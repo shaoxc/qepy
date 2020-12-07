@@ -27,10 +27,19 @@ MODULE pwpy_mod
       SUBROUTINE pwpy_get_rho(rhor)
          USE kinds,                ONLY : DP
          use scf, only: rho !! the charge density and its other components
+         USE fft_base,         ONLY : dfftp, dffts
+         USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
+         USE scatter_mod, ONLY : gather_grid
          IMPLICIT NONE
-         !REAL(DP), INTENT(OUT) :: rhor(dfftp%nnr,nspin)
          REAL(DP), INTENT(OUT) :: rhor(:,:)
-         rhor(:,:)=rho%of_r(:,:)
+         !REAL(DP), INTENT(OUT) :: rhor(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin) 
+         !
+         INTEGER  :: ispin
+         !print *, 'get_rho_IN',minval(rho%of_r),maxval(rho%of_r),sum(rho%of_r)
+         DO ispin = 1, nspin
+            CALL gather_grid(dfftp, rho%of_r(:,ispin), rhor(:,ispin))
+         END DO
+         !print *, 'get_rho_OUT',minval(rhor),maxval(rhor),sum(rhor)
       END SUBROUTINE 
 
       SUBROUTINE pwpy_set_rho(rhor)
@@ -38,9 +47,15 @@ MODULE pwpy_mod
          USE fft_rho,              ONLY : rho_g2r, rho_r2g
          USE fft_base,         ONLY : dfftp, dffts
          use scf, only: rho !! the charge density and its other components
+         USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
+         USE scatter_mod, ONLY : scatter_grid
          IMPLICIT NONE
          REAL(DP), INTENT(IN) :: rhor(:,:)
-         rho%of_r(:,:)=rhor
+         !
+         INTEGER  :: ispin
+         DO ispin = 1, nspin
+            CALL scatter_grid(dfftp, rhor(:,ispin), rho%of_r(:,ispin))
+         END DO
          CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
       END SUBROUTINE 
 

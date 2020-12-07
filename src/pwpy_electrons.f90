@@ -342,7 +342,7 @@
 !END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initial)
+SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, initial, etotal)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -413,13 +413,17 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
   USE wrappers,             ONLY : memstat
   !
   USE plugin_variables,     ONLY : plugin_etot
+  USE scatter_mod,          ONLY : scatter_grid
   !
   IMPLICIT NONE
   !
-  real(kind=dp),                   intent(in)      :: extpot(dfftp%nnr)
+  !real(kind=dp),                   intent(in)      :: extpot_w(:)
+  real(kind=dp),                   intent(in)      :: extpot_w(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
+  real(kind=dp)                                    :: extpot(dfftp%nnr)
   real(kind=dp),                   intent(in)      :: extene
   integer,                         intent(in)      :: exttype
   logical,                         intent(in)      :: initial
+  real(kind=dp),                   intent(out)     :: etotal
   !
   INTEGER, INTENT (IN) :: printout
   !! * If printout>0, prints on output the total energy;
@@ -470,6 +474,9 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
   INTEGER:: atnum(1:nat), na
   !! auxiliary variables for grimme-d3
   !
+  !-----------------------------------------------------------------------
+  CALL scatter_grid(dfftp, extpot_w, extpot)
+  !-----------------------------------------------------------------------
   iter = 0
   if (initial) then
   dr2  = 0.0_dp
@@ -661,6 +668,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
         deband = delta_e()
         if (.not.initial) then
            return
+           !EXIT scf_step
         end if
         !
         ! ... mix_rho mixes several quantities: rho in g-space, tauk (for
@@ -727,6 +735,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
 
         if (exttype>0) then
            return
+           !EXIT scf_step
         end if
         !
         IF ( .NOT. conv_elec ) THEN
@@ -835,6 +844,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
         !
      ENDIF
      !
+     if (exttype<1) then
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
         IF ( ABS( charge - nelec ) / charge > 1.D-3 ) THEN
@@ -845,6 +855,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
            ENDIF
         ENDIF
      ENDIF
+     endif
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      ! for hybrid calculations, add the current estimate of exchange energy
@@ -906,6 +917,11 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot, extene, exttype, initia
      !
      CALL print_energies ( printout )
      !
+     etotal=etot
+     if (exttype>0) then
+        etotal = etotal - ewld
+        return
+     end if
      IF ( conv_elec ) THEN
         !
         ! ... if system is charged add a Makov-Payne correction to the energy

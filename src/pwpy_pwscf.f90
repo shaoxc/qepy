@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_pwscf(infile)
+SUBROUTINE pwpy_pwscf(infile, my_world_comm)
   !! Author: Paolo Giannozzi
   !
   !! Version: v6.1
@@ -50,6 +50,7 @@ SUBROUTINE pwpy_pwscf(infile)
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: infile
+  INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
   !
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
@@ -62,7 +63,11 @@ SUBROUTINE pwpy_pwscf(infile)
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
   !
-  CALL mp_startup( start_images=.TRUE. )
+  IF ( PRESENT(my_world_comm)) THEN
+     CALL mp_startup(my_world_comm=my_world_comm, start_images=.TRUE. )
+  ELSE
+     CALL mp_startup( start_images=.TRUE. )
+  ENDIF
   !
   IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
      ! used to be the default : one diag group per bgrp
@@ -114,7 +119,6 @@ SUBROUTINE pwpy_pwscf(infile)
   !ENDIF
   !
   input_file_=trim(infile)
-  print*,'input_file_',input_file_
   CALL read_input_file( 'PW', input_file_ )
   call pwpy_run_pwscf(exit_status)
 END SUBROUTINE pwpy_pwscf
@@ -124,6 +128,6 @@ SUBROUTINE pwpy_pwscf_finalise()
    INTEGER :: exit_status
 
    CALL laxlib_free_ortho_group()
-   CALL stop_run( exit_status )
-   CALL do_stop( exit_status )
+   CALL pwpy_stop_run( exit_status )
+   !CALL do_stop( exit_status )
 END SUBROUTINE pwpy_pwscf_finalise

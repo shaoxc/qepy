@@ -51,6 +51,7 @@ SUBROUTINE pwpy_run_pwscf( exit_status )
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
+  USE mp_world, ONLY: world_comm
   !
   IMPLICIT NONE
   !

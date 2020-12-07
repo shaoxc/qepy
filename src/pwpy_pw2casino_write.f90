@@ -320,7 +320,7 @@
 
 !CONTAINS
 
-   SUBROUTINE pwpy_calc_energies(etotal, extpot, extene, exttype)
+   SUBROUTINE pwpy_calc_energies(etotal, exttype)
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
@@ -356,9 +356,8 @@
       IMPLICIT NONE
 
       real(kind=dp),                   intent(out)     :: etotal
-      real(kind=dp),                   intent(in)      :: extpot(dfftp%nnr)
-      real(kind=dp),                   intent(in)      :: extene
       integer,                         intent(in)      :: exttype
+      real(kind=dp)                                    :: extpot(dfftp%nnr)
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)
