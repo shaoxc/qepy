@@ -5,16 +5,17 @@
  - Python 3.6 or later
  - Numpy >= 1.18
  - Intel compiler (ifort)
- - f90wrap package (Modified)
+ - f90wrap package (latest)
  - Quantum-espresso source distribution (qe-6.5)
 
 ## Install
  - Install f90wrap:
 
-   Due to the QE was written more freely than normal code. So we need modified the f90wrap a little bit. You can directly use our modified version:
+   <!--Due to the QE was written more freely than normal code. So we need modified the f90wrap a little bit. You can directly use our modified version:-->
+   <!--pip install git+https://gitlab.com/shaoxc/f90wrap@modified-->
     
     ```shell
-	pip install git+https://gitlab.com/shaoxc/f90wrap@modified
+	pip install git+https://github.com/jameskermode/f90wrap
     ```
 
  - Install QE

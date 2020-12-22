@@ -342,7 +342,7 @@
 !END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, initial, etotal)
+SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, initial, etotal, mix_coef, finish)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -423,6 +423,8 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   real(kind=dp),                   intent(in)      :: extene
   integer,                         intent(in)      :: exttype
   logical,                         intent(in)      :: initial
+  real(kind=dp),intent(out),optional               :: mix_coef
+  logical,intent(in),optional               :: finish
   real(kind=dp),                   intent(out)     :: etotal
   !
   INTEGER, INTENT (IN) :: printout
@@ -445,7 +447,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !! counter on polarization
   INTEGER :: idum
   !! dummy counter on iterations
-  INTEGER :: iter
+  INTEGER,save :: iter
   !! counter on iterations
   INTEGER :: ios, kilobytes
   !
@@ -461,7 +463,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !! auxiliary variables for calculating and storing temporary copies of
   !! the charge density and of the HXC-potential
   !
-  TYPE(scf_type) :: rhoin
+  TYPE(scf_type),save :: rhoin
   !! used to store rho_in of current/next iteration
   !
   ! ... external functions
@@ -474,14 +476,20 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   INTEGER:: atnum(1:nat), na
   !! auxiliary variables for grimme-d3
   !
+  INTEGER:: its
+  
+  if (present(finish) .and. finish) then
+     goto 10
+  endif
+
   !-----------------------------------------------------------------------
   CALL scatter_grid(dfftp, extpot_w, extpot)
   !-----------------------------------------------------------------------
-  iter = 0
   if (initial) then
+  iter = 0
   dr2  = 0.0_dp
   IF ( restart ) CALL restart_in_electrons( iter, dr2, ethr, et )
-  end if
+  !end if
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
@@ -494,7 +502,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   ! ... calculates the ewald contribution to total energy
   !
-  if (initial) then
+  !if (initial) then
   IF ( do_comp_esm ) THEN
      ewld = esm_ewald()
   ELSE
@@ -531,15 +539,16 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   CALL open_mix_file( iunmix, 'mix', exst )
   end if
-
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
   !if (exttype>0 .or. (.not. initial)) then
+  !if (initial) then
      CALL pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
         ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+   !endif
   !endif
 
   DO idum = 1, niter
@@ -619,6 +628,10 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
+        if (.not.initial .and. (.not. present(mix_coef))) then
+           !return
+           goto 111
+        end if
         CALL sum_band()
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
@@ -666,10 +679,6 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         ! ... eband + deband = \sum_v <\psi_v | T + Vion |\psi_v>
         !
         deband = delta_e()
-        if (.not.initial) then
-           return
-           !EXIT scf_step
-        end if
         !
         ! ... mix_rho mixes several quantities: rho in g-space, tauk (for
         ! ... meta-gga), ns and ns_nc (for lda+u) and becsum (for paw)
@@ -732,19 +741,23 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
            ENDIF
            !
         ENDIF
-
-        if (exttype>0) then
-           return
-           !EXIT scf_step
+        !-----------------------------------------------------------------------
+        if (exttype>0 .or. present(mix_coef)) then
+           CALL scf_type_COPY( rhoin, rho )
+           descf = 0._dp
+           goto 111
         end if
+        !-----------------------------------------------------------------------
         !
         IF ( .NOT. conv_elec ) THEN
            !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL pwpy_v_of_rho( rhoin, rho_core, rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+           !CALL pwpy_v_of_rho( rhoin, rho_core, rhog_core, &
+                          !ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+           CALL v_of_rho( rhoin, rho_core, rhog_core, &
+                          ehart, etxc, vtxc, eth, etotefield, charge, v)
            !
            IF (okpaw) THEN
               CALL PAW_potential( rhoin%bec, ddd_paw, epaw,etot_cmp_paw )
@@ -771,8 +784,10 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
-           CALL pwpy_v_of_rho( rho,rho_core,rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+           !CALL pwpy_v_of_rho( rho,rho_core,rhog_core, &
+                          !ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+           CALL v_of_rho( rho,rho_core,rhog_core, &
+                      ehart, etxc, vtxc, eth, etotefield, charge, v)
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            IF (okpaw) THEN
@@ -857,7 +872,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
      ENDIF
      endif
      !
-     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
+111     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      ! for hybrid calculations, add the current estimate of exchange energy
      ! (it will subtracted later if exx_is_active to be replaced with a better estimate)
      etot = etot - exxen
@@ -916,12 +931,14 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
      etot = etot + plugin_etot 
      !
      CALL print_energies ( printout )
+     !call pwpy_calc_energies(etot, exttype)
      !
      etotal=etot
      if (exttype>0) then
         etotal = etotal - ewld
         return
      end if
+     return
      IF ( conv_elec ) THEN
         !
         ! ... if system is charged add a Makov-Payne correction to the energy

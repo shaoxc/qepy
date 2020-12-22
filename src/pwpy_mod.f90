@@ -2,7 +2,6 @@ MODULE pwpy_mod
    USE kinds,                ONLY : DP
    IMPLICIT NONE
    PUBLIC
-   REAL(DP), ALLOCATABLE :: scf__vnew__of_r(:,:)
    CONTAINS
       SUBROUTINE pwpy_init_pointer()
          use scf, only: rho,v,vnew
@@ -90,5 +89,36 @@ MODULE pwpy_mod
          USE force_mod,         ONLY : force, lforce, sumfor
          IMPLICIT NONE
          REAL(DP), INTENT(IN) :: forces(:,:)
+      END SUBROUTINE 
+
+      SUBROUTINE pwpy_set_stdout(fname, uni)
+      USE io_global,     ONLY : stdout, ionode
+      INTEGER                  :: ierr
+      CHARACTER(LEN=*),INTENT(IN),OPTIONAL  :: fname
+      INTEGER,INTENT(in),OPTIONAL :: uni
+      IF ( .NOT. present(fname) ) return
+      IF ( present(uni) ) THEN
+         stdout=uni
+      ELSE
+         stdout=666
+      ENDIF
+
+      IF(ionode) THEN
+         OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
+      ENDIF
+      END SUBROUTINE 
+
+      SUBROUTINE pwpy_write_stdout(fstr)
+      USE io_global,     ONLY : stdout, ionode
+      INTEGER                  :: ierr
+      CHARACTER(LEN=*),INTENT(IN)  :: fstr
+      IF(ionode) WRITE(stdout,'(A)') fstr
+      END SUBROUTINE 
+
+      SUBROUTINE pwpy_close_stdout(fname)
+      USE io_global,     ONLY : stdout, ionode
+      INTEGER                  :: ierr
+      CHARACTER(LEN=*),INTENT(IN)  :: fname
+      IF(ionode) close(stdout)
       END SUBROUTINE 
 END MODULE pwpy_mod
