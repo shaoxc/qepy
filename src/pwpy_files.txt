@@ -6,3 +6,6 @@ pw2casino_write.f90
 sum_band.f90
 v_of_rho.f90
 forces.f90
+hinit1.f90
+mix_rho.f90
+setlocal.f90

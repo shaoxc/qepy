@@ -85,17 +85,8 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   !
   ! ... define the total local potential (external + scf)
   !
-  if (iand(exttype,1) == 0) then ! local_pp
+  CALL sum_vrs( dfftp%nnr, nspin, extpot, v%of_r, v%of_r )
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
-  end if
-
-  if (exttype>0) then
-     if (iand(exttype,1) == 0) then ! local_pp
-        CALL sum_vrs( dfftp%nnr, nspin, extpot, vrs, vrs )
-     else
-        CALL sum_vrs( dfftp%nnr, nspin, extpot, v%of_r, vrs )
-     end if
-  end if
   !
   ! ... interpolate the total local potential
   !

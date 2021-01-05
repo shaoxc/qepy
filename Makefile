@@ -9,18 +9,15 @@ QEMODS= ../src/libpw.a ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a
 QEINC =-I../../Modules/ -I../../KS_Solvers/ -I../../FFTXlib/ \
 	   -I../../LAXlib/ -I../../UtilXlib/ -I../../dft-d3/ -I../src/ -I.
 
-MODULES_SOURCES = read_cards.f90 read_input.f90 read_namelists.f90 read_pseudo.f90
+MODULES_SOURCES = constants.f90 read_cards.f90 read_input.f90 read_namelists.f90 read_pseudo.f90
 MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 electrons.f90 sum_band.f90 update_pot.f90 hinit1.f90
 PW_FILES = $(addprefix ../src/,${PW_SOURCES})
 
-PWPY_SOURCES= pwpy_electrons.f90 pwpy_forces.f90 pwpy_mod.f90 pwpy_pw2casino_write.f90 pwpy_pwscf.f90 \
-			  pwpy_run_pwscf.f90 pwpy_sum_band.f90 pwpy_v_of_rho.f90 pwpy_stop_run.f90
-
-PWPY_FILES = $(addprefix ./src/,${PWPY_SOURCES})
-
-PWPY_OBJS= $(addsuffix .o, $(basename ${PWPY_SOURCES}))
+PWPY_FILES = $(wildcard ./src/*.f90)
+PWPY_SOURCES = $(PWPY_FILES:./src/%=%)
+PWPY_OBJS= $(PWPY_SOURCES:%.f90=%.o)
 
 WRAP_SOURCES = ${MODULES_SOURCES} ${PW_SOURCES} ${PWPY_SOURCES}
 WRAP_FILES = ${MODULES_FILES} ${PW_FILES} ${PWPY_FILES}

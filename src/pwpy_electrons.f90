@@ -423,7 +423,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   real(kind=dp),                   intent(in)      :: extene
   integer,                         intent(in)      :: exttype
   logical,                         intent(in)      :: initial
-  real(kind=dp),intent(out),optional               :: mix_coef
+  real(kind=dp),intent(in),optional               :: mix_coef
   logical,intent(in),optional               :: finish
   real(kind=dp),                   intent(out)     :: etotal
   !
@@ -478,9 +478,8 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   INTEGER:: its
   
-  if (present(finish) .and. finish) then
-     goto 10
-  endif
+  if (present(finish) .and. finish) goto 10
+  if (present(mix_coef)) goto 100
 
   !-----------------------------------------------------------------------
   CALL scatter_grid(dfftp, extpot_w, extpot)
@@ -503,12 +502,16 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   ! ... calculates the ewald contribution to total energy
   !
   !if (initial) then
+  if (exttype<1) then
   IF ( do_comp_esm ) THEN
      ewld = esm_ewald()
   ELSE
      ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   ENDIF
+  else if (iand(exttype,1) == 1) then
+     call pwpy_setlocal(exttype)
+  endif
   !
   IF ( llondon ) THEN
      elondon = energy_london( alat , nat , ityp , at ,bg , tau )
@@ -628,10 +631,10 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
-        if (.not.initial .and. (.not. present(mix_coef))) then
-           !return
-           goto 111
-        end if
+        !if (.not.initial .and. (.not. present(mix_coef))) then
+           !!return
+           !goto 111
+        !end if
         CALL sum_band()
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
@@ -686,6 +689,9 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         ! ... mix_rho contains a call to rho_ddot that in the PAW case
         ! ... is parallelized on the entire image
         !
+100     if (.not.initial .and. (.not. present(mix_coef))) then
+           goto 111
+        end if
         ! IF ( my_pool_id == root_pool ) 
         !if (exttype==0) then
         !!!Need this to return dr2
@@ -935,7 +941,6 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
      !
      etotal=etot
      if (exttype>0) then
-        etotal = etotal - ewld
         return
      end if
      return
@@ -985,6 +990,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   ! ... delete mixing info if converged, keep it if not
   !
+  IF (present(finish) .and. finish) conv_elec = .true.
   IF ( conv_elec ) THEN
      CALL close_mix_file( iunmix, 'delete' )
   ELSE

@@ -58,6 +58,17 @@ MODULE pwpy_mod
          CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
       END SUBROUTINE 
 
+      SUBROUTINE pwpy_get_rho_core(rhoc)
+         USE kinds,                ONLY : DP
+         use scf, only: rho_core !! the core charge in real space
+         USE fft_base,         ONLY : dfftp, dffts
+         USE scatter_mod, ONLY : gather_grid
+         IMPLICIT NONE
+         REAL(DP), INTENT(OUT) :: rhoc(:)
+         !
+         CALL gather_grid(dfftp, rho_core, rhoc)
+      END SUBROUTINE 
+
       SUBROUTINE pwpy_set_v(vin)
          USE kinds,                ONLY : DP
          USE fft_rho,              ONLY : rho_g2r, rho_r2g
