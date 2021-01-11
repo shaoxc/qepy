@@ -1,5 +1,6 @@
 MODULE pwpy_mod
    USE kinds,                ONLY : DP
+   USE pwpy_scatter_mod, ONLY : gather_grid, scatter_grid
    IMPLICIT NONE
    PUBLIC
    CONTAINS
@@ -28,7 +29,6 @@ MODULE pwpy_mod
          use scf, only: rho !! the charge density and its other components
          USE fft_base,         ONLY : dfftp, dffts
          USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
-         USE scatter_mod, ONLY : gather_grid
          IMPLICIT NONE
          REAL(DP), INTENT(OUT) :: rhor(:,:)
          !REAL(DP), INTENT(OUT) :: rhor(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin) 
@@ -47,7 +47,6 @@ MODULE pwpy_mod
          USE fft_base,         ONLY : dfftp, dffts
          use scf, only: rho !! the charge density and its other components
          USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
-         USE scatter_mod, ONLY : scatter_grid
          IMPLICIT NONE
          REAL(DP), INTENT(IN) :: rhor(:,:)
          !
@@ -62,7 +61,6 @@ MODULE pwpy_mod
          USE kinds,                ONLY : DP
          use scf, only: rho_core !! the core charge in real space
          USE fft_base,         ONLY : dfftp, dffts
-         USE scatter_mod, ONLY : gather_grid
          IMPLICIT NONE
          REAL(DP), INTENT(OUT) :: rhoc(:)
          !

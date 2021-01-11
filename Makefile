@@ -15,8 +15,12 @@ MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 PW_SOURCES = pwcom.f90 scf_mod.f90 electrons.f90 sum_band.f90 update_pot.f90 hinit1.f90
 PW_FILES = $(addprefix ../src/,${PW_SOURCES})
 
-PWPY_FILES = $(wildcard ./src/*.f90)
-PWPY_SOURCES = $(PWPY_FILES:./src/%=%)
+PWPY_SOURCES= pwpy_scatter_mod.f90 pwpy_setlocal.f90 pwpy_v_of_rho.f90 pwpy_pw2casino_write.f90 \
+		      pwpy_hinit1.f90 pwpy_pwscf.f90 pwpy_run_pwscf.f90 pwpy_sum_band.f90 \
+			  pwpy_electrons.f90 pwpy_forces.f90 \
+			  pwpy_stop_run.f90 pwpy_mix_rho.f90 \
+			  pwpy_mod.f90
+PWPY_FILES = $(addprefix ./src/,${PWPY_SOURCES})
 PWPY_OBJS= $(PWPY_SOURCES:%.f90=%.o)
 
 WRAP_SOURCES = ${MODULES_SOURCES} ${PW_SOURCES} ${PWPY_SOURCES}
@@ -26,7 +30,7 @@ F90WRAP_FILES = f90wrap_*.f90
 
 PWFLAGS = $(F90FLAGS) $(QEINC)
 NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large
-F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS)) 
+F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS))
 
 #$(info 'Install path :',${PY_INSTALL_DIR})
 

@@ -10,6 +10,8 @@
 ! included gate related energy
 !----------------------------------------------------------------------------
 !
+MODULE pwpy_electrons
+   contains
 !----------------------------------------------------------------------------
 !SUBROUTINE electrons()
   !!----------------------------------------------------------------------------
@@ -342,7 +344,7 @@
 !END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, initial, etotal, mix_coef, finish)
+SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, initial, etotal, dnorm, mix_coef, finish)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -413,19 +415,20 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   USE wrappers,             ONLY : memstat
   !
   USE plugin_variables,     ONLY : plugin_etot
-  USE scatter_mod,          ONLY : scatter_grid
+  USE pwpy_scatter_mod,          ONLY : scatter_grid
   !
   IMPLICIT NONE
   !
-  !real(kind=dp),                   intent(in)      :: extpot_w(:)
-  real(kind=dp),                   intent(in)      :: extpot_w(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
-  real(kind=dp)                                    :: extpot(dfftp%nnr)
+  real(kind=dp),                   intent(in)      :: extpot_w(:)
+  !real(kind=dp),                   intent(in)      :: extpot_w(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
   real(kind=dp),                   intent(in)      :: extene
   integer,                         intent(in)      :: exttype
   logical,                         intent(in)      :: initial
-  real(kind=dp),intent(in),optional               :: mix_coef
-  logical,intent(in),optional               :: finish
+  real(kind=dp),intent(in),optional                :: mix_coef
+  logical,intent(in),optional                      :: finish
   real(kind=dp),                   intent(out)     :: etotal
+  real(kind=dp),                   intent(out)     :: dnorm
+  real(kind=dp)                                    :: extpot(dfftp%nnr)
   !
   INTEGER, INTENT (IN) :: printout
   !! * If printout>0, prints on output the total energy;
@@ -940,10 +943,10 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
      !call pwpy_calc_energies(etot, exttype)
      !
      etotal=etot
+     dnorm = dr2
      if (exttype>0) then
         return
      end if
-     return
      IF ( conv_elec ) THEN
         !
         ! ... if system is charged add a Makov-Payne correction to the energy
@@ -1492,3 +1495,4 @@ END SUBROUTINE pwpy_electrons_scf
   !domat = .FALSE.
   !!
 !END FUNCTION exxenergyace
+END MODULE pwpy_electrons
