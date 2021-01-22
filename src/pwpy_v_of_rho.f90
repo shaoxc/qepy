@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
   !----------------------------------------------------------------------------
   !! This routine computes the Hartree and Exchange and Correlation
   !! potential and energies which corresponds to a given charge density
@@ -34,12 +34,11 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE ener,                 ONLY : epaw
+  USE pwpy_embed,           ONLY : embed_base
   !
   IMPLICIT NONE
   !
-  real(kind=dp),                   intent(in)      :: extpot(dfftp%nnr)
-  real(kind=dp),                   intent(in)      :: extene
-  integer,                         intent(in)      :: exttype
+  type(embed_base), intent(in)    :: embed
   !
   TYPE(scf_type), INTENT(INOUT) :: rho
   !! the valence charge
@@ -73,7 +72,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   REAL(DP) :: etot_cmp_paw(nat,2,2)
 
   call pwpy_v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
   IF (okpaw) THEN
      CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
      CALL PAW_symmetrize_ddd( ddd_paw )
@@ -85,7 +84,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   !
   ! ... define the total local potential (external + scf)
   !
-  CALL sum_vrs( dfftp%nnr, nspin, extpot, v%of_r, v%of_r )
+  CALL sum_vrs( dfftp%nnr, nspin, embed%extpot, v%of_r, v%of_r )
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !
   ! ... interpolate the total local potential
@@ -100,7 +99,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   END SUBROUTINE 
 !----------------------------------------------------------------------------
 SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
   !----------------------------------------------------------------------------
   !! This routine computes the Hartree and Exchange and Correlation
   !! potential and energies which corresponds to a given charge density
@@ -118,12 +117,11 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   USE cell_base,        ONLY : alat
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
+  USE pwpy_embed,       ONLY : embed_base
   !
   IMPLICIT NONE
   !
-  real(kind=dp),                   intent(in)      :: extpot(dfftp%nnr)
-  real(kind=dp),                   intent(in)      :: extene
-  integer,                         intent(in)      :: exttype
+  type(embed_base), intent(in)    :: embed
   !
   TYPE(scf_type), INTENT(INOUT) :: rho
   !! the valence charge
@@ -156,23 +154,23 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   CALL start_clock( 'v_of_rho' )
 
   i=0
-  if (iand(exttype,1) == 1) then
+  if (iand(embed%exttype,1) == 1) then
      i = i+1
   end if
-  if (iand(exttype,2) == 2) then
+  if (iand(embed%exttype,2) == 2) then
      i = i+1
   end if
-  if (iand(exttype,4) == 4) then
+  if (iand(embed%exttype,4) == 4) then
      i = i+1
   end if
   if (i>0) then
-     split_energy = extene / i
+     split_energy = embed%extene / i
   endif
 
   !
   ! ... calculate exchange-correlation potential
   !
-  if (iand(exttype,4) == 0) then ! XC
+  if (iand(embed%exttype,4) == 0) then ! XC
   IF (dft_is_meta()) then
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   ELSE
@@ -189,7 +187,7 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate hartree potential
   !
-  if (iand(exttype,2) == 0) then ! Hartree
+  if (iand(embed%exttype,2) == 0) then ! Hartree
   CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
   else
      ehart=split_energy

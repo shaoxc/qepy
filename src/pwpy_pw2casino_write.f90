@@ -320,7 +320,7 @@
 
 !CONTAINS
 
-   SUBROUTINE pwpy_calc_energies(etotal, exttype)
+   SUBROUTINE pwpy_calc_energies(embed)
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
@@ -353,11 +353,12 @@
       USE buffers,              ONLY : get_buffer
 
       USE pw2blip
+      !
+      USE pwpy_embed,           ONLY : embed_base
       IMPLICIT NONE
 
-      real(kind=dp),                   intent(out)     :: etotal
-      integer,                         intent(in)      :: exttype
-      real(kind=dp)                                    :: extpot(dfftp%nnr)
+      type(embed_base), intent(inout)    :: embed
+      !
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)
@@ -394,7 +395,7 @@
          !
          !      bring rho to G-space
          !
-         if (iand(exttype,1) == 0) then ! 
+         if (iand(embed%exttype,1) == 0) then ! 
          aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
          CALL fwfft ('Rho', aux, dfftp)
          !
@@ -493,7 +494,7 @@
       !
       ! compute ewald contribution
       !
-      if (exttype==0) then
+      if (embed%exttype==0) then
       ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
            g, gg, ngm, gcutm, gstart, gamma_only, strf )
       else
@@ -502,8 +503,8 @@
       !
       ! compute hartree and xc contribution
       !
-      call pwpy_v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, 0.d0, exttype)
+      call pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
+                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
       !
       ! compute exact exchange contribution (if present)
       !
@@ -538,7 +539,7 @@
       WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
       WRITE (stdout,*) 'Total energy0     ', etot_/e2, ' au  =  ', etot_, ' Ry'
       WRITE (stdout,*)
-      etotal=etot_
+      embed%etotal=etot_
 
    END SUBROUTINE pwpy_calc_energies
 

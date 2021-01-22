@@ -344,7 +344,7 @@ MODULE pwpy_electrons
 !END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, initial, etotal, dnorm, mix_coef, finish)
+SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -415,26 +415,16 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   USE wrappers,             ONLY : memstat
   !
   USE plugin_variables,     ONLY : plugin_etot
-  USE pwpy_scatter_mod,          ONLY : scatter_grid
   !
+  USE pwpy_embed,           ONLY : embed_base
   IMPLICIT NONE
-  !
-  real(kind=dp),                   intent(in)      :: extpot_w(:)
-  !real(kind=dp),                   intent(in)      :: extpot_w(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
-  real(kind=dp),                   intent(in)      :: extene
-  integer,                         intent(in)      :: exttype
-  logical,                         intent(in)      :: initial
-  real(kind=dp),intent(in),optional                :: mix_coef
-  logical,intent(in),optional                      :: finish
-  real(kind=dp),                   intent(out)     :: etotal
-  real(kind=dp),                   intent(out)     :: dnorm
-  real(kind=dp)                                    :: extpot(dfftp%nnr)
   !
   INTEGER, INTENT (IN) :: printout
   !! * If printout>0, prints on output the total energy;
   !! * if printout>1, also prints decomposition into energy contributions.
   REAL(DP),INTENT (IN) :: exxen
   !! current estimate of the exchange energy
+  type(embed_base), intent(inout)    :: embed
   !
   ! ... local variables
   !
@@ -481,13 +471,10 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   INTEGER:: its
   
-  if (present(finish) .and. finish) goto 10
-  if (present(mix_coef)) goto 100
+  if (embed%finish) goto 10
+  if (embed%mix_coef>0.0) goto 100
 
-  !-----------------------------------------------------------------------
-  CALL scatter_grid(dfftp, extpot_w, extpot)
-  !-----------------------------------------------------------------------
-  if (initial) then
+  if (embed%initial) then
   iter = 0
   dr2  = 0.0_dp
   IF ( restart ) CALL restart_in_electrons( iter, dr2, ethr, et )
@@ -504,16 +491,16 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   ! ... calculates the ewald contribution to total energy
   !
-  !if (initial) then
-  if (exttype<1) then
+  !if (embed%initial) then
+  if (embed%exttype<1) then
   IF ( do_comp_esm ) THEN
      ewld = esm_ewald()
   ELSE
      ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   ENDIF
-  else if (iand(exttype,1) == 1) then
-     call pwpy_setlocal(exttype)
+  else if (iand(embed%exttype,1) == 1) then
+     call pwpy_setlocal(embed%exttype)
   endif
   !
   IF ( llondon ) THEN
@@ -550,10 +537,10 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  !if (exttype>0 .or. (.not. initial)) then
-  !if (initial) then
+  !if (embed%exttype>0 .or. (.not. embed%initial)) then
+  !if (embed%initial) then
      CALL pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
-        ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
+        ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
    !endif
   !endif
 
@@ -573,7 +560,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
      ! ... Convergence threshold for iterative diagonalization is
      ! ... automatically updated during self consistency
      !
-     IF ( iter > 1 .or. (.not. initial)) THEN
+     IF ( iter > 1 .or. (.not. embed%initial)) THEN
         !
         IF ( iter == 2 ) ethr = 1.D-2
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
@@ -583,7 +570,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         !
      ENDIF
      !
-     if (initial) then
+     if (embed%initial) then
      first = ( iter == 1 )
      else
      first = .false.
@@ -692,11 +679,11 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         ! ... mix_rho contains a call to rho_ddot that in the PAW case
         ! ... is parallelized on the entire image
         !
-100     if (.not.initial .and. (.not. present(mix_coef))) then
+100     if (.not. embed%initial .and. (embed%mix_coef<0)) then
            goto 111
         end if
         ! IF ( my_pool_id == root_pool ) 
-        !if (exttype==0) then
+        !if (embed%exttype==0) then
         !!!Need this to return dr2
         CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
                       iunmix, conv_elec )
@@ -751,7 +738,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
            !
         ENDIF
         !-----------------------------------------------------------------------
-        if (exttype>0 .or. present(mix_coef)) then
+        if (embed%exttype>0 .or. embed%mix_coef>0) then
            CALL scf_type_COPY( rhoin, rho )
            descf = 0._dp
            goto 111
@@ -763,8 +750,6 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           !CALL pwpy_v_of_rho( rhoin, rho_core, rhog_core, &
-                          !ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            !
@@ -793,8 +778,6 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
-           !CALL pwpy_v_of_rho( rho,rho_core,rhog_core, &
-                          !ehart, etxc, vtxc, eth, etotefield, charge, v, extpot, extene, exttype)
            CALL v_of_rho( rho,rho_core,rhog_core, &
                       ehart, etxc, vtxc, eth, etotefield, charge, v)
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
@@ -868,7 +851,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
         !
      ENDIF
      !
-     if (exttype<1) then
+     if (embed%exttype<1) then
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
         IF ( ABS( charge - nelec ) / charge > 1.D-3 ) THEN
@@ -942,11 +925,11 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
      CALL print_energies ( printout )
      !call pwpy_calc_energies(etot, exttype)
      !
-     etotal=etot
-     dnorm = dr2
-     if (exttype>0) then
-        return
-     end if
+     embed%etotal=etot
+     embed%dnorm = dr2
+     if (embed%exttype>0 .or. niter==1) return
+     !if (embed%exttype>0) return
+     !
      IF ( conv_elec ) THEN
         !
         ! ... if system is charged add a Makov-Payne correction to the energy
@@ -993,7 +976,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, extpot_w, extene, exttype, init
   !
   ! ... delete mixing info if converged, keep it if not
   !
-  IF (present(finish) .and. finish) conv_elec = .true.
+  IF ( embed%finish) conv_elec = .true.
   IF ( conv_elec ) THEN
      CALL close_mix_file( iunmix, 'delete' )
   ELSE

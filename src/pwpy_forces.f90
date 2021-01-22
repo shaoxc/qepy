@@ -58,7 +58,7 @@ SUBROUTINE pwpy_forces(icalc)
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: icalc
+  integer, intent(in), optional :: icalc
   REAL(DP), ALLOCATABLE :: forcenl(:,:),   &
                            forcelc(:,:),   &
                            forcecc(:,:),   &
@@ -103,7 +103,7 @@ SUBROUTINE pwpy_forces(icalc)
   !
   ! ... The local contribution
   !
-  if (icalc<1) then
+  if (.not. present(icalc) .or. icalc<1) then
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
@@ -124,7 +124,7 @@ SUBROUTINE pwpy_forces(icalc)
   !
   ! ... The ionic contribution is computed here
   !
-  if (icalc<2) then
+  if (.not. present(icalc) .or. icalc<2) then
   IF( do_comp_esm ) THEN
      CALL esm_force_ew( forceion )
   ELSE
