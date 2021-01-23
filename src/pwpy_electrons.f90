@@ -673,21 +673,24 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
         !
         deband = delta_e()
         !
+100     if (.not. embed%initial .and. (embed%mix_coef<0)) then
+           ! from second step directly return new density without mixing
+           goto 111
+        else if ( embed%initial .and. (embed%mix_coef>0)) then
+           ! the first step already mixing, so do nothing
+           goto 111
+        end if
+        !
+        !
         ! ... mix_rho mixes several quantities: rho in g-space, tauk (for
         ! ... meta-gga), ns and ns_nc (for lda+u) and becsum (for paw)
         ! ... The mixing could in principle be done on pool 0 only, but
         ! ... mix_rho contains a call to rho_ddot that in the PAW case
         ! ... is parallelized on the entire image
         !
-100     if (.not. embed%initial .and. (embed%mix_coef<0)) then
-           goto 111
-        end if
         ! IF ( my_pool_id == root_pool ) 
-        !if (embed%exttype==0) then
-        !!!Need this to return dr2
         CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
                       iunmix, conv_elec )
-        !end if
         !
         ! ... Results are broadcast from pool 0 to others to prevent trouble
         ! ... on machines unable to yield the same results for the same 
