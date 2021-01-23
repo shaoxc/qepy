@@ -234,6 +234,7 @@ SUBROUTINE pwpy_forces(icalc)
         !
      END DO
      !
+     if (.not. present(icalc) .or. icalc<1) then
      !TB
      IF ((gate.AND.relaxz).AND.(ipol==3)) WRITE( stdout, '("Total force in z direction = 0 disabled")')
      !
@@ -255,15 +256,18 @@ SUBROUTINE pwpy_forces(icalc)
         END DO
         !
      ENDIF
+     endif
      !
   END DO
   !
   ! ... resymmetrize (should not be needed, but ...)
   !
+  if (.not. present(icalc) .or. icalc<1) then
   CALL symvector( nat, force )
   !
   IF ( remove_rigid_rot ) &
      CALL remove_tot_torque( nat, tau, amass(ityp(:)), force  )
+  endif
   !
   IF( textfor ) force(:,:) = force(:,:) + extfor(:,:)
   !
