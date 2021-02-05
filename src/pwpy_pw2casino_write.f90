@@ -335,7 +335,7 @@
       USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
       USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
       USE lsda_mod, ONLY: lsda, nspin
-      USE scf, ONLY: rho, rho_core, rhog_core, v
+      USE scf, ONLY: rho, rho_core, rhog_core, v, vnew
       USE ldaU, ONLY : eth
       USE vlocal, ONLY: vloc, strf
       USE wvfct, ONLY: npwx, nbnd, wg, et
@@ -354,7 +354,8 @@
 
       USE pw2blip
       !
-      USE pwpy_embed,           ONLY : embed_base
+      USE pwpy_mod,             ONLY : embed_base
+      !
       IMPLICIT NONE
 
       type(embed_base), intent(inout)    :: embed
@@ -494,7 +495,7 @@
       !
       ! compute ewald contribution
       !
-      if (embed%exttype==0) then
+      if (embed%exttype==0 .and. embed%lewald) then
       ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
            g, gg, ngm, gcutm, gstart, gamma_only, strf )
       else
@@ -503,8 +504,14 @@
       !
       ! compute hartree and xc contribution
       !
+      !if (embed%exttype > 1) then
+      !   vnew%of_r(:,:) = v%of_r(:,:)
+      !endif
       call pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+      !if (embed%exttype > 1) then
+      !   vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
+      !endif
       !
       ! compute exact exchange contribution (if present)
       !

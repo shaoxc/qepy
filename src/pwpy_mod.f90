@@ -4,6 +4,20 @@ MODULE pwpy_mod
    IMPLICIT NONE
    PUBLIC
 
+   type, public :: embed_base
+      real(kind=dp), allocatable      :: extpot(:)
+      real(kind=dp)                   :: extene = 0.0
+      integer                         :: exttype = 0
+      logical                         :: initial = .true.
+      real(kind=dp)                   :: mix_coef = -1.0
+      logical                         :: finish = .false.
+      real(kind=dp)                   :: etotal = 0.0
+      real(kind=dp)                   :: dnorm = 1.0
+      logical                         :: lewald = .true.
+      logical                         :: nlpp = .true.
+      real(kind=dp)                   :: diag_conv = 1.D-2
+   end type embed_base
+
 CONTAINS
    SUBROUTINE pwpy_init_pointer()
       use scf, only: rho,v,vnew
@@ -25,7 +39,7 @@ CONTAINS
          associate(scf__vnew__of_r => vnew%of_r)
          end associate
       ENDIF
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_get_rho(rhor)
       USE kinds,                ONLY : DP
@@ -35,7 +49,7 @@ CONTAINS
       !
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhor(:,:)
-      !REAL(DP), INTENT(OUT) :: rhor(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin) 
+      !REAL(DP), INTENT(OUT) :: rhor(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin)
       !
       INTEGER  :: ispin
       !
@@ -44,7 +58,7 @@ CONTAINS
          CALL gather_grid(dfftp, rho%of_r(:,ispin), rhor(:,ispin))
       END DO
       !print *, 'get_rho_OUT',minval(rhor),maxval(rhor),sum(rhor)
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_set_rho(rhor)
       USE kinds,                ONLY : DP
@@ -61,7 +75,7 @@ CONTAINS
          CALL scatter_grid(dfftp, rhor(:,ispin), rho%of_r(:,ispin))
       END DO
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_get_rho_core(rhoc)
       USE kinds,                ONLY : DP
@@ -71,13 +85,22 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhoc(:)
       !
       CALL gather_grid(dfftp, rho_core, rhoc)
-   END SUBROUTINE 
+   END SUBROUTINE
+
+   SUBROUTINE pwpy_set_rho_core(rhoc)
+      USE kinds,                ONLY : DP
+      use scf, only: rho_core !! the core charge in real space
+      USE fft_base,         ONLY : dfftp, dffts
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN) :: rhoc(:)
+      !
+      CALL scatter_grid(dfftp, rhoc, rho_core)
+   END SUBROUTINE
 
    SUBROUTINE pwpy_set_extpot(embed, vin)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,         ONLY : dfftp, dffts
-      USE pwpy_embed,       ONLY : embed_base
       !
       IMPLICIT NONE
       TYPE(embed_base), INTENT(INOUT) :: embed
@@ -88,7 +111,7 @@ CONTAINS
       ENDIF
       IF (.NOT.ALLOCATED(embed%extpot)) ALLOCATE(embed%extpot(dfftp%nnr))
       CALL scatter_grid(dfftp, vin, embed%extpot)
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_get_grid(nr)
       USE kinds,                ONLY : DP
@@ -98,7 +121,7 @@ CONTAINS
       INTEGER, INTENT(OUT) :: nr(3)
       !
       nr=(/dfftp%nr1, dfftp%nr2, dfftp%nr3/)
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_set_stdout(fname, uni)
       USE io_global,     ONLY : stdout, ionode
@@ -117,7 +140,7 @@ CONTAINS
       IF(ionode) THEN
          OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
       ENDIF
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_write_stdout(fstr)
       USE io_global,     ONLY : stdout, ionode
@@ -126,7 +149,7 @@ CONTAINS
       CHARACTER(LEN=*),INTENT(IN)  :: fstr
       !
       IF(ionode) WRITE(stdout,'(A)') fstr
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_close_stdout(fname)
       USE io_global,     ONLY : stdout, ionode
@@ -135,7 +158,7 @@ CONTAINS
       CHARACTER(LEN=*),INTENT(IN)  :: fname
       !
       IF(ionode) close(stdout)
-   END SUBROUTINE 
+   END SUBROUTINE
 
    SUBROUTINE pwpy_update_ions(embed, pos)
       ! This is function Combined 'run_pwscf' and 'move_ions'
@@ -146,7 +169,6 @@ CONTAINS
       USE symm_base,            ONLY : checkallsym
       USE mp,                   ONLY : mp_bcast
       USE control_flags,        ONLY : treinit_gvecs
-      USE pwpy_embed,       ONLY : embed_base
       !
       INTEGER                  :: ierr
       TYPE(embed_base), INTENT(INOUT) :: embed
@@ -166,6 +188,14 @@ CONTAINS
          CALL update_pot()
          CALL pwpy_hinit1(embed%exttype)
       END IF
-   END SUBROUTINE 
+   END SUBROUTINE
+
+   SUBROUTINE pwpy_set_mod_float(mod_name, param, value)
+      !
+      CHARACTER(LEN=*),INTENT(IN)  :: mod_name
+      CHARACTER(LEN=*),INTENT(IN)  :: param
+      REAL(DP),INTENT(IN)  :: value
+      !
+   END SUBROUTINE
 
 END MODULE pwpy_mod

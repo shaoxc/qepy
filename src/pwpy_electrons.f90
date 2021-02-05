@@ -10,8 +10,6 @@
 ! included gate related energy
 !----------------------------------------------------------------------------
 !
-MODULE pwpy_electrons
-   contains
 !----------------------------------------------------------------------------
 !SUBROUTINE electrons()
   !!----------------------------------------------------------------------------
@@ -416,7 +414,8 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
-  USE pwpy_embed,           ONLY : embed_base
+  USE pwpy_mod,             ONLY : embed_base
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
@@ -564,6 +563,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
         !
         IF ( iter == 2 ) ethr = 1.D-2
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
+        ethr = MIN( ethr, embed%diag_conv)
         ! ... do not allow convergence threshold to become too small:
         ! ... iterative diagonalization may become unstable
         ethr = MAX( ethr, 1.D-13 )
@@ -841,7 +841,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
      ENDIF  
 
      !
-     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
+111  IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
         IF ( lda_plus_U .AND. iverbosity == 0 ) THEN
            IF (noncolin) THEN
@@ -854,7 +854,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
         !
      ENDIF
      !
-     if (embed%exttype<1) then
+     if (embed%exttype<1 .and. niter>1) then
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
         IF ( ABS( charge - nelec ) / charge > 1.D-3 ) THEN
@@ -867,7 +867,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
      ENDIF
      endif
      !
-111     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
+     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      ! for hybrid calculations, add the current estimate of exchange energy
      ! (it will subtracted later if exx_is_active to be replaced with a better estimate)
      etot = etot - exxen
@@ -1481,4 +1481,3 @@ END SUBROUTINE pwpy_electrons_scf
   !domat = .FALSE.
   !!
 !END FUNCTION exxenergyace
-END MODULE pwpy_electrons

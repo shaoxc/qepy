@@ -34,11 +34,12 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE ener,                 ONLY : epaw
-  USE pwpy_embed,           ONLY : embed_base
+  !
+  USE pwpy_mod,             ONLY : embed_base
   !
   IMPLICIT NONE
   !
-  type(embed_base), intent(in)    :: embed
+  TYPE(embed_base), INTENT(INOUT)    :: embed
   !
   TYPE(scf_type), INTENT(INOUT) :: rho
   !! the valence charge
@@ -84,6 +85,10 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   !
   ! ... define the total local potential (external + scf)
   !
+  IF (.NOT.ALLOCATED(embed%extpot)) THEN
+     ALLOCATE(embed%extpot(dfftp%nnr))
+     embed%extpot=0.0
+  ENDIF
   CALL sum_vrs( dfftp%nnr, nspin, embed%extpot, v%of_r, v%of_r )
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !
@@ -117,7 +122,7 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   USE cell_base,        ONLY : alat
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
-  USE pwpy_embed,       ONLY : embed_base
+  USE pwpy_mod,         ONLY : embed_base
   !
   IMPLICIT NONE
   !
