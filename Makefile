@@ -9,11 +9,9 @@ QEMODS= ../src/libpw.a ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a
 QEINC =-I../../Modules/ -I../../KS_Solvers/ -I../../FFTXlib/ \
 	   -I../../LAXlib/ -I../../UtilXlib/ -I../../dft-d3/ -I../src/ -I.
 
-#MODULES_SOURCES = constants.f90 read_cards.f90 read_input.f90 read_namelists.f90 read_pseudo.f90 uspp.f90
 MODULES_SOURCES = constants.f90
 MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 
-#PW_SOURCES = pwcom.f90 scf_mod.f90 electrons.f90 sum_band.f90 update_pot.f90 hinit1.f90
 PW_SOURCES = pwcom.f90 scf_mod.f90
 PW_FILES = $(addprefix ../src/,${PW_SOURCES})
 
@@ -48,6 +46,17 @@ else
     PY2_DIR = $(PY_INSTALL_DIR)
     PY3_DIR = $(PY_INSTALL_DIR)
 endif
+
+pwpy_mod.o             : pwpy_scatter_mod.o
+pwpy_setlocal.o        : pwpy_mod.o
+pwpy_v_of_rho.o        : pwpy_mod.o
+pwpy_pw2casino_write.o : pwpy_mod.o
+pwpy_hinit1.o          : pwpy_mod.o
+pwpy_pwscf.o           : pwpy_mod.o
+pwpy_run_pwscf.o       : pwpy_mod.o
+pwpy_electrons.o       : pwpy_mod.o
+pwpy_forces.o          : pwpy_mod.o
+pwpy_stop_run.o        : pwpy_mod.o
 
 
 vpath %.f90 $(SRC_DIRS)
