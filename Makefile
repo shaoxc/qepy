@@ -9,7 +9,7 @@ QEMODS= ../src/libpw.a ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a
 QEINC =-I../../Modules/ -I../../KS_Solvers/ -I../../FFTXlib/ \
 	   -I../../LAXlib/ -I../../UtilXlib/ -I../../dft-d3/ -I../src/ -I.
 
-MODULES_SOURCES = constants.f90
+MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90
@@ -51,7 +51,7 @@ pwpy_mod.o             : pwpy_scatter_mod.o
 pwpy_setlocal.o        : pwpy_mod.o
 pwpy_v_of_rho.o        : pwpy_mod.o
 pwpy_pw2casino_write.o : pwpy_mod.o
-pwpy_hinit1.o          : pwpy_mod.o
+pwpy_hinit1.o          : pwpy_setlocal.o
 pwpy_pwscf.o           : pwpy_mod.o
 pwpy_run_pwscf.o       : pwpy_mod.o
 pwpy_electrons.o       : pwpy_mod.o

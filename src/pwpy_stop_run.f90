@@ -77,6 +77,8 @@ SUBROUTINE pwpy_stop_run( exit_status, print_flag )
   INTEGER             :: iprint
   LOGICAL             :: exst, opnd, lflag
   !
+  CALL punch( 'all' )
+
   IF ( PRESENT(print_flag)) THEN
      iprint = print_flag
   ELSE
