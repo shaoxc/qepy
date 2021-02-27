@@ -9,7 +9,8 @@ QEMODS= ../src/libpw.a ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a
 QEINC =-I../../Modules/ -I../../KS_Solvers/ -I../../FFTXlib/ \
 	   -I../../LAXlib/ -I../../UtilXlib/ -I../../dft-d3/ -I../src/ -I.
 
-MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
+MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 io_files.f90
+#MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90
@@ -23,14 +24,17 @@ PWPY_SOURCES= pwpy_scatter_mod.f90 \
 PWPY_FILES = $(addprefix ./src/,${PWPY_SOURCES})
 PWPY_OBJS= $(PWPY_SOURCES:%.f90=%.o)
 
-WRAP_SOURCES = ${MODULES_SOURCES} ${PW_SOURCES} ${PWPY_SOURCES}
 WRAP_FILES = ${MODULES_FILES} ${PW_FILES} ${PWPY_FILES}
 
 F90WRAP_FILES = f90wrap_*.f90
 
+WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
+
 PWFLAGS = $(F90FLAGS) $(QEINC)
 NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large
 F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS))
+
+FPP = ${F90} -E -cpp $(F2FLAGS)
 
 #$(info 'Install path :',${PY_INSTALL_DIR})
 
@@ -66,8 +70,11 @@ default: python
 $(filter %.o,${PWPY_OBJS}):%.o : %.f90
 	$(LD) -c $(PWFLAGS) $< -o $@
 
-${F90WRAP_FILES}: ${PWPY_OBJS}
-	f90wrap -v -m pwscfpy ${WRAP_FILES} -k $(PY_SRC_DIR)/kind_map \
+${WRAP_FPP_FILES}: ${WRAP_FILES}
+	for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
+
+${F90WRAP_FILES}: ${PWPY_OBJS} ${WRAP_FPP_FILES}
+	f90wrap -v -m pwscfpy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map \
 	    --init-file $(PY_SRC_DIR)/init.py -P
 
 .PHONY: clean install python mpi python-clean python-install
@@ -96,7 +103,7 @@ python-install:
 	cp -r pwscfpy _pwscfpy*.so ${PY3_DIR}
 
 python-clean:
-	-rm -f _pwscfpy*.so ${F90WRAP_FILES}
+	-rm -f _pwscfpy*.so ${F90WRAP_FILES} ${WRAP_FPP_FILES}
 	-rm -rf pwscfpy
 	-rm -rf f90wrap_*.o pwpy_*.o pwpy_*.mod
 	-rm -rf src.* .libs .f2py_f2cmap

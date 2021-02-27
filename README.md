@@ -23,8 +23,8 @@
    + All static libraries must be compiled with the `-fPIC` compuiler option, so you need add `-fPIC` for all configuration. e.g.
 
      ```shell
-	 ./configure F77=ifort MPIF90=mpiifort F90=ifort CC=icc \
-	    --with-scalapack=intel -enable-openmp=yes -enable-parallel=no \
+	 ./configure F77=ifort F90=ifort CC=icc \
+	    --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
 	 	CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' 
      ```
     or parallel version:
