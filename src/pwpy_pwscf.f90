@@ -138,13 +138,14 @@ SUBROUTINE pwpy_initial(input)
   USE mp_global,   ONLY : mp_startup
   USE environment, ONLY : environment_start, environment_end
   USE pwpy_common, ONLY : input_base
-  USE io_files,  ONLY : tmp_dir, prefix
+  USE io_files,    ONLY : tmp_dir, prefix
   !
   IMPLICIT NONE
   !
   TYPE(input_base), OPTIONAL :: input
   !
   LOGICAL            :: start_images = .false.
+  !CHARACTER(len=256) :: code = 'PWPY'
   !
   IF (PRESENT(input)) THEN
      start_images = input%start_images
@@ -159,6 +160,23 @@ SUBROUTINE pwpy_initial(input)
   IF (PRESENT(input)) THEN
      prefix = input%prefix
      tmp_dir = input%tmp_dir
+     CALL environment_start ( input%code )
   ENDIF
   !
 END SUBROUTINE pwpy_initial
+
+SUBROUTINE pwpy_finalise_end(input)
+  !
+  USE environment, ONLY : environment_start, environment_end
+  USE pwpy_common, ONLY : input_base
+  USE mp_global,   ONLY : mp_global_end
+  !
+  IMPLICIT NONE
+  !
+  TYPE(input_base), OPTIONAL :: input
+  !
+  IF (PRESENT(input)) THEN
+     CALL environment_end ( input%code )
+  ENDIF
+  CALL mp_global_end()
+END SUBROUTINE pwpy_finalise_end

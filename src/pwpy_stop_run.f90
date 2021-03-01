@@ -55,7 +55,7 @@
   !!
 !END SUBROUTINE stop_run
 
-SUBROUTINE pwpy_stop_run( exit_status, print_flag )
+SUBROUTINE pwpy_stop_run( exit_status, print_flag, what )
   !----------------------------------------------------------------------------
   !! Close all files and synchronize processes before stopping:
   !
@@ -74,10 +74,17 @@ SUBROUTINE pwpy_stop_run( exit_status, print_flag )
   !
   INTEGER, INTENT(IN) :: exit_status
   INTEGER, INTENT(IN), OPTIONAL :: print_flag
+  CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: what
+  CHARACTER(LEN=256)  :: what_ ='config-nowf'
   INTEGER             :: iprint
   LOGICAL             :: exst, opnd, lflag
   !
-  CALL punch( 'all' )
+
+  IF ( PRESENT(what)) THEN
+     what_= trim(what)
+  ENDIF
+
+  CALL punch( what_)
 
   IF ( PRESENT(print_flag)) THEN
      iprint = print_flag

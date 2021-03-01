@@ -21,6 +21,7 @@ MODULE pwpy_common
       INTEGER            :: my_world_comm = 0
       LOGICAL            :: start_images = .false.
       CHARACTER(len=256) :: filename = ''
+      CHARACTER(len=256) :: code = 'PWPY'
       CHARACTER(len=256) :: tmp_dir = './'
       CHARACTER(len=256) :: wfc_dir = 'undefined'
       CHARACTER(len=256) :: prefix  = 'os'
