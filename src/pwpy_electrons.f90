@@ -414,7 +414,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
-  USE pwpy_mod,             ONLY : embed_base
+  USE pwpy_common,          ONLY : embed_base
   !
   IMPLICIT NONE
   !

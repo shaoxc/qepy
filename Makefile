@@ -13,11 +13,11 @@ MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 io_files.f90
 #MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 
-PW_SOURCES = pwcom.f90 scf_mod.f90
+PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90
 PW_FILES = $(addprefix ../src/,${PW_SOURCES})
 
 PWPY_SOURCES= pwpy_scatter_mod.f90 \
-			  pwpy_mod.f90 \
+			  pwpy_common.f90 pwpy_mod.f90 \
 			  pwpy_setlocal.f90 pwpy_v_of_rho.f90 pwpy_pw2casino_write.f90 \
 		      pwpy_hinit1.f90 pwpy_pwscf.f90 pwpy_run_pwscf.f90 pwpy_electrons.f90 \
 			  pwpy_forces.f90 pwpy_stop_run.f90
@@ -51,16 +51,11 @@ else
     PY3_DIR = $(PY_INSTALL_DIR)
 endif
 
-pwpy_mod.o             : pwpy_scatter_mod.o
-pwpy_setlocal.o        : pwpy_mod.o
-pwpy_v_of_rho.o        : pwpy_mod.o
-pwpy_pw2casino_write.o : pwpy_mod.o
+pwpy_mod.o             : pwpy_scatter_mod.o pwpy_common.o
+pwpy_v_of_rho.o        : pwpy_common.o
+pwpy_pw2casino_write.o : pwpy_common.o
+pwpy_electrons.o       : pwpy_common.o
 pwpy_hinit1.o          : pwpy_setlocal.o
-pwpy_pwscf.o           : pwpy_mod.o
-pwpy_run_pwscf.o       : pwpy_mod.o
-pwpy_electrons.o       : pwpy_mod.o
-pwpy_forces.o          : pwpy_mod.o
-pwpy_stop_run.o        : pwpy_mod.o
 
 
 vpath %.f90 $(SRC_DIRS)

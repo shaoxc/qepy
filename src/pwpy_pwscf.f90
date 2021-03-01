@@ -131,3 +131,34 @@ SUBROUTINE pwpy_pwscf_finalise()
    CALL pwpy_stop_run( exit_status )
    !CALL do_stop( exit_status )
 END SUBROUTINE pwpy_pwscf_finalise
+
+SUBROUTINE pwpy_initial(input)
+  !
+  USE io_global,   ONLY : ionode
+  USE mp_global,   ONLY : mp_startup
+  USE environment, ONLY : environment_start, environment_end
+  USE pwpy_common, ONLY : input_base
+  USE io_files,  ONLY : tmp_dir, prefix
+  !
+  IMPLICIT NONE
+  !
+  TYPE(input_base), OPTIONAL :: input
+  !
+  LOGICAL            :: start_images = .false.
+  !
+  IF (PRESENT(input)) THEN
+     start_images = input%start_images
+  ENDIF
+  !
+  IF ( PRESENT(input) .and. input%my_world_comm /= 0 ) THEN
+     CALL mp_startup(my_world_comm=input%my_world_comm, start_images=start_images )
+  ELSE
+     CALL mp_startup(start_images=start_images )
+  ENDIF
+  !
+  IF (PRESENT(input)) THEN
+     prefix = input%prefix
+     tmp_dir = input%tmp_dir
+  ENDIF
+  !
+END SUBROUTINE pwpy_initial

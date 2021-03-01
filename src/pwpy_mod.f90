@@ -1,23 +1,11 @@
 MODULE pwpy_mod
    USE kinds,                ONLY : DP
    USE pwpy_scatter_mod, ONLY : gather_grid, scatter_grid
+   USE pwpy_common, ONLY : embed_base, input_base
+   !
    IMPLICIT NONE
    PUBLIC
-
-   type, public :: embed_base
-      real(kind=dp), allocatable      :: extpot(:)
-      real(kind=dp)                   :: extene = 0.0
-      integer                         :: exttype = 0
-      logical                         :: initial = .true.
-      real(kind=dp)                   :: mix_coef = -1.0
-      logical                         :: finish = .false.
-      real(kind=dp)                   :: etotal = 0.0
-      real(kind=dp)                   :: dnorm = 1.0
-      logical                         :: lewald = .true.
-      logical                         :: nlpp = .true.
-      real(kind=dp)                   :: diag_conv = 1.D-2
-   end type embed_base
-
+   !
 CONTAINS
    SUBROUTINE pwpy_init_pointer()
       use scf, only: rho,v,vnew

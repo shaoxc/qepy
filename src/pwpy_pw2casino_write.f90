@@ -354,7 +354,7 @@
 
       USE pw2blip
       !
-      USE pwpy_mod,             ONLY : embed_base
+      USE pwpy_common,             ONLY : embed_base
       !
       IMPLICIT NONE
 

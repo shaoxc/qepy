@@ -35,7 +35,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE ener,                 ONLY : epaw
   !
-  USE pwpy_mod,             ONLY : embed_base
+  USE pwpy_common,             ONLY : embed_base
   !
   IMPLICIT NONE
   !
@@ -122,7 +122,7 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   USE cell_base,        ONLY : alat
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
-  USE pwpy_mod,         ONLY : embed_base
+  USE pwpy_common,         ONLY : embed_base
   !
   IMPLICIT NONE
   !
