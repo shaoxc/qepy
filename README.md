@@ -31,7 +31,7 @@
 
      ```shell
 	 ./configure F77=ifort MPIF90=mpiifort F90=ifort CC=icc \
-	   --with-scalapack=intel FFLAGS=-mcmodel=large -fPIC \
+	   --with-scalapack=intel FFLAGS=-mcmodel="large -fPIC" \
 	   -enable-openmp=no -enable-parallel=yes CFLAGS=-fPIC FOXFLAGS=-fPIC
 	 ```
 

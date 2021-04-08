@@ -50,6 +50,8 @@ else
     PY3_DIR = $(PY_INSTALL_DIR)
 endif
 
+default: python
+
 pwpy_mod.o             : pwpy_scatter_mod.o pwpy_common.o
 pwpy_v_of_rho.o        : pwpy_common.o
 pwpy_pw2casino_write.o : pwpy_common.o
@@ -59,8 +61,6 @@ pwpy_hinit1.o          : pwpy_setlocal.o
 
 
 vpath %.f90 $(SRC_DIRS)
-
-default: python
 
 $(filter %.o,${PWPY_OBJS}):%.o : %.f90
 	$(LD) -c $(PWFLAGS) $< -o $@
@@ -74,6 +74,7 @@ ${F90WRAP_FILES}: ${PWPY_OBJS} ${WRAP_FPP_FILES}
 
 .PHONY: clean install python mpi python-clean python-install
 
+uninstall: python-uninstall
 install: python-install
 clean: python-clean
 
@@ -96,6 +97,12 @@ mpi: ${F90WRAP_FILES}
 python-install:
 	cp -r pwscfpy _pwscfpy*.so ${PY2_DIR}
 	cp -r pwscfpy _pwscfpy*.so ${PY3_DIR}
+
+python-uninstall:
+	-rm -rf ${PY2_DIR}/pwscfpy
+	-rm -rf ${PY3_DIR}/pwscfpy
+	-rm -rf ${PY2_DIR}/_pwscfpy*.so
+	-rm -rf ${PY3_DIR}/_pwscfpy*.so
 
 python-clean:
 	-rm -f _pwscfpy*.so ${F90WRAP_FILES} ${WRAP_FPP_FILES}
