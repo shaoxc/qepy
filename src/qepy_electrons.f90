@@ -342,7 +342,7 @@
 !END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
+SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -414,7 +414,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
-  USE pwpy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed_base
   !
   IMPLICIT NONE
   !
@@ -499,7 +499,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   ENDIF
   else if (iand(embed%exttype,1) == 1) then
-     call pwpy_setlocal(embed%exttype)
+     call qepy_setlocal(embed%exttype)
   endif
   !
   IF ( llondon ) THEN
@@ -538,7 +538,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
   !
   !if (embed%exttype>0 .or. (.not. embed%initial)) then
   !if (embed%initial) then
-     CALL pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
+     CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
         ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
    !endif
   !endif
@@ -926,7 +926,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
      etot = etot + plugin_etot 
      !
      CALL print_energies ( printout )
-     !call pwpy_calc_energies(etot, exttype)
+     !call qepy_calc_energies(etot, exttype)
      !
      embed%etotal=etot
      embed%dnorm = dr2
@@ -1431,7 +1431,7 @@ SUBROUTINE pwpy_electrons_scf ( printout, exxen, embed)
 
   END SUBROUTINE print_energies
   !
-END SUBROUTINE pwpy_electrons_scf
+END SUBROUTINE qepy_electrons_scf
 !
 !----------------------------------------------------------------------------
 !FUNCTION exxenergyace( )

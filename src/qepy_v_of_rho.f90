@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
+SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
   !----------------------------------------------------------------------------
   !! This routine computes the Hartree and Exchange and Correlation
@@ -35,7 +35,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE ener,                 ONLY : epaw
   !
-  USE pwpy_common,             ONLY : embed_base
+  USE qepy_common,             ONLY : embed_base
   !
   IMPLICIT NONE
   !
@@ -72,7 +72,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   REAL(DP) :: dr2
   REAL(DP) :: etot_cmp_paw(nat,2,2)
 
-  call pwpy_v_of_rho( rho, rho_core, rhog_core, &
+  call qepy_v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
   IF (okpaw) THEN
      CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
@@ -103,7 +103,7 @@ SUBROUTINE pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
   CALL newd()
   END SUBROUTINE 
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
+SUBROUTINE qepy_v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
   !----------------------------------------------------------------------------
   !! This routine computes the Hartree and Exchange and Correlation
@@ -122,7 +122,7 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   USE cell_base,        ONLY : alat
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
-  USE pwpy_common,         ONLY : embed_base
+  USE qepy_common,         ONLY : embed_base
   !
   IMPLICIT NONE
   !
@@ -229,7 +229,7 @@ SUBROUTINE pwpy_v_of_rho( rho, rho_core, rhog_core, &
   !
   RETURN
   !
-END SUBROUTINE pwpy_v_of_rho
+END SUBROUTINE qepy_v_of_rho
 !
 !
 !----------------------------------------------------------------------------

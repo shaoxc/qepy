@@ -11,7 +11,7 @@
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-SUBROUTINE pwpy_setlocal(exttype)
+SUBROUTINE qepy_setlocal(exttype)
   !----------------------------------------------------------------------
   !! This routine computes the local potential in real space vltot(ir).
   !
@@ -133,5 +133,5 @@ SUBROUTINE pwpy_setlocal(exttype)
   !
   RETURN
   !
-END SUBROUTINE pwpy_setlocal
+END SUBROUTINE qepy_setlocal
 

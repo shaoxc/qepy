@@ -1,13 +1,13 @@
-MODULE pwpy_mod
+MODULE qepy_mod
    USE kinds,                ONLY : DP
-   USE pwpy_scatter_mod, ONLY : gather_grid, scatter_grid
-   USE pwpy_common, ONLY : embed_base, input_base
+   USE qepy_scatter_mod, ONLY : gather_grid, scatter_grid
+   USE qepy_common, ONLY : embed_base, input_base
    !
    IMPLICIT NONE
    PUBLIC
    !
 CONTAINS
-   SUBROUTINE pwpy_init_pointer()
+   SUBROUTINE qepy_init_pointer()
       use scf, only: rho,v,vnew
       !
       IMPLICIT NONE
@@ -29,7 +29,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE pwpy_get_rho(rhor)
+   SUBROUTINE qepy_get_rho(rhor)
       USE kinds,                ONLY : DP
       use scf, only: rho !! the charge density and its other components
       USE fft_base,         ONLY : dfftp, dffts
@@ -48,7 +48,7 @@ CONTAINS
       !print *, 'get_rho_OUT',minval(rhor),maxval(rhor),sum(rhor)
    END SUBROUTINE
 
-   SUBROUTINE pwpy_set_rho(rhor)
+   SUBROUTINE qepy_set_rho(rhor)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,         ONLY : dfftp, dffts
@@ -65,7 +65,7 @@ CONTAINS
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
    END SUBROUTINE
 
-   SUBROUTINE pwpy_get_rho_core(rhoc)
+   SUBROUTINE qepy_get_rho_core(rhoc)
       USE kinds,                ONLY : DP
       use scf, only: rho_core !! the core charge in real space
       USE fft_base,         ONLY : dfftp, dffts
@@ -75,7 +75,7 @@ CONTAINS
       CALL gather_grid(dfftp, rho_core, rhoc)
    END SUBROUTINE
 
-   SUBROUTINE pwpy_set_rho_core(rhoc)
+   SUBROUTINE qepy_set_rho_core(rhoc)
       USE kinds,                ONLY : DP
       use scf, only: rho_core !! the core charge in real space
       USE fft_base,         ONLY : dfftp, dffts
@@ -85,7 +85,7 @@ CONTAINS
       CALL scatter_grid(dfftp, rhoc, rho_core)
    END SUBROUTINE
 
-   SUBROUTINE pwpy_set_extpot(embed, vin)
+   SUBROUTINE qepy_set_extpot(embed, vin)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,         ONLY : dfftp, dffts
@@ -101,7 +101,7 @@ CONTAINS
       CALL scatter_grid(dfftp, vin, embed%extpot)
    END SUBROUTINE
 
-   SUBROUTINE pwpy_get_grid(nr)
+   SUBROUTINE qepy_get_grid(nr)
       USE kinds,                ONLY : DP
       USE fft_base,         ONLY : dfftp, dffts
       !
@@ -111,7 +111,7 @@ CONTAINS
       nr=(/dfftp%nr1, dfftp%nr2, dfftp%nr3/)
    END SUBROUTINE
 
-   SUBROUTINE pwpy_set_stdout(fname, uni)
+   SUBROUTINE qepy_set_stdout(fname, uni)
       USE io_global,     ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
@@ -130,7 +130,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE pwpy_write_stdout(fstr)
+   SUBROUTINE qepy_write_stdout(fstr)
       USE io_global,     ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
@@ -139,7 +139,7 @@ CONTAINS
       IF(ionode) WRITE(stdout,'(A)') fstr
    END SUBROUTINE
 
-   SUBROUTINE pwpy_close_stdout(fname)
+   SUBROUTINE qepy_close_stdout(fname)
       USE io_global,     ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
@@ -148,7 +148,7 @@ CONTAINS
       IF(ionode) close(stdout)
    END SUBROUTINE
 
-   SUBROUTINE pwpy_update_ions(embed, pos)
+   SUBROUTINE qepy_update_ions(embed, pos)
       ! This is function Combined 'run_pwscf' and 'move_ions'
       USE mp_images,            ONLY : intra_image_comm
       USE extrapolation,        ONLY : update_file, update_pot
@@ -174,11 +174,11 @@ CONTAINS
          CALL reset_gvectors()
       ELSE
          CALL update_pot()
-         CALL pwpy_hinit1(embed%exttype)
+         CALL qepy_hinit1(embed%exttype)
       END IF
    END SUBROUTINE
 
-   SUBROUTINE pwpy_set_mod_float(mod_name, param, value)
+   SUBROUTINE qepy_set_mod_float(mod_name, param, value)
       !
       CHARACTER(LEN=*),INTENT(IN)  :: mod_name
       CHARACTER(LEN=*),INTENT(IN)  :: param
@@ -186,4 +186,4 @@ CONTAINS
       !
    END SUBROUTINE
 
-END MODULE pwpy_mod
+END MODULE qepy_mod

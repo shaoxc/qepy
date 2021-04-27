@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_hinit1(exttype)
+SUBROUTINE qepy_hinit1(exttype)
   !----------------------------------------------------------------------------
   !! Atomic configuration dependent hamiltonian initialization,
   !! potential, wavefunctions for Hubbard U.  
@@ -43,7 +43,7 @@ SUBROUTINE pwpy_hinit1(exttype)
   !
   ! ... calculate the total local potential
   !
-  CALL pwpy_setlocal(exttype)
+  CALL qepy_setlocal(exttype)
   !
   IF ( tqr ) CALL generate_qpointlist()
   !
@@ -82,5 +82,5 @@ SUBROUTINE pwpy_hinit1(exttype)
   !
   RETURN
   !
-END SUBROUTINE pwpy_hinit1
+END SUBROUTINE qepy_hinit1
 

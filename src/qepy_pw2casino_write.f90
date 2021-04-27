@@ -320,7 +320,7 @@
 
 !CONTAINS
 
-   SUBROUTINE pwpy_calc_energies(embed)
+   SUBROUTINE qepy_calc_energies(embed)
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
@@ -354,7 +354,7 @@
 
       USE pw2blip
       !
-      USE pwpy_common,             ONLY : embed_base
+      USE qepy_common,             ONLY : embed_base
       !
       IMPLICIT NONE
 
@@ -507,7 +507,7 @@
       !if (embed%exttype > 1) then
       !   vnew%of_r(:,:) = v%of_r(:,:)
       !endif
-      call pwpy_v_of_rho_all( rho, rho_core, rhog_core, &
+      call qepy_v_of_rho_all( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
       !if (embed%exttype > 1) then
       !   vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
@@ -548,7 +548,7 @@
       WRITE (stdout,*)
       embed%etotal=etot_
 
-   END SUBROUTINE pwpy_calc_energies
+   END SUBROUTINE qepy_calc_energies
 
 
    !SUBROUTINE test_overlap

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_run_pwscf( exit_status ) 
+SUBROUTINE qepy_run_pwscf( exit_status ) 
   !----------------------------------------------------------------------------
   !! Author: Paolo Giannozzi  
   !! License: GNU  
@@ -285,7 +285,7 @@ SUBROUTINE pwpy_run_pwscf( exit_status )
           &  /,5X,'The G-vectors are recalculated for the final unit cell', &
           &  /,5X,'Results may differ from those at the preceding step.' )
   !
-END SUBROUTINE pwpy_run_pwscf
+END SUBROUTINE qepy_run_pwscf
 !
 !
 !-------------------------------------------------------------

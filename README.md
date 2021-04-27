@@ -1,5 +1,5 @@
-# PWSCFPY - PWSCF (quantum-espresso) Python interface
-   In order to use PWSCF in embedding code, we modified some code of quantum-espresso and compile the Python wrappers. The source code was modified based on QE-6.5 and commented out unused code.
+# QEPY - Quantum ESPRESSO Python interface
+   In order to use Quantum ESPRESSO in embedding code, we modified some code of quantum-espresso and compile the Python wrappers. The source code was modified based on QE-6.5 and commented out unused code.
 
 ## Requirements
  - Python 3.6 or later
@@ -40,10 +40,10 @@
 
  - Install PWSCFPY
 
-   + Copy the *pwpy* into the ${QE}/PW directory.
-   + Go to *pwpy* directory and `make` or `make mpi`.
-   + Go to *pwpy* directory and `make install`.
+   + Copy the *qepy* into the ${QE}/PW directory.
+   + Go to *qepy* directory and `make` (serial) or `make mpi` (parallel).
+   + Go to *qepy* directory and `make install`.
 
 ## TODO
  - Update the Makefile to support Gfortran compiler
- - Write a python script that can automatically update the *pwpy* code according to the new version of the *QE*
+ - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*

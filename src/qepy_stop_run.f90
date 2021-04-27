@@ -55,7 +55,7 @@
   !!
 !END SUBROUTINE stop_run
 
-SUBROUTINE pwpy_stop_run( exit_status, print_flag, what )
+SUBROUTINE qepy_stop_run( exit_status, print_flag, what )
   !----------------------------------------------------------------------------
   !! Close all files and synchronize processes before stopping:
   !
@@ -128,7 +128,7 @@ SUBROUTINE pwpy_stop_run( exit_status, print_flag, what )
   !
   CALL mp_global_end()
   !
-END SUBROUTINE pwpy_stop_run
+END SUBROUTINE qepy_stop_run
 !
 !-----------------------------------------
 !SUBROUTINE do_stop( exit_status )

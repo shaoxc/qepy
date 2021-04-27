@@ -1,4 +1,4 @@
-MODULE pwpy_common
+MODULE qepy_common
    USE kinds,                ONLY : DP
    IMPLICIT NONE
    PUBLIC
@@ -21,7 +21,7 @@ MODULE pwpy_common
       INTEGER            :: my_world_comm = 0
       LOGICAL            :: start_images = .false.
       CHARACTER(len=256) :: filename = ''
-      CHARACTER(len=256) :: code = 'PWPY'
+      CHARACTER(len=256) :: code = 'QEPY'
       CHARACTER(len=256) :: tmp_dir = './'
       CHARACTER(len=256) :: wfc_dir = 'undefined'
       CHARACTER(len=256) :: prefix  = 'os'
@@ -29,4 +29,4 @@ MODULE pwpy_common
       LOGICAL            :: needwf
    end type input_base
 
-END MODULE pwpy_common
+END MODULE qepy_common

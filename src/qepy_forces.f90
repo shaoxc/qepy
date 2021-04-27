@@ -11,7 +11,7 @@
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_forces(icalc)
+SUBROUTINE qepy_forces(icalc)
   !----------------------------------------------------------------------------
   !! This routine is a driver routine which computes the forces
   !! acting on the atoms. The complete expression of the forces
@@ -430,4 +430,4 @@ SUBROUTINE pwpy_forces(icalc)
   !
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
   !
-END SUBROUTINE pwpy_forces
+END SUBROUTINE qepy_forces

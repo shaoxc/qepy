@@ -1,19 +1,19 @@
 # import atexit
 
 # def pwscf_finalise():
-#     pwpy_pwscf_finalise()
+#     qepy_pwscf_finalise()
 
 
 # atexit.register(pwscf_finalise)
 
 import pkgutil
 import operator
-def pwpy_clean_saved():
-    mods = [name for _, name, _ in pkgutil.iter_modules(pwscfpy.__path__)]
+def qepy_clean_saved():
+    mods = [name for _, name, _ in pkgutil.iter_modules(qepy.__path__)]
     for mod in mods :
-        if hasattr(pwscfpy, mod):
+        if hasattr(qepy, mod):
             mod += '._arrays'
-            operator.attrgetter(mod)(pwscfpy).clear()
+            operator.attrgetter(mod)(qepy).clear()
 
 
-pwpy_clean_saved()
+qepy_clean_saved()

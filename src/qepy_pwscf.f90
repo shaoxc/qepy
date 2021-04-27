@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pwpy_pwscf(infile, my_world_comm)
+SUBROUTINE qepy_pwscf(infile, my_world_comm)
   !! Author: Paolo Giannozzi
   !
   !! Version: v6.1
@@ -120,24 +120,24 @@ SUBROUTINE pwpy_pwscf(infile, my_world_comm)
   !
   input_file_=trim(infile)
   CALL read_input_file( 'PW', input_file_ )
-  call pwpy_run_pwscf(exit_status)
-END SUBROUTINE pwpy_pwscf
+  call qepy_run_pwscf(exit_status)
+END SUBROUTINE qepy_pwscf
    !
-SUBROUTINE pwpy_pwscf_finalise()
+SUBROUTINE qepy_pwscf_finalise()
    IMPLICIT NONE
    INTEGER :: exit_status
 
    CALL laxlib_free_ortho_group()
-   CALL pwpy_stop_run( exit_status )
+   CALL qepy_stop_run( exit_status )
    !CALL do_stop( exit_status )
-END SUBROUTINE pwpy_pwscf_finalise
+END SUBROUTINE qepy_pwscf_finalise
 
-SUBROUTINE pwpy_initial(input)
+SUBROUTINE qepy_initial(input)
   !
   USE io_global,   ONLY : ionode
   USE mp_global,   ONLY : mp_startup
   USE environment, ONLY : environment_start, environment_end
-  USE pwpy_common, ONLY : input_base
+  USE qepy_common, ONLY : input_base
   USE io_files,    ONLY : tmp_dir, prefix
   !
   IMPLICIT NONE
@@ -145,7 +145,7 @@ SUBROUTINE pwpy_initial(input)
   TYPE(input_base), OPTIONAL :: input
   !
   LOGICAL            :: start_images = .false.
-  !CHARACTER(len=256) :: code = 'PWPY'
+  !CHARACTER(len=256) :: code = 'QEPY'
   !
   IF (PRESENT(input)) THEN
      start_images = input%start_images
@@ -163,12 +163,12 @@ SUBROUTINE pwpy_initial(input)
      CALL environment_start ( input%code )
   ENDIF
   !
-END SUBROUTINE pwpy_initial
+END SUBROUTINE qepy_initial
 
-SUBROUTINE pwpy_finalise_end(input)
+SUBROUTINE qepy_finalise_end(input)
   !
   USE environment, ONLY : environment_start, environment_end
-  USE pwpy_common, ONLY : input_base
+  USE qepy_common, ONLY : input_base
   USE mp_global,   ONLY : mp_global_end
   !
   IMPLICIT NONE
@@ -179,4 +179,4 @@ SUBROUTINE pwpy_finalise_end(input)
      CALL environment_end ( input%code )
   ENDIF
   CALL mp_global_end()
-END SUBROUTINE pwpy_finalise_end
+END SUBROUTINE qepy_finalise_end

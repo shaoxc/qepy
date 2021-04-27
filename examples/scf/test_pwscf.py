@@ -1,5 +1,5 @@
 import numpy as np
-import pwscfpy
+import qepy
 
 from mpi4py import MPI
 
@@ -9,29 +9,29 @@ comm = comm.py2f()
 
 fname = 'qe_in.in'
 
-pwscfpy.pwpy_pwscf(fname, comm)
+qepy.qepy_pwscf(fname, comm)
 
-embed = pwscfpy.pwpy_common.embed_base()
+embed = qepy.qepy_common.embed_base()
 
 nr = np.zeros(3, dtype = 'int32')
-pwscfpy.pwpy_mod.pwpy_get_grid(nr)
+qepy.qepy_mod.qepy_get_grid(nr)
 extpot = np.zeros((np.prod(nr), 1), order = 'F')
-pwscfpy.pwpy_mod.pwpy_set_extpot(embed, extpot)
+qepy.qepy_mod.qepy_set_extpot(embed, extpot)
 embed.exttype = 0
 
-pwscfpy.pwpy_electrons_scf(0, 0, embed)
+qepy.qepy_electrons_scf(0, 0, embed)
 
-pwscfpy.pwpy_calc_energies(embed)
+qepy.qepy_calc_energies(embed)
 etotal = embed.etotal
 
-pwscfpy.pwpy_forces(0)
-forces = pwscfpy.force_mod.get_array_force().T
+qepy.qepy_forces(0)
+forces = qepy.force_mod.get_array_force().T
 
 rho = np.zeros((np.prod(nr), 1), order = 'F')
-pwscfpy.pwpy_mod.pwpy_get_rho(rho)
+qepy.qepy_mod.qepy_get_rho(rho)
 
-pwscfpy.punch('all')
-pwscfpy.pwpy_stop_run(0, what = 'no')
+qepy.punch('all')
+qepy.qepy_stop_run(0, what = 'no')
 
 # print('Forces :\n', forces)
 # print('Total energy :', etotal)
