@@ -41,7 +41,8 @@
  - Install PWSCFPY
 
    + Copy the *pwpy* into the ${QE}/PW directory.
-   + Go to *pwpy* directory and `make`.
+   + Go to *pwpy* directory and `make` or `make mpi`.
+   + Go to *pwpy* directory and `make install`.
 
 ## TODO
  - Update the Makefile to support Gfortran compiler

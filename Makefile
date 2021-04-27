@@ -12,7 +12,7 @@ QEINC =-I../../Modules/ -I../../KS_Solvers/ -I../../FFTXlib/ \
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ../../Modules/,${MODULES_SOURCES})
 
-PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90
+PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90
 PW_FILES = $(addprefix ../src/,${PW_SOURCES})
 
 PWPY_SOURCES= pwpy_scatter_mod.f90 \

@@ -65,7 +65,7 @@ SUBROUTINE pwpy_stop_run( exit_status, print_flag, what )
   !
   !! Do not remove temporary files needed for restart.
   !
-  USE io_global,          ONLY : ionode
+  USE io_global,          ONLY : stdout, ionode
   USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
   USE io_files,           ONLY : iuntmp, seqopn
@@ -84,7 +84,11 @@ SUBROUTINE pwpy_stop_run( exit_status, print_flag, what )
      what_= trim(what)
   ENDIF
 
-  CALL punch( what_)
+  IF (TRIM(what_) == 'no') THEN 
+     WRITE( UNIT = stdout, FMT = '(/,5X,"Not output data")' )
+  ELSE
+     CALL punch( what_)
+  ENDIF
 
   IF ( PRESENT(print_flag)) THEN
      iprint = print_flag

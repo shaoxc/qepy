@@ -29,7 +29,9 @@ forces = pwscfpy.force_mod.get_array_force().T
 
 rho = np.zeros((np.prod(nr), 1), order = 'F')
 pwscfpy.pwpy_mod.pwpy_get_rho(rho)
-pwscfpy.pwpy_stop_run(0)
+
+pwscfpy.punch('all')
+# pwscfpy.pwpy_stop_run(0)
 
 # print('Forces :\n', forces)
 # print('Total energy :', etotal)
