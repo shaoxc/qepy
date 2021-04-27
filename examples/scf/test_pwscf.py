@@ -31,7 +31,7 @@ rho = np.zeros((np.prod(nr), 1), order = 'F')
 pwscfpy.pwpy_mod.pwpy_get_rho(rho)
 
 pwscfpy.punch('all')
-# pwscfpy.pwpy_stop_run(0)
+pwscfpy.pwpy_stop_run(0, what = 'no')
 
 # print('Forces :\n', forces)
 # print('Total energy :', etotal)
