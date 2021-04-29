@@ -29,6 +29,36 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
+   SUBROUTINE mp_gather(fin, fout)
+      USE kinds,                ONLY : DP
+      USE fft_base,         ONLY : dfftp
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN) :: fin(:)
+      REAL(DP), INTENT(OUT) :: fout(:)
+      !
+      IF (dfftp%nproc > 1) THEN
+         CALL gather_grid(dfftp, fin, fout)
+      ELSE
+         fout(:) = fin(:)
+      ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE mp_scatter(fin, fout)
+      USE kinds,                ONLY : DP
+      USE fft_base,         ONLY : dfftp
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN) :: fin(:)
+      REAL(DP), INTENT(OUT) :: fout(:)
+      !
+      IF (dfftp%nproc > 1) THEN
+         CALL scatter_grid(dfftp, fin, fout)
+      ELSE
+         fout(:) = fin(:)
+      ENDIF
+   END SUBROUTINE
+
    SUBROUTINE qepy_get_rho(rhor)
       USE kinds,                ONLY : DP
       use scf, only: rho !! the charge density and its other components
@@ -43,7 +73,7 @@ CONTAINS
       !
       !print *, 'get_rho_IN',minval(rho%of_r),maxval(rho%of_r),sum(rho%of_r)
       DO ispin = 1, nspin
-         CALL gather_grid(dfftp, rho%of_r(:,ispin), rhor(:,ispin))
+         CALL mp_gather(rho%of_r(:,ispin), rhor(:,ispin))
       END DO
       !print *, 'get_rho_OUT',minval(rhor),maxval(rhor),sum(rhor)
    END SUBROUTINE
@@ -60,7 +90,7 @@ CONTAINS
       !
       INTEGER  :: ispin
       DO ispin = 1, nspin
-         CALL scatter_grid(dfftp, rhor(:,ispin), rho%of_r(:,ispin))
+         CALL mp_scatter(rhor(:,ispin), rho%of_r(:,ispin))
       END DO
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
    END SUBROUTINE
@@ -72,7 +102,7 @@ CONTAINS
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhoc(:)
       !
-      CALL gather_grid(dfftp, rho_core, rhoc)
+      CALL mp_gather(rho_core, rhoc)
    END SUBROUTINE
 
    SUBROUTINE qepy_set_rho_core(rhoc)
@@ -82,7 +112,7 @@ CONTAINS
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhoc(:)
       !
-      CALL scatter_grid(dfftp, rhoc, rho_core)
+      CALL mp_scatter(rhoc, rho_core)
    END SUBROUTINE
 
    SUBROUTINE qepy_set_extpot(embed, vin)
@@ -98,7 +128,7 @@ CONTAINS
          IF (SIZE(embed%extpot) /= dfftp%nnr) DEALLOCATE(embed%extpot)
       ENDIF
       IF (.NOT.ALLOCATED(embed%extpot)) ALLOCATE(embed%extpot(dfftp%nnr))
-      CALL scatter_grid(dfftp, vin, embed%extpot)
+      CALL mp_scatter(vin, embed%extpot)
    END SUBROUTINE
 
    SUBROUTINE qepy_get_grid(nr)

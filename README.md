@@ -38,9 +38,9 @@
    + After configuration, you also need add `-fPIC` to `FOX_FLAGS` in the *make.inc* file.
    + Build the normal ***pw*** or ***pwlibs***.
 
- - Install PWSCFPY
+ - Install QEPY
 
-   + Copy the *qepy* into the ${QE}/PW directory.
+   + Copy the *qepy* into the ${QE} directory.
    + Go to *qepy* directory and `make` (serial) or `make mpi` (parallel).
    + Go to *qepy* directory and `make install`.
 

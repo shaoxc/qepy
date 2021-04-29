@@ -35,9 +35,7 @@ F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS))
 
 FPP = ${F90} -E -cpp $(F2FLAGS)
 
-#$(info 'Install path :',${PY_INSTALL_DIR})
-
-ifeq ($(PY_INSTALL_DIR), )
+ifeq ($(prefix), )
     PY2_DIR := $(shell python -m site --user-site)
     PY3_DIR := $(shell python3 -m site --user-site)
 ifeq ($(PY3_DIR), )
@@ -46,8 +44,8 @@ else
     PY3_DIR = $(shell python3 -m site --user-site)
 endif
 else
-    PY2_DIR = $(PY_INSTALL_DIR)
-    PY3_DIR = $(PY_INSTALL_DIR)
+    PY2_DIR = $(prefix)
+    PY3_DIR = $(prefix)
 endif
 
 default: python
@@ -72,11 +70,12 @@ ${F90WRAP_FILES}: ${qepy_OBJS} ${WRAP_FPP_FILES}
 	f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map \
 	    --init-file $(PY_SRC_DIR)/init.py -P
 
-.PHONY: clean install python mpi python-clean python-install
+.PHONY: clean install python mpi python-clean python-install help
 
 uninstall: python-uninstall
 install: python-install
 clean: python-clean
+serial: python
 
 python: ${F90WRAP_FILES}
 	f2py-f90wrap --fcompiler=intelem --build-dir . \
@@ -109,3 +108,14 @@ python-clean:
 	-rm -rf qepy
 	-rm -rf f90wrap_*.o qepy_*.o qepy_*.mod
 	-rm -rf src.* .libs .f2py_f2cmap
+
+help:
+	@echo ""
+	@echo "make help    : show this help information"
+	@echo "make serial  : build serial version [default]"
+	@echo "make mpi     : build parallel [MPI] version"
+	@echo "make install : install to given directory (default is user site-packages)"
+	@echo "make clean   : remove the package form given directory (default is user site-packages)"
+	@echo ""
+	@echo "Variables:"
+	@echo "prefix       : given the folder for installation"
