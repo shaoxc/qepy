@@ -18,6 +18,13 @@
 	pip install git+https://github.com/jameskermode/f90wrap
     ```
 
+      If not working, please try our modified version:
+      
+    ```shell
+	pip install git+https://github.com/shaoxc/f90wrap
+    ```
+
+
  ### Install QE
 
    + All static libraries must be compiled with the `-fPIC` compuiler option, so you need add `-fPIC` for all configuration. e.g.
