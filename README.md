@@ -9,23 +9,22 @@
  - Quantum-espresso source distribution (qe-6.5)
 
 ## Install
- ### Install f90wrap:
+ - **f90wrap**
 
-   <!--Due to the QE was written more freely than normal code. So we need modified the f90wrap a little bit. You can directly use our modified version:-->
-   <!--pip install git+https://gitlab.com/shaoxc/f90wrap@modified-->
-    
+    Install the origin version:
+
     ```shell
 	pip install git+https://github.com/jameskermode/f90wrap
     ```
+	If not working, please try our modified version:
 
-      If not working, please try our modified version:
-      
     ```shell
 	pip install git+https://github.com/shaoxc/f90wrap
     ```
 
 
- ### Install QE
+
+ - **QE**
 
    + All static libraries must be compiled with the `-fPIC` compuiler option, so you need add `-fPIC` for all configuration. e.g.
 
@@ -45,7 +44,7 @@
    + After configuration, you also need add `-fPIC` to `FOX_FLAGS` in the *make.inc* file.
    + Build the normal ***pw*** or ***pwlibs***.
 
- ### Install QEPY
+ - **QEPY**
 
    + Copy the *qepy* into the ${QE} directory.
    + Go to *qepy* directory and `make` (serial) or `make mpi` (parallel).
