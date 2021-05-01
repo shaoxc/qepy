@@ -431,6 +431,10 @@
             g2kin(1:npw) = ( ( xk(1,ikk) + g(1,igk_k(1:npw,ikk)) )**2 + &
                              ( xk(2,ikk) + g(2,igk_k(1:npw,ikk)) )**2 + &
                              ( xk(3,ikk) + g(3,igk_k(1:npw,ikk)) )**2 ) * tpiba2
+!print*, 'evc', evc(1:3,1)
+!print*, 'wg', wg(1,1:3)
+!print*, 'et', et(1,1:3)
+!print*, 'ef', ef
             DO ibnd = 1, nbnd
                DO j = 1, npw
                   IF(gamma_only)THEN !.and.j>1)then
