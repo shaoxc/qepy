@@ -50,16 +50,15 @@
    + Go to *qepy* directory and `make` (serial) or `make mpi` (parallel).
    + Go to *qepy* directory and `make install`.
 
-     **NOTE**
+## Tips
+ - `make help` will show the information of Makefile.
+ - The *variables* of Makefile can do some custom functionality.
 
-    * `make help` will show the information of Makefile.
-    * The *variables* of Makefile can do some custom functionality.
+	e.g.
 
-        e.g.
+	- "`export oldxml=yes`" can read old version QE xml file.
+	- "`export prefix=~/.local/lib/python3.8/site-packages/`" can set the folder for installation.
 
-        - "`export oldxml=yes`" can read old version QE xml file.
-        - "`export prefix=~/.local/lib/python3.8/site-packages/`" can set the folder for installation.
-
-## TODO
+## Todo
  - Update the Makefile to support Gfortran compiler
  - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*
