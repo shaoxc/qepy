@@ -30,8 +30,8 @@
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc \
-	    --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
-	 	CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
+	   --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
+	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
      ```
 
 	Or parallel version:
