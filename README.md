@@ -26,19 +26,21 @@
 
  - **QE**
 
-   + All static libraries must be compiled with the `-fPIC` compuiler option, so you need add `-fPIC` for all configuration. e.g.
+	All static libraries must be compiled with the `-fPIC` compuiler option, so you need add `-fPIC` for all configuration. e.g.
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc \
 	    --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
-	 	CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' 
+	 	CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
      ```
-    or parallel version:
+
+	Or parallel version:
+
 
      ```shell
-	 ./configure F77=ifort MPIF90=mpiifort F90=ifort CC=icc \
-	   --with-scalapack=intel FFLAGS=-mcmodel="large -fPIC" \
-	   -enable-openmp=no -enable-parallel=yes CFLAGS=-fPIC FOXFLAGS=-fPIC
+	 ./configure F77=ifort F90=ifort CC=icc MPIF90=mpiifort \
+	   --with-scalapack=intel -enable-openmp=no -enable-parallel=yes \
+	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
 	 ```
 
    + After configuration, you also need add `-fPIC` to `FOX_FLAGS` in the *make.inc* file.
@@ -51,6 +53,7 @@
    + Go to *qepy* directory and `make install`.
 
 ## Tips
+ - The ***QE*** and ***QEPY*** should be same version, both serial or parallel.
  - `make help` will show the information of Makefile.
  - The *variables* of Makefile can do some custom functionality.
 
