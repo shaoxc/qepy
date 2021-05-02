@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_run_pwscf( exit_status ) 
+SUBROUTINE qepy_run_pwscf( exit_status, oldxml ) 
   !----------------------------------------------------------------------------
   !! Author: Paolo Giannozzi  
   !! License: GNU  
@@ -70,6 +70,8 @@ SUBROUTINE qepy_run_pwscf( exit_status )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
+  LOGICAL, INTENT(IN), OPTIONAL :: oldxml
+  LOGICAL               :: oldver
   !
   exit_status = 0
   IF ( ionode ) WRITE( UNIT = stdout, FMT = 9010 ) ntypx, npk, lmaxx
@@ -121,7 +123,12 @@ SUBROUTINE qepy_run_pwscf( exit_status )
      RETURN
   ENDIF
   !
-  CALL init_run()
+  !CALL init_run()
+  if (present(oldxml)) then
+  CALL qepy_init_run(oldxml)
+  else
+  CALL qepy_init_run(oldxml)
+  endif
   !
   IF ( check_stop_now() ) THEN
      CALL qexsd_set_status( 255 )

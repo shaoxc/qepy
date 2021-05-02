@@ -22,12 +22,11 @@
 &electrons
 !    mixing_mode = 'plain'
 !    diagonalization = 'cg'
-!    startingwfc='atomic+random'
     conv_thr = 1e-8
     mixing_beta = 0.5
     electron_maxstep = 200
- 	startingpot=‘file’
- 	startingwfc=‘file’
+ 	startingpot = 'file'
+ 	startingwfc = 'file'
 /
 &IONS
 /

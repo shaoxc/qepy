@@ -71,8 +71,7 @@ SUBROUTINE oldxml_potinit(starting)
   LOGICAL               :: exst 
   CHARACTER(LEN=256)    :: dirname, filename
   !
-  CHARACTER(LEN=32), INTENT(IN), OPTIONAL :: starting
-  LOGICAL               :: sfile
+  CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: starting
   !
   CALL start_clock('potinit')
   !
@@ -84,17 +83,9 @@ SUBROUTINE oldxml_potinit(starting)
 #endif
   exst     =  check_file_exist( TRIM(filename) )
   !
-  sfile = .FALSE.
-  if (present(starting)) then
-     if (starting == 'file') then
-        sfile = .TRUE.
-     endif
-  else if (starting_pot == 'file') then
-     sfile = .TRUE.
-  endif
+  if (present(starting) .and. len_trim(starting)>1) starting_pot = trim(starting)
   !
-  !IF ( starting_pot == 'file' .AND. exst ) THEN
-  IF ( sfile .AND. exst ) THEN
+  IF ( starting_pot == 'file' .AND. exst ) THEN
      !
      ! ... Cases a) and b): the charge density is read from file
      ! ... this also reads rho%ns if lda+U and rho%bec if PAW
@@ -138,8 +129,7 @@ SUBROUTINE oldxml_potinit(starting)
      ! ... Case c): the potential is built from a superposition 
      ! ... of atomic charges contained in the array rho_at
      !
-     !IF ( starting_pot == 'file' .AND. .NOT. exst ) &
-     IF ( sfile .AND. .NOT. exst ) &
+     IF ( starting_pot == 'file' .AND. .NOT. exst ) &
         WRITE( stdout, '(5X,"Cannot read rho : file not found")' )
      !
      WRITE( UNIT = stdout, &
@@ -240,8 +230,7 @@ SUBROUTINE oldxml_potinit(starting)
      !
      !!! fact = 0.0_dp
      DO is = 1, nspin
-        !if (starting_pot /= 'file') rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
-        if (sfile) rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
+        if (starting_pot /= 'file') rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         psic(:) = rho%kin_r(:,is)
         CALL fwfft ('Rho', psic, dfftp)
         rho%kin_g(:,is) = psic(dfftp%nl(:))

@@ -43,9 +43,9 @@ SUBROUTINE qepy_wfcinit(starting)
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
   !
-  CHARACTER(LEN=32), INTENT(IN), OPTIONAL :: starting
-  LOGICAL               :: sfile
+  CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: starting
   !
+  if (present(starting) .and. len_trim(starting)>1) starting_wfc= trim(starting)
   !
   CALL start_clock( 'wfcinit' )
   !
@@ -59,16 +59,7 @@ SUBROUTINE qepy_wfcinit(starting)
   !
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
-  if (present(starting)) then
-     if (starting == 'file') then
-        sfile = .TRUE.
-     endif
-  else if (starting_wfc == 'file') then
-     sfile = .TRUE.
-  endif
-  !
-  !IF ( TRIM(starting_wfc) == 'file') THEN
-  IF ( sfile ) THEN
+  IF ( TRIM(starting_wfc) == 'file') THEN
      dirname = restart_dir ( ) 
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
@@ -88,7 +79,6 @@ SUBROUTINE qepy_wfcinit(starting)
            !              !
            WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
            starting_wfc = 'atomic+random'
-           sfile = .FALSE.
            !
         ELSE
         !
@@ -110,8 +100,7 @@ SUBROUTINE qepy_wfcinit(starting)
   !
   ! ... state what will happen
   !
-  !IF ( TRIM(starting_wfc) == 'file' ) THEN
-  IF ( sfile ) THEN
+  IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
      WRITE( stdout, '(5X,"Starting wfcs from file")' )
      !
@@ -144,8 +133,7 @@ SUBROUTINE qepy_wfcinit(starting)
   ! ... In the latter case the starting wavefunctions are not 
   ! ... calculated here but just before diagonalization (to reduce I/O)
   !
-  !IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
-  IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. sfile ) THEN
+  IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
      !
      CALL stop_clock( 'wfcinit' )
      RETURN

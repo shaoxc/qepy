@@ -8,20 +8,16 @@ else:
     comm = comm.py2f()
 
 fname = 'qe_in.in'
-qepy.qepy_pwscf(fname, comm)
+qepy.qepy_pwscf(fname, comm, True)
 
 embed = qepy.qepy_common.embed_base()
-
-# qepy.qepy_pw_restart_new.qepy_read_xml_file(alloc=False)
-# qepy.qepy_potinit(starting = 'file')
-# qepy.qepy_wfcinit(starting = 'file')
 
 qepy.oldxml_pw_restart.pw_readfile('header')
 qepy.oldxml_pw_restart.pw_readfile('reset')
 qepy.oldxml_pw_restart.pw_readfile('dim')
 qepy.oldxml_pw_restart.pw_readfile('bs')
-qepy.oldxml_potinit(starting = 'file')
-qepy.oldxml_wfcinit(starting = 'file')
+# qepy.oldxml_potinit(starting = 'file')
+# qepy.oldxml_wfcinit(starting = 'file')
 
 energy = qepy.qepy_calc_energies(embed)
 qepy.qepy_stop_run(0, what = 'no')

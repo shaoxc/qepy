@@ -65,8 +65,7 @@ SUBROUTINE qepy_potinit(starting)
   LOGICAL               :: exst 
   CHARACTER(LEN=320)    :: filename
   !
-  CHARACTER(LEN=32), INTENT(IN), OPTIONAL :: starting
-  LOGICAL               :: sfile
+  CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: starting
   !
   CALL start_clock('potinit')
   !
@@ -77,17 +76,9 @@ SUBROUTINE qepy_potinit(starting)
   exst     =  check_file_exist( TRIM(filename) // '.dat' )
 #endif
   !
-  sfile = .FALSE.
-  if (present(starting)) then
-     if (starting == 'file') then
-        sfile = .TRUE.
-     endif
-  else if (starting_pot == 'file') then
-     sfile = .TRUE.
-  endif
+  if (present(starting) .and. len_trim(starting)>1) starting_pot = trim(starting)
   !
-  !IF ( starting_pot == 'file' .AND. exst ) THEN
-  IF ( sfile .AND. exst ) THEN
+  IF ( starting_pot == 'file' .AND. exst ) THEN
      !
      ! ... Cases a) and b): the charge density is read from file
      ! ... this also reads rho%ns if lda+U, rho%bec if PAW, rho%kin if metaGGA
@@ -123,8 +114,7 @@ SUBROUTINE qepy_potinit(starting)
      ! ... Case c): the potential is built from a superposition 
      ! ... of atomic charges contained in the array rho_at
      !
-     !IF ( starting_pot == 'file' .AND. .NOT. exst ) &
-     IF ( sfile .AND. .NOT. exst ) &
+     IF ( starting_pot == 'file' .AND. .NOT. exst ) &
         WRITE( stdout, '(5X,"Cannot read rho : file not found")' )
      !
      WRITE( UNIT = stdout, &
@@ -196,8 +186,7 @@ SUBROUTINE qepy_potinit(starting)
   CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
   !
   IF  ( dft_is_meta() ) THEN
-     !IF (starting_pot /= 'file') THEN
-     IF (.not. sfile) THEN
+     IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
         ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
         fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)

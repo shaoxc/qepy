@@ -10,19 +10,17 @@ QEINC =-I../Modules/ -I../KS_Solvers/ -I../FFTXlib/ \
 	   -I../LAXlib/ -I../UtilXlib/ -I../dft-d3/ -I../PW/src/ -I. -I../iotk/src/
 
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
-MODULES_SOURCES = 
 MODULES_FILES = $(addprefix ../Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90
-PW_SOURCES = 
 PW_FILES = $(addprefix ../PW/src/,${PW_SOURCES})
 
 QEPY_SOURCES = qepy_scatter_mod.f90 \
 			  qepy_common.f90 qepy_mod.f90 \
 			  qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
-		      qepy_hinit1.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
-			  qepy_forces.f90 qepy_stop_run.f90 \
-			  qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90
+		      qepy_hinit1.f90 qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90 \
+			  qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
+			  qepy_forces.f90 qepy_stop_run.f90 
 
 OLDXML_SOURCES = oldxml_qexml.f90 oldxml_xml_io_base.f90 \
 				oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
@@ -30,7 +28,8 @@ OLDXML_SOURCES = oldxml_qexml.f90 oldxml_xml_io_base.f90 \
 
 ifeq ($(oldxml), yes)
    QEPY_FILES := $(addprefix ./src/,${QEPY_SOURCES}) $(addprefix ./src/oldxml/,${OLDXML_SOURCES})
-   QEPY_SOURCES += ${OLDXML_SOURCES}
+   #QEPY_SOURCES += ${OLDXML_SOURCES}
+   QEPY_SOURCES := ${OLDXML_SOURCES} ${QEPY_SOURCES}
    FOLDXML = -D__OLDXML
 else
    QEPY_FILES := $(addprefix ./src/,${QEPY_SOURCES})
@@ -135,17 +134,17 @@ python-uninstall:
 python-clean:
 	-rm -f _qepy*.so ${F90WRAP_FILES} ${WRAP_FPP_FILES}
 	-rm -rf qepy
-	#-rm -rf f90wrap_*.o qepy_*.o qepy_*.mod
 	-rm -rf src.* .libs .f2py_f2cmap
 	-rm -rf *.o *.mod
 
 help:
 	@echo ""
 	@echo "make help    : show this help information"
-	@echo "make serial  : build serial version [default]"
+	@echo "make serial  : build serial version (default)"
 	@echo "make mpi     : build parallel [MPI] version"
 	@echo "make install : install to given directory (default is user site-packages)"
 	@echo "make clean   : remove the package form given directory (default is user site-packages)"
 	@echo ""
 	@echo "Variables:"
 	@echo "prefix       : given the folder for installation"
+	@echo "oldxml       : support read old version xml with iotk"
