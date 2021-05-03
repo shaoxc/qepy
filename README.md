@@ -67,6 +67,13 @@
 	+ Make sure same version of QE and QEPY
 	+ Try `export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_rt.so`
 
+ - What's the *oldxml*?
+	+ QE deleted the old format (-D\_\_OLDXML) supported from [version 6.4](https://github.com/QEF/q-e/releases/tag/qe-6.4). In order to read the output of old format XML file, so we revert some codes in QEPY.
+
+ - Can not read the wavefunctions or wouldn't stop reading?
+	+ If the wavefunctions were stored by old version QE (<6.4) or [eQE](http://eqe.rutgers.edu), please try *oldxml*.
+	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). If not sure, simply just use one processor to read.
+
 ## Todo
  - Update the Makefile to support Gfortran compiler
  - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*
