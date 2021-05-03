@@ -80,7 +80,7 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what )
   LOGICAL             :: exst, opnd, lflag
   !
 
-  IF ( PRESENT(what)) THEN
+  IF ( PRESENT(what) .and. len_trim(what)>1) THEN
      what_= trim(what)
   ENDIF
 

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_pwscf(infile, my_world_comm)
+SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml)
   !! Author: Paolo Giannozzi
   !
   !! Version: v6.1
@@ -51,6 +51,8 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm)
   !
   CHARACTER(len=*) :: infile
   INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
+  LOGICAL, INTENT(IN), OPTIONAL :: oldxml
+  LOGICAL               :: oldver
   !
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
@@ -62,6 +64,13 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm)
   !! true if running "manypw.x"
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
+  !
+  if (present(oldxml)) then
+     oldver = oldxml
+  else
+     oldver = .FALSE.
+  endif
+  !
   !
   IF ( PRESENT(my_world_comm)) THEN
      CALL mp_startup(my_world_comm=my_world_comm, start_images=.TRUE. )
@@ -120,7 +129,7 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm)
   !
   input_file_=trim(infile)
   CALL read_input_file( 'PW', input_file_ )
-  call qepy_run_pwscf(exit_status)
+  call qepy_run_pwscf(exit_status, oldver)
 END SUBROUTINE qepy_pwscf
    !
 SUBROUTINE qepy_pwscf_finalise()

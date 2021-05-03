@@ -89,7 +89,6 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
      ALLOCATE(embed%extpot(dfftp%nnr))
      embed%extpot=0.0
   ENDIF
-  print *, 'extpot',embed%extpot(0:3)
   CALL sum_vrs( dfftp%nnr, nspin, embed%extpot, v%of_r, v%of_r )
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !
