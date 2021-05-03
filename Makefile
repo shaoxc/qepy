@@ -48,7 +48,7 @@ F90WRAP_FILES = f90wrap_*.f90
 WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
 
 PWFLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
-NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large
+NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large -g -C
 F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS)) $(FOLDXML)
 
 #$(info 'F2FLAGS', ${F2FLAGS})

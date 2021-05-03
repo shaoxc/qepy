@@ -24,6 +24,8 @@ SUBROUTINE qepy_init_run(oldxml)
 #if defined(__MPI)
   USE paw_init,           ONLY : paw_post_init
 #endif
+  USE mp_images,          ONLY : intra_image_comm
+  USE mp,                 ONLY : mp_barrier
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
   USE fft_base,           ONLY : dfftp, dffts
   USE funct,              ONLY : dft_is_hybrid
@@ -125,6 +127,7 @@ endif
   !
   CALL hinit0()
   !
+  CALL mp_barrier( intra_image_comm ) ! for oldxml
   if (oldver) then
 #if defined (__OLDXML) 
      call oldxml_potinit()
@@ -138,6 +141,7 @@ endif
   !
   CALL newd()
   !
+  CALL mp_barrier( intra_image_comm ) ! for oldxml
   if (oldver) then
 #if defined (__OLDXML) 
      call oldxml_wfcinit()

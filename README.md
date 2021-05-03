@@ -62,6 +62,11 @@
 	- "`export oldxml=yes`" can read old version QE xml file.
 	- "`export prefix=~/.local/lib/python3.8/site-packages/`" can set the folder for installation.
 
+## FAQ
+ - Some Intel MPI/MKL errors occur
+	+ Make sure same version of QE and QEPY
+	+ Try `export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_rt.so`
+
 ## Todo
  - Update the Makefile to support Gfortran compiler
  - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*

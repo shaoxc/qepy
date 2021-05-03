@@ -3792,7 +3792,7 @@ CONTAINS
       IF ( present( tfixed_occ ))       tfixed_occ  = tfixed_occ_
       IF ( present( ngauss ))           ngauss      = ngauss_
       IF ( present( ntetra ))           ntetra      = ntetra_
-      IF ( present( tetra_type ))       tetra_type  = tetra_type_
+      IF ( present( tetra_type ) .and. ltetra_)       tetra_type  = tetra_type_
       IF ( present( degauss ))          degauss     = degauss_
       IF ( present( degauss_units ))    degauss_units  = trim(degauss_units_)
       IF ( present( nstates_up ))       nstates_up  = nstates_up_
