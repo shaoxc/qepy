@@ -1,12 +1,15 @@
 # QEPY - Quantum ESPRESSO Python interface
-   In order to use Quantum ESPRESSO in embedding code, we modified some code of quantum-espresso and compile the Python wrappers. The source code was modified based on QE-6.5 and commented out unused code.
+   `QEPy` turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose. 
+   
+# What's in this code?
+Small modifications to QE routines and a quick compilation with Python wrappers. `QEPy` is based on QE-6.5 and is kept up to date with the latest QE stable release.
 
 ## Requirements
  - Python 3.6 or later
  - Numpy >= 1.18
  - Intel compiler (ifort)
  - f90wrap package (latest)
- - Quantum-espresso source distribution (qe-6.5)
+ - Quantum ESPRESSO source distribution (qe-6.5)
 
 ## Install
  - **f90wrap**
@@ -16,7 +19,7 @@
     ```shell
 	pip install git+https://github.com/jameskermode/f90wrap
     ```
-	If not working, please try our modified version:
+	If you struggle, try our own modified version of f90wrap:
 
     ```shell
 	pip install git+https://github.com/shaoxc/f90wrap
@@ -26,7 +29,7 @@
 
  - **QE**
 
-	All static libraries must be compiled with the `-fPIC` compuiler option, so you need add `-fPIC` for all configuration. e.g.
+	All static libraries must be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc \
@@ -34,7 +37,7 @@
 	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
      ```
 
-	Or parallel version:
+	Parallel version:
 
 
      ```shell
@@ -53,26 +56,26 @@
    + Go to *qepy* directory and `make install`.
 
 ## Tips
- - The ***QE*** and ***QEPY*** should be same version, both serial or parallel.
- - `make help` will show the information of Makefile.
- - The *variables* of Makefile can do some custom functionality.
+ - The ***QE*** and ***QEPY*** should be both either serial or parallel.
+ - `make help` will show the Makefile.
+ - The *variables* of Makefile help you customize your build.
 
 	e.g.
 
-	- "`export oldxml=yes`" can read old version QE xml file.
+	- "`export oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
 	- "`export prefix=~/.local/lib/python3.8/site-packages/`" can set the folder for installation.
 
 ## FAQ
- - Some Intel MPI/MKL errors occur
-	+ Make sure same version of QE and QEPY
+ - Some Intel MPI/MKL errors occur. What do I do?
+	+ Make sure QE and QEPY are of same version 
 	+ Try `export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_rt.so`
 
- - What's the *oldxml*?
-	+ QE deleted the old format (-D\_\_OLDXML) supported from [version 6.4](https://github.com/QEF/q-e/releases/tag/qe-6.4). In order to read the output of old format XML file, so we revert some codes in QEPY.
+ - What is the *oldxml*?
+	+ The old format (-D\_\_OLDXML) has been deprecated since [version 6.4](https://github.com/QEF/q-e/releases/tag/qe-6.4). *oldxml* allows you to read the output (wavefunctions, etc) from an old XML file.
 
- - Can not read the wavefunctions or wouldn't stop reading?
+ - Why can't I read the wavefunctions? Why does it hang?
 	+ If the wavefunctions were stored by old version QE (<6.4) or [eQE](http://eqe.rutgers.edu), please try *oldxml*.
-	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). If not sure, simply just use one processor to read.
+	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). In doubt, simply use one processor to read.
 
 ## Todo
  - Update the Makefile to support Gfortran compiler
