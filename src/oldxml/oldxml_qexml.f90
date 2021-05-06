@@ -2997,26 +2997,36 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "FIELD_AMPLITUDE", eamp_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "CHARGED_PLATE", gate_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      !-----------------------------------------------------------------------
+      !Earlier versions do not have the following field (e.g. 5.1.0).
+      gate_= .FALSE.
+      block_= .FALSE.
+      relaxz_ = .FALSE.
+      zgate_ = 0.0
+      block_1_ = 0.0
+      block_2_ = 0.0
+      block_height_ = 0.0
+      !-----------------------------------------------------------------------
+      CALL iotk_scan_dat( iunit, "CHARGED_PLATE", gate_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "GATE_POS", zgate_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      CALL iotk_scan_dat( iunit, "GATE_POS", zgate_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "RELAX_Z", relaxz_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      CALL iotk_scan_dat( iunit, "RELAX_Z", relaxz_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK", block_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      CALL iotk_scan_dat( iunit, "BLOCK", block_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK_1", block_1_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      CALL iotk_scan_dat( iunit, "BLOCK_1", block_1_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK_2", block_2_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      CALL iotk_scan_dat( iunit, "BLOCK_2", block_2_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK_HEIGHT", block_height_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      CALL iotk_scan_dat( iunit, "BLOCK_HEIGHT", block_height_, FOUND=found, IERR=ierr )
+      IF ( found .and. ( ierr /= 0 ) ) RETURN
       !
       CALL iotk_scan_end( iunit, "ELECTRIC_FIELD", IERR=ierr )
       IF ( ierr /= 0 ) RETURN

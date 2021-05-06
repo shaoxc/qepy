@@ -12,7 +12,7 @@ QEINC =-I../Modules/ -I../KS_Solvers/ -I../FFTXlib/ \
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ../Modules/,${MODULES_SOURCES})
 
-PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90
+PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 atomic_wfc_mod.f90
 PW_FILES = $(addprefix ../PW/src/,${PW_SOURCES})
 
 QEPY_SOURCES = qepy_scatter_mod.f90 \
@@ -24,7 +24,7 @@ QEPY_SOURCES = qepy_scatter_mod.f90 \
 
 OLDXML_SOURCES = oldxml_qexml.f90 oldxml_xml_io_base.f90 \
 				oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
-				oldxml_wfcinit.f90 oldxml_potinit.f90
+				oldxml_wfcinit.f90 oldxml_potinit.f90 oldxml_read_file.f90 
 
 ifeq ($(oldxml), yes)
    QEPY_FILES := $(addprefix ./src/,${QEPY_SOURCES}) $(addprefix ./src/oldxml/,${OLDXML_SOURCES})
@@ -84,6 +84,9 @@ oldxml_pw_restart.o : oldxml_qexml.o
 oldxml_pw_restart.o : oldxml_xml_io_base.o
 oldxml_pw_restart.o : oldxml_io_rho_xml.o
 oldxml_wfcinit.o    : oldxml_pw_restart.o
+oldxml_read_file.o  : oldxml_pw_restart.o
+oldxml_read_file.o  : oldxml_xml_io_base.o
+
 
 
 vpath %.f90 $(SRC_DIRS)

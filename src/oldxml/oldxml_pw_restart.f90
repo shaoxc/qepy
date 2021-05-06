@@ -1370,6 +1370,10 @@ MODULE oldxml_pw_restart
       CALL mp_bcast( ntask_groups_file,  ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_bgrp_file,    ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_ortho_file,   ionode_id, intra_image_comm )
+      !-----------------------------------------------------------------------
+      npwx=npwx_
+      lpw_read = .TRUE.
+      !-----------------------------------------------------------------------
       !
       RETURN
       !
