@@ -576,6 +576,8 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      first = .false.
      end if
      !
+     if (first) ethr = MAX( ethr, 1.D-6 )
+     !
      ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v> is calculated a
      ! ... first time here using the input density and potential ( to be
      ! ... used to calculate the Harris-Weinert-Foulkes energy )
