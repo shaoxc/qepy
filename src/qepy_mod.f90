@@ -178,7 +178,7 @@ CONTAINS
       IF(ionode) close(stdout)
    END SUBROUTINE
 
-   SUBROUTINE qepy_update_ions(embed, pos)
+   SUBROUTINE qepy_update_ions(embed, pos, ikind)
       ! This is function Combined 'run_pwscf' and 'move_ions'
       USE mp_images,            ONLY : intra_image_comm
       USE extrapolation,        ONLY : update_file, update_pot
@@ -191,20 +191,32 @@ CONTAINS
       INTEGER                  :: ierr
       TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: pos(:,:)
+      INTEGER,INTENT(IN),OPTIONAL  :: ikind
       !
-      CALL update_file()
+      INTEGER   :: iflag
+      !
+      IF ( present(ikind) ) THEN
+         iflag = ikind
+      ELSE
+         iflag = 0
+      ENDIF
+
+      IF (iflag == 0 ) THEN
+         CALL update_file()
+      ENDIF
       IF ( ionode ) THEN
          tau(:,:)=pos(:,:)
          CALL checkallsym( nat, tau, ityp)
       ENDIF
       CALL mp_bcast( tau, ionode_id, intra_image_comm )
-      CALL punch( 'config-nowf' )
-      !
-      IF ( treinit_gvecs ) THEN
-         CALL reset_gvectors()
-      ELSE
-         CALL update_pot()
-         CALL qepy_hinit1(embed%exttype)
+      IF (iflag == 0 ) THEN
+         CALL punch( 'config-nowf' )
+         IF ( treinit_gvecs ) THEN
+            CALL reset_gvectors()
+         ELSE
+            CALL update_pot()
+            CALL qepy_hinit1(embed%exttype)
+         END IF
       END IF
    END SUBROUTINE
 
