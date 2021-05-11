@@ -43,7 +43,7 @@ class MakeBuild(build_ext):
                 list(pathlib.Path(topdir + '/src/').glob('**/*.f90'))
 
         for f in makefiles :
-            shutil.copy(f, self.build_temp)
+            shutil.copy2(f, self.build_temp)
 
         subprocess.check_call(['make', '-f', 'Makefile'] + build_args, cwd=self.build_temp, env = env)
 
