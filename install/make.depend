@@ -1,0 +1,16 @@
+oldxml_io_rho_xml.o : oldxml_xml_io_base.o
+oldxml_potinit.o : oldxml_io_rho_xml.o
+oldxml_potinit.o : oldxml_xml_io_base.o
+oldxml_pw_restart.o : oldxml_io_rho_xml.o
+oldxml_pw_restart.o : oldxml_qexml.o
+oldxml_pw_restart.o : oldxml_xml_io_base.o
+oldxml_read_file.o : oldxml_io_rho_xml.o
+oldxml_read_file.o : oldxml_pw_restart.o
+oldxml_read_file.o : oldxml_xml_io_base.o
+oldxml_wfcinit.o : oldxml_pw_restart.o
+qepy_electrons.o : qepy_common.o
+qepy_mod.o : qepy_common.o
+qepy_mod.o : qepy_scatter_mod.o
+qepy_pw2casino_write.o : qepy_common.o
+qepy_pwscf.o : qepy_common.o
+qepy_v_of_rho.o : qepy_common.o

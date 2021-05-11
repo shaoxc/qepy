@@ -54,23 +54,18 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
  - **QEPY**
 
-   + Copy the *qepy* into the ${QE} directory.
-   + Go to *qepy* directory and `make` (serial) or `make mpi` (parallel).
-   + Go to *qepy* directory and `make install`.
+   + `qedir=${QE} python setup.py install --user`
 
 ## Tips
- - The ***QE*** and ***QEPY*** should be both either serial or parallel.
- - `make help` will show the Makefile.
- - The *variables* of Makefile help you customize your build.
+ - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
+ - Set the *variables* can help you customize your build.
 
 	e.g.
 
-	- "`export oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
-	- "`export prefix=~/.local/lib/python3.8/site-packages/`" can set the folder for installation.
+	- "`enable_oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
 
 ## FAQ
  - Some Intel MPI/MKL errors occur. What do I do?
-	+ Make sure QE and QEPY are of same version 
 	+ Try `export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_rt.so`
 
  - What is the *oldxml*?
