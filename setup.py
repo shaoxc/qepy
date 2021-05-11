@@ -35,12 +35,6 @@ class MakeBuild(build_ext):
         # if env.get('enable_parallel', 'no').lower() == 'yes' :
         #     build_args.append('mpi')
 
-        oldxml = env.get('enable_oldxml', '').lower()
-        if oldxml == 'yes' :
-            env['oldxml'] = 'yes'
-        elif oldxml == 'no' :
-            env['oldxml'] = 'no'
-
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
 

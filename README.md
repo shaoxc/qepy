@@ -58,11 +58,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
 ## Tips
  - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
+ - If already build once, please delete the *build* or simply through `python setup.py clean --all`.
  - Set the *variables* can help you customize your build.
 
 	e.g.
 
-	- "`enable_oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
+	- "`oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
 
 ## FAQ
  - Some Intel MPI/MKL errors occur. What do I do?
