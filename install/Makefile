@@ -5,17 +5,22 @@ include ${QEDIR}/make.inc
 SRC_DIRS := ./
 PY_SRC_DIR := ./
 
-QEMODS= ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/KS_Solvers/libks_solvers.a ${QEDIR}/FFTXlib/libqefft.a \
-	   ${QEDIR}/LAXlib/libqela.a ${QEDIR}/UtilXlib/libutil.a ${QEDIR}/dft-d3/libdftd3qe.a
+QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/KS_Solvers/libks_solvers.a ${QEDIR}/FFTXlib/libqefft.a \
+       ${QEDIR}/LAXlib/libqela.a ${QEDIR}/UtilXlib/libutil.a ${QEDIR}/dft-d3/libdftd3qe.a ${QEDIR}/dft-d3/libdftd3qe.a
 
-QEINC =-I${QEDIR}/Modules/ -I${QEDIR}/KS_Solvers/ -I${QEDIR}/FFTXlib/ \
-	   -I${QEDIR}/LAXlib/ -I${QEDIR}/UtilXlib/ -I${QEDIR}/dft-d3/ -I${QEDIR}/PW/src/ -I. -I${QEDIR}/iotk/src/
+QEINC :=-I${QEDIR}/Modules/ -I${QEDIR}/KS_Solvers/ -I${QEDIR}/FFTXlib/ \
+       -I${QEDIR}/LAXlib/ -I${QEDIR}/UtilXlib/ -I${QEDIR}/dft-d3/ -I${QEDIR}/PW/src/ \
+       -I${QEDIR}/iotk/src/ \
+       -I.
 
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 atomic_wfc_mod.f90
 PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
+
+TDDFT_SOURCES = tddft_module.f90
+TDDFT_FILES = ${TDDFT_SOURCES}
 
 QEPY_SOURCES := qepy_scatter_mod.f90 \
               qepy_common.f90 qepy_mod.f90 \
@@ -28,18 +33,30 @@ OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
                 oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
                 oldxml_wfcinit.f90 oldxml_potinit.f90 oldxml_read_file.f90
 
+QEPY_TDDFT_SOURCES := qepy_molecule_optical_absorption.f90 qepy_tddft_main.f90 \
+                    qepy_tddft_routines.f90 qepy_tddft_setup.f90 qepy_update_ham.f90
+
 FOLDXML =
+EXT_FILES=
+
 ifeq ($(oldxml), yes)
    QEPY_SOURCES := ${OLDXML_SOURCES} ${QEPY_SOURCES}
    FOLDXML = -D__OLDXML
 endif
+
+ifeq ($(tddft), yes)
+   QEPY_SOURCES := ${QEPY_TDDFT_SOURCES} ${QEPY_SOURCES}
+   QEMODS := libtddft.a ${QEMODS}
+   EXT_FILES += ${TDDFT_FILES}
+endif
+
 QEPY_FILES = ${QEPY_SOURCES}
 
-#$(info 'files', ${QEPY_FILES})
+#$(info 'files', ${QEPY_FILES}})
 
 QEPY_OBJS = $(QEPY_SOURCES:%.f90=%.o)
 
-WRAP_FILES = ${MODULES_FILES} ${PW_FILES} ${QEPY_FILES}
+WRAP_FILES = ${MODULES_FILES} ${PW_FILES} ${QEPY_FILES} ${EXT_FILES}
 
 F90WRAP_FILES = f90wrap_*.f90
 
@@ -60,18 +77,7 @@ endif
 
 FPP = ${F90} -E -cpp $(F2FLAGS)
 
-ifeq ($(prefix), )
-    PY2_DIR := $(shell python -m site --user-site)
-    PY3_DIR := $(shell python3 -m site --user-site)
-ifeq ($(PY3_DIR), )
-    PY3_DIR = ${PY2_DIR}
-else
-    PY3_DIR = $(shell python3 -m site --user-site)
-endif
-else
-    PY2_DIR = $(prefix)
-    PY3_DIR = $(prefix)
-endif
+PY3_DIR := $(shell python3 -m site --user-site)
 
 default: ${GOAL}
 
@@ -106,13 +112,10 @@ mpi: ${F90WRAP_FILES}
 
 
 install:
-	cp -r qepy _qepy*.so ${PY2_DIR}
 	cp -r qepy _qepy*.so ${PY3_DIR}
 
 uninstall:
-	-rm -rf ${PY2_DIR}/qepy
 	-rm -rf ${PY3_DIR}/qepy
-	-rm -rf ${PY2_DIR}/_qepy*.so
 	-rm -rf ${PY3_DIR}/_qepy*.so
 
 clean:
@@ -121,16 +124,5 @@ clean:
 	-rm -rf src.* .libs .f2py_f2cmap
 	-rm -rf *.o *.mod
 
-help:
-	@echo ""
-	@echo "make help    : show this help information"
-	@echo "make serial  : build serial version (default)"
-	@echo "make mpi     : build parallel [MPI] version"
-	@echo "make install : install to given directory (default is user site-packages)"
-	@echo "make clean   : remove the package form given directory (default is user site-packages)"
-	@echo ""
-	@echo "Variables:"
-	@echo "prefix       : given the folder for installation"
-	@echo "oldxml       : support read old version xml with iotk"
-
 include make.depend
+

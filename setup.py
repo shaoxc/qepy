@@ -45,6 +45,9 @@ class MakeBuild(build_ext):
         for f in makefiles :
             shutil.copy2(f, self.build_temp)
 
+        if env.get('tddft', 'no').lower() == 'yes' :
+            subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
+
         subprocess.check_call(['make', '-f', 'Makefile'] + build_args, cwd=self.build_temp, env = env)
 
         if not os.path.exists(self.build_lib):
