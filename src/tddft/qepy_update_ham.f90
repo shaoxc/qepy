@@ -64,6 +64,10 @@ SUBROUTINE qepy_update_hamiltonian(istep, embed)
   !call setlocal
   !call set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)    
   call qepy_setlocal(embed%exttype)
+  IF (.NOT.ALLOCATED(embed%extpot)) THEN
+     ALLOCATE(embed%extpot(dfftp%nnr))
+     embed%extpot=0.0
+  ENDIF
   CALL sum_vrs( dfftp%nnr, nspin, embed%extpot, v%of_r, v%of_r )
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !

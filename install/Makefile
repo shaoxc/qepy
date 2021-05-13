@@ -16,7 +16,8 @@ QEINC :=-I${QEDIR}/Modules/ -I${QEDIR}/KS_Solvers/ -I${QEDIR}/FFTXlib/ \
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
 
-PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 atomic_wfc_mod.f90
+PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 \
+			 atomic_wfc_mod.f90 close_files.f90
 PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
 
 TDDFT_SOURCES = tddft_module.f90
@@ -91,7 +92,7 @@ ${WRAP_FPP_FILES}: ${WRAP_FILES}
 
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
 	f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map \
-	    --init-file $(PY_SRC_DIR)/init.py -P
+		--init-file $(PY_SRC_DIR)/init.py -P
 
 .PHONY: serial mpi clean install help
 
@@ -110,7 +111,6 @@ mpi: ${F90WRAP_FILES}
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
 		${F2FLAGS} ${QEMODS} $(LIBOBJS) $(QELIBS)
 
-
 install:
 	cp -r qepy _qepy*.so ${PY3_DIR}
 
@@ -123,6 +123,12 @@ clean:
 	-rm -rf qepy
 	-rm -rf src.* .libs .f2py_f2cmap
 	-rm -rf *.o *.mod
+
+rmso:
+	-rm -f _qepy*.so
+
+test: rmso mpi uninstall
+	cp -r qepy _qepy*.so ${PY3_DIR}
 
 include make.depend
 

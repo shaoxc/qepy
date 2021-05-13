@@ -28,7 +28,9 @@ SUBROUTINE qepy_tddft_readin(infile)
   !
   CHARACTER(len=*), INTENT(IN), OPTIONAL  :: infile
   INTEGER, EXTERNAL :: find_free_unit
-  INTEGER :: iun
+  INTEGER :: iun, i
+  CHARACTER(len=256) :: fstr
+  CHARACTER(len=1), EXTERNAL :: lowercase
   !
   namelist /inputtddft/ job, prefix, tmp_dir, conv_threshold, verbosity, &
                         dt, e_strength, e_direction, nstep, nupdate_Dnm, &
@@ -69,8 +71,24 @@ SUBROUTINE qepy_tddft_readin(infile)
   IF ( PRESENT(infile)) THEN
      iun = find_free_unit()
      OPEN ( UNIT = iun, FILE = infile, FORM = 'FORMATTED', &
-            STATUS = 'OLD', IOSTAT = ios)
-     read( iun, inputtddft, err = 200, iostat = ios )
+        STATUS = 'OLD', IOSTAT = ios)
+     IF (ios /= 0) GOTO 200
+     DO 
+        READ(iun, '(A200)', IOSTAT=ios) fstr
+        IF (ios /= 0) GOTO 200
+        fstr=ADJUSTL(fstr)
+        IF (fstr(1:1)=='&') THEN
+           DO i=2, LEN_TRIM(fstr)
+              fstr(i:i)=lowercase(fstr(i:i))
+           ENDDO
+           IF (fstr=='&inputtddft') THEN
+              BACKSPACE(iun)
+              EXIT
+           ENDIF
+        ENDIF
+     ENDDO
+     READ( iun, inputtddft, ERR = 200, IOSTAT = ios )
+     CLOSE( iun )
   ELSE
   call input_from_file()
   read( 5, inputtddft, err = 200, iostat = ios )
@@ -145,23 +163,25 @@ END SUBROUTINE qepy_tddft_readin
   
 
 !!-----------------------------------------------------------------------
-!SUBROUTINE tddft_allocate
-!  !-----------------------------------------------------------------------
-!  !
-!  ! ... Allocate memory for TDDFT
-!  !
-!  USE tddft_module
-!  USE klist,         ONLY : nkstot
-!  USE wvfct,         ONLY : btype, nbndx
-!  USE tddft_module
+SUBROUTINE qepy_tddft_allocate
+  !-----------------------------------------------------------------------
+  !
+  ! ... Allocate memory for TDDFT
+  !
+  USE tddft_module
+  USE klist,         ONLY : nkstot
+  USE wvfct,         ONLY : btype, nbndx
+  USE tddft_module
 
-!  implicit none
+  implicit none
 
-!  ! needed by sum_band
-!  allocate(btype(nbndx,nkstot))
-!  btype = 1
+  ! needed by sum_band
+  IF (.NOT.ALLOCATED(btype)) THEN
+  allocate(btype(nbndx,nkstot))
+  btype = 1
+  ENDIF
     
-!END SUBROUTINE tddft_allocate
+END SUBROUTINE qepy_tddft_allocate
 
 
 !!-----------------------------------------------------------------------

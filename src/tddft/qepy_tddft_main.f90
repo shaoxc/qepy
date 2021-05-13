@@ -78,16 +78,16 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm)
   write(stdout,'(5X,''***** in publications or presentations arising from this work.            *****'')')
   write(stdout,*)
 
-  call qepy_tddft_readin()
-  call check_stop_init( max_seconds )
+  call qepy_tddft_readin(infile)
+  !call check_stop_init( max_seconds )
 
-  !io_level = 1
+  io_level = 1
  
   !! read ground state wavefunctions
   !call read_file
 END SUBROUTINE qepy_tddft_main_initial
 !
-SUBROUTINE qepy_tddft_main(embed)
+SUBROUTINE qepy_tddft_main_setup(embed)
   !-----------------------------------------------------------------------
   !
   ! ... This is the main driver of the real time TDDFT propagation.
@@ -147,7 +147,7 @@ SUBROUTINE qepy_tddft_main(embed)
   ibrav_ = ibrav
   assume_isolated_ = 'none'
   call plugin_read_input()
-  call tddft_allocate()
+  call qepy_tddft_allocate()
   call qepy_tddft_setup(embed)
   call tddft_summary()
 
@@ -156,20 +156,20 @@ SUBROUTINE qepy_tddft_main(embed)
 #endif
 
   ! calculation
-  select case (trim(job))
-  case ('optical')
-     if (molecule) then
-        call qepy_molecule_optical_absorption(embed)
-     else
-        call errore('tddft_main', 'solids are not yet implemented', 1)
-     endif
+  !select case (trim(job))
+  !case ('optical')
+  !   if (molecule) then
+  !      call qepy_molecule_optical_absorption(embed)
+  !   else
+  !      call errore('tddft_main', 'solids are not yet implemented', 1)
+  !   endif
 
-  case default
-     call errore('tddft_main', 'wrong or undefined job in input', 1)
+  !case default
+  !   call errore('tddft_main', 'wrong or undefined job in input', 1)
 
-  end select
+  !end select
   
-END subroutine qepy_tddft_main
+END subroutine qepy_tddft_main_setup
 !
 SUBROUTINE qepy_stop_tddft(print_flag)
   USE environment,     ONLY : environment_start, environment_end

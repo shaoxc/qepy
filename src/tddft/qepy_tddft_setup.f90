@@ -149,7 +149,7 @@ SUBROUTINE qepy_tddft_setup(embed)
   endif
 
   ! initialize hamiltonian
-  call update_hamiltonian(-1, embed)
+  call qepy_update_hamiltonian(-1, embed)
 
   call stop_clock('tddft_setup')
   

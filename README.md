@@ -54,6 +54,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
  - **QEPY**
 
+   + `git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git`
    + `qedir=${QE} python setup.py install --user`
 
 ## Tips

@@ -93,7 +93,7 @@ subroutine qepy_molecule_optical_absorption(embed)
         call get_buffer (evc, nwordwfc, iunevcn, ik)
      end do
      
-     call update_hamiltonian(-1, embed)
+     call qepy_update_hamiltonian(-1, embed)
  
      if (iverbosity > 0) write(stdout,'(5X,''Done with restart'')')
   endif
@@ -102,7 +102,9 @@ subroutine qepy_molecule_optical_absorption(embed)
   if (ehrenfest) then
      call allocate_dyn_vars()
      vel(:,:) = 0.d0
+     IF (.NOT.ALLOCATED(if_pos)) THEN
      allocate(if_pos(3,nat)) ! Ehrenfest work around
+     ENDIF
      if_pos(:,:) = 1
   endif
 
@@ -187,7 +189,7 @@ subroutine qepy_molecule_optical_absorption(embed)
 #endif
 
     ! update the hamiltonian (recompute charge and potential)
-    call update_hamiltonian(istep, embed)
+    call qepy_update_hamiltonian(istep, embed)
 
     ! print observables
     if (ionode) then
