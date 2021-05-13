@@ -15,12 +15,12 @@ qepy_electrons.o : qepy_common.o
 qepy_mod.o : qepy_common.o
 qepy_mod.o : qepy_scatter_mod.o
 qepy_molecule_optical_absorption.o : qepy_common.o
+qepy_molecule_optical_absorption.o : qepy_tddft_common.o
 qepy_molecule_optical_absorption.o : tddft_module.o
 qepy_pw2casino_write.o : qepy_common.o
 qepy_pwscf.o : qepy_common.o
 qepy_tddft_main.o : qepy_common.o
 qepy_tddft_main.o : tddft_module.o
-qepy_tddft_main.o : tddft_version.o
 qepy_tddft_routines.o : tddft_module.o
 qepy_tddft_setup.o : qepy_common.o
 qepy_tddft_setup.o : tddft_module.o

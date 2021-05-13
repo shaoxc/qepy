@@ -3,7 +3,28 @@ MODULE qepy_common
    IMPLICIT NONE
    PUBLIC
    !
+   type, public :: input_base
+      INTEGER            :: my_world_comm = 0
+      LOGICAL            :: start_images = .false.
+      CHARACTER(len=256) :: filename = ''
+      CHARACTER(len=256) :: code = 'QEPY'
+      CHARACTER(len=256) :: tmp_dir = './'
+      CHARACTER(len=256) :: wfc_dir = 'undefined'
+      CHARACTER(len=256) :: prefix  = 'os'
+      ! ...  If needwf=.t. performs wavefunction-related initialization as well
+      LOGICAL            :: needwf
+   end type input_base
+   !
+   type, public :: tddft_base
+      logical                         :: initial = .true.
+      logical                         :: finish = .false.
+      integer                         :: istep = 0
+      integer                         :: nstep = 1
+   end type tddft_base
+   !
    type, public :: embed_base
+      type(input_base)                :: input
+      type(tddft_base)                :: tddft
       real(kind=dp), allocatable      :: extpot(:)
       real(kind=dp)                   :: extene = 0.0
       integer                         :: exttype = 0
@@ -17,16 +38,4 @@ MODULE qepy_common
       real(kind=dp)                   :: diag_conv = 1.D-2
    end type embed_base
    !
-   type, public :: input_base
-      INTEGER            :: my_world_comm = 0
-      LOGICAL            :: start_images = .false.
-      CHARACTER(len=256) :: filename = ''
-      CHARACTER(len=256) :: code = 'QEPY'
-      CHARACTER(len=256) :: tmp_dir = './'
-      CHARACTER(len=256) :: wfc_dir = 'undefined'
-      CHARACTER(len=256) :: prefix  = 'os'
-      ! ...  If needwf=.t. performs wavefunction-related initialization as well
-      LOGICAL            :: needwf
-   end type input_base
-
 END MODULE qepy_common

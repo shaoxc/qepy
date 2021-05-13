@@ -38,15 +38,20 @@ subroutine qepy_molecule_optical_absorption(embed)
   USE tddft_module
   !
   USE qepy_common,             ONLY : embed_base
+  USE qepy_tddft_common,       ONLY : tddft_psi, b, &
+                                      tddft_hpsi, tddft_spsi, &
+                                      tddft_Ppsi, &
+                                      charge, dipole, quadrupole, &
+                                      circular, circular_local
   !
   IMPLICIT NONE
 
   !-- tddft variables ----------------------------------------------------
-  complex(dp), allocatable :: tddft_psi(:,:,:), b(:,:)
-  complex(dp), allocatable :: tddft_hpsi(:,:), tddft_spsi(:,:)
-  complex(dp), allocatable :: tddft_Ppsi(:,:)        ! PAW correction to forces (Ehrenfest)
-  real(dp), allocatable :: charge(:), dipole(:,:), quadrupole(:,:,:)
-  complex(dp), allocatable :: circular(:,:), circular_local(:)
+  !complex(dp), allocatable :: tddft_psi(:,:,:), b(:,:)
+  !complex(dp), allocatable :: tddft_hpsi(:,:), tddft_spsi(:,:)
+  !complex(dp), allocatable :: tddft_Ppsi(:,:)        ! PAW correction to forces (Ehrenfest)
+  !real(dp), allocatable :: charge(:), dipole(:,:), quadrupole(:,:,:)
+  !complex(dp), allocatable :: circular(:,:), circular_local(:)
 
   integer :: istep, lter, flag_global
   integer :: ik, is, ibnd
@@ -57,10 +62,15 @@ subroutine qepy_molecule_optical_absorption(embed)
   external tddft_ch_psi_all
   !
   TYPE(embed_base), INTENT(INOUT)    :: embed
+  INTEGER :: iter
   !
 
   ! TODO: restart
-
+  IF (embed%tddft%finish) THEN
+     call optical_finalize()
+     return
+  ENDIF
+  IF (embed%tddft%initial) THEN
   ! allocate memory
   call allocate_optical()
 
@@ -112,7 +122,14 @@ subroutine qepy_molecule_optical_absorption(embed)
 
   ! enter the main TDDFT loop
   wclock = get_clock('TDDFT')
-  do istep = 1, nstep
+  embed%tddft%istep = 0
+  if (embed%tddft%nstep > 1) nstep = 1
+  embed%tddft%initial = .FALSE.
+  endif !initial
+  !do istep = 1, nstep
+  do iter = 1, nstep
+     embed%tddft%istep = embed%tddft%istep + 1
+     istep = embed%tddft%istep
      
     ! calculate dipole moment along x, y, and z direction
     call molecule_compute_dipole( charge, dipole )
@@ -223,11 +240,19 @@ subroutine qepy_molecule_optical_absorption(embed)
   write(stdout,*)
 
   ! finish  
-  call tddft_cgsolver_finalize()
-  call deallocate_optical()
-  if (ehrenfest) call deallocate_dyn_vars() 
+  if (nstep>1 .or. embed%tddft%finish) then
+     call optical_finalize()
+  endif
+  !call tddft_cgsolver_finalize()
+  !call deallocate_optical()
+  !if (ehrenfest) call deallocate_dyn_vars() 
     
 CONTAINS
+  SUBROUTINE optical_finalize()
+     call tddft_cgsolver_finalize()
+     call deallocate_optical()
+     if (ehrenfest) call deallocate_dyn_vars() 
+  END SUBROUTINE optical_finalize
 
   !====================================================================
   ! Print the legend key

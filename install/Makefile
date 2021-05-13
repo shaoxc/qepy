@@ -34,7 +34,8 @@ OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
                 oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
                 oldxml_wfcinit.f90 oldxml_potinit.f90 oldxml_read_file.f90
 
-QEPY_TDDFT_SOURCES := qepy_molecule_optical_absorption.f90 qepy_tddft_main.f90 \
+QEPY_TDDFT_SOURCES := qepy_tddft_common.f90 \
+                    qepy_molecule_optical_absorption.f90 qepy_tddft_main.f90 \
                     qepy_tddft_routines.f90 qepy_tddft_setup.f90 qepy_update_ham.f90
 
 FOLDXML =
