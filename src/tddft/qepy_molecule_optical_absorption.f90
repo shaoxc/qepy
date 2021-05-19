@@ -76,7 +76,7 @@ subroutine qepy_molecule_optical_absorption(embed)
 
   ee = i_complex * dt / 2.d0  ! i*dt/2: do not change
   
-  evc = cmplx(0.d0,0.d0)
+  !evc = cmplx(0.d0,0.d0)
   call tddft_cgsolver_initialize(npwx, nbnd_occ_max)
   if (iverbosity > 0) then
     write(stdout,'(5X,''Done with tddft_cgsolver_initialize'')')
@@ -99,8 +99,10 @@ subroutine qepy_molecule_optical_absorption(embed)
         call init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
         
         ! read wfcs from file and compute becp
+        if (nks>1) then
         evc = (0.d0, 0.d0)
         call get_buffer (evc, nwordwfc, iunevcn, ik)
+        endif
      end do
      
      call qepy_update_hamiltonian(-1, embed)
@@ -145,6 +147,7 @@ subroutine qepy_molecule_optical_absorption(embed)
       call g2_kin(ik)
       call init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
       
+      if (nks>1) then
       ! read wfcs from file and compute becp
       evc = (0.d0, 0.d0)
       if (istep == 1) then
@@ -152,10 +155,13 @@ subroutine qepy_molecule_optical_absorption(embed)
       else
         call get_buffer (evc, nwordwfc, iunevcn, ik)
       endif
+      endif
       if (.not. is_allocated_bec_type(becp)) call allocate_bec_type(nkb, nbnd, becp)
       call calbec( npw, vkb, evc, becp )
+      if (nks>1) then
       if ( (istep > 1) .or. (l_tddft_restart .and. (istep == 1)) ) then
         call get_buffer (tddft_psi, nwordtdwfc, iuntdwfc, ik)
+      endif
       endif
 
       ! apply electric field
@@ -193,8 +199,10 @@ subroutine qepy_molecule_optical_absorption(embed)
       evc(:,1:nbnd_occ(ik)) = tddft_psi(:,1:nbnd_occ(ik),1)
 
       ! save wavefunctions to disk
+      if (nks>1) then
       call save_buffer (evc, nwordwfc, iunevcn, ik)
       call save_buffer (tddft_psi(:,:,1:2), nwordtdwfc, iuntdwfc, ik)
+      endif
         
     enddo ! ik
 
