@@ -99,10 +99,8 @@ subroutine qepy_molecule_optical_absorption(embed)
         call init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
         
         ! read wfcs from file and compute becp
-        if (nks>1) then
         evc = (0.d0, 0.d0)
         call get_buffer (evc, nwordwfc, iunevcn, ik)
-        endif
      end do
      
      call qepy_update_hamiltonian(-1, embed)
@@ -114,11 +112,14 @@ subroutine qepy_molecule_optical_absorption(embed)
   if (ehrenfest) then
      call allocate_dyn_vars()
      vel(:,:) = 0.d0
-     IF (.NOT.ALLOCATED(if_pos)) THEN
-     allocate(if_pos(3,nat)) ! Ehrenfest work around
-     ENDIF
-     if_pos(:,:) = 1
+     !allocate(if_pos(3,nat)) ! Ehrenfest work around
+     !if_pos(:,:) = 1
   endif
+
+  IF (.NOT.ALLOCATED(if_pos)) THEN
+  allocate(if_pos(3,nat)) ! Forces
+  ENDIF
+  if_pos(:,:) = 1
 
   if (isave_rho /= 0) call save_rho(0)
 
@@ -127,12 +128,19 @@ subroutine qepy_molecule_optical_absorption(embed)
   embed%tddft%istep = 0
   if (embed%tddft%nstep > 1) nstep = 1
   embed%tddft%initial = .FALSE.
-  endif !initial
+  embed%tddft%istep = 0
+  endif ! end initial
   !do istep = 1, nstep
   do iter = 1, nstep
-     embed%tddft%istep = embed%tddft%istep + 1
-     istep = embed%tddft%istep
+    embed%tddft%istep = embed%tddft%istep + 1
+    istep = embed%tddft%istep
      
+    if (istep==1) then
+    call sum_band()
+    endif
+
+    call qepy_update_hamiltonian(istep, embed)
+
     ! calculate dipole moment along x, y, and z direction
     call molecule_compute_dipole( charge, dipole )
     !call molecule_compute_quadrupole( quadrupole )
@@ -199,10 +207,8 @@ subroutine qepy_molecule_optical_absorption(embed)
       evc(:,1:nbnd_occ(ik)) = tddft_psi(:,1:nbnd_occ(ik),1)
 
       ! save wavefunctions to disk
-      if (nks>1) then
       call save_buffer (evc, nwordwfc, iunevcn, ik)
       call save_buffer (tddft_psi(:,:,1:2), nwordtdwfc, iuntdwfc, ik)
-      endif
         
     enddo ! ik
 
@@ -214,7 +220,8 @@ subroutine qepy_molecule_optical_absorption(embed)
 #endif
 
     ! update the hamiltonian (recompute charge and potential)
-    call qepy_update_hamiltonian(istep, embed)
+    !call qepy_update_hamiltonian(istep, embed)
+    call sum_band()
 
     ! print observables
     if (ionode) then

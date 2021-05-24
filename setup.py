@@ -38,6 +38,10 @@ class MakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
 
+        #remove *.so files
+        for f in pathlib.Path(self.build_temp).glob('*.so'):
+            os.remove(f)
+
         makefiles = list(pathlib.Path(topdir + '/Python/').glob('*')) + \
                 list(pathlib.Path(topdir + '/install/').glob('*')) + \
                 list(pathlib.Path(topdir + '/src/').glob('**/*.f90'))

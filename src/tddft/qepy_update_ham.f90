@@ -46,10 +46,10 @@ SUBROUTINE qepy_update_hamiltonian(istep, embed)
   call start_clock('updateH')
   
   ! calculate total charge density
-  rho%of_g(:,:) = (0.d0,0.d0)
-  rho%of_r(:,:) = 0.d0
+  !rho%of_g(:,:) = (0.d0,0.d0)
+  !rho%of_r(:,:) = 0.d0
+  !call sum_band()
   if (okvan .and. is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
-  call sum_band()
 
   if (lda_plus_U) then
     call new_ns
@@ -83,6 +83,7 @@ SUBROUTINE qepy_update_hamiltonian(istep, embed)
     endif
   endif
 
+  if (embed%tddft%nstep > 1) then
   ! calculate band energy and Ewald energy
   deband = delta_eband()
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
@@ -91,6 +92,7 @@ SUBROUTINE qepy_update_hamiltonian(istep, embed)
   ! calculate new energy
   etot = eband + deband + ( etxc - etxcc ) + ewld + ehart
   call sum_energies
+  endif
 
   ! intialization step
   if (istep == -1) &

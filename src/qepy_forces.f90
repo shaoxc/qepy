@@ -56,6 +56,8 @@ SUBROUTINE qepy_forces(icalc)
   USE esm,               ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,              ONLY : qmmm_mode
   !
+  USE becmod, ONLY: becp, deallocate_bec_type, is_allocated_bec_type
+  !
   IMPLICIT NONE
   !
   integer, intent(in), optional :: icalc
@@ -93,6 +95,9 @@ SUBROUTINE qepy_forces(icalc)
   ALLOCATE( forcenl( 3, nat ), forcelc( 3, nat ), forcecc( 3, nat ), &
             forceh( 3, nat ), forceion( 3, nat ), forcescc( 3, nat ) )
   !    
+  !qepy
+  if (is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
+  !
   forcescc(:,:) = 0.D0
   forceh(:,:)   = 0.D0
   force(:,:)    = 0.D0

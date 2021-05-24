@@ -179,7 +179,11 @@ CONTAINS
    END SUBROUTINE
 
    SUBROUTINE qepy_update_ions(embed, pos, ikind)
+      !-----------------------------------------------------------------------
       ! This is function Combined 'run_pwscf' and 'move_ions'
+      ! ikind = 0  all
+      ! ikind = 1  atomic configuration dependent information
+      !-----------------------------------------------------------------------
       USE mp_images,            ONLY : intra_image_comm
       USE extrapolation,        ONLY : update_file, update_pot
       USE io_global,            ONLY : ionode_id, ionode
@@ -201,9 +205,8 @@ CONTAINS
          iflag = 0
       ENDIF
 
-      IF (iflag == 0 ) THEN
-         CALL update_file()
-      ENDIF
+      CALL update_file()
+
       IF ( ionode ) THEN
          tau(:,:)=pos(:,:)
          CALL checkallsym( nat, tau, ityp)
@@ -217,6 +220,9 @@ CONTAINS
             CALL update_pot()
             CALL qepy_hinit1(embed%exttype)
          END IF
+      ELSE IF (iflag == 1 ) THEN
+         CALL set_rhoc()
+         CALL qepy_hinit1(embed%exttype)
       END IF
    END SUBROUTINE
 

@@ -936,6 +936,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      !
      embed%etotal=etot
      embed%dnorm = dr2
+     embed%initial = .false.
      if (embed%exttype>0 .or. niter==1) return
      !if (embed%exttype>0) return
      !
