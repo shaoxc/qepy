@@ -136,7 +136,7 @@ endif
 #endif
   else
   !CALL potinit()
-  CALL qepy_potinit()
+  CALL qepy_potinit('')
   endif
   !
   CALL newd()
@@ -150,7 +150,7 @@ endif
 #endif
   else
   !CALL wfcinit()
-  CALL qepy_wfcinit()
+  CALL qepy_wfcinit('')
   endif
   !
   IF(use_wannier) CALL wannier_init()

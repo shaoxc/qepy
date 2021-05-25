@@ -127,7 +127,7 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml )
   if (present(oldxml)) then
   CALL qepy_init_run(oldxml)
   else
-  CALL qepy_init_run(oldxml)
+  CALL qepy_init_run(.FALSE.)
   endif
   !
   IF ( check_stop_now() ) THEN
