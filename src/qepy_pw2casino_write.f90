@@ -321,7 +321,7 @@
 !CONTAINS
 
    SUBROUTINE qepy_calc_energies(embed)
-      USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
+      USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type, is_allocated_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
       USE kinds, ONLY: DP,sgl
@@ -381,6 +381,9 @@
       ENDIF
 
       ALLOCATE (aux(dfftp%nnr))
+      !qepy
+      if (is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
+      !
       CALL allocate_bec_type ( nkb, nbnd, becp )
 
       ek  = 0.d0

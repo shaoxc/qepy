@@ -1,0 +1,3 @@
+[submodule "src/ce-tddft"]
+	path = src/ce-tddft
+	url = https://github.com/dceresoli/ce-tddft.git

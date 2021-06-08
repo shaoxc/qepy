@@ -1,0 +1,10 @@
+apply_efield.o : tddft_module.o
+molecule_operators.o : tddft_module.o
+molecule_optical_absorption.o : tddft_module.o
+tddft_ch_psi_all.o : tddft_module.o
+tddft_main.o : tddft_module.o
+tddft_main.o : tddft_version.o
+tddft_routines.o : tddft_module.o
+tddft_setup.o : tddft_module.o
+update_ham.o : tddft_module.o
+wavepacket.o : tddft_module.o

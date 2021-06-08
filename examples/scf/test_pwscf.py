@@ -1,11 +1,11 @@
 import numpy as np
 import qepy
 
-from mpi4py import MPI
+# from mpi4py import MPI
 
-comm = MPI.COMM_WORLD
-comm = comm.py2f()
-# comm = None
+# comm = MPI.COMM_WORLD
+# comm = comm.py2f()
+comm = None
 
 fname = 'qe_in.in'
 

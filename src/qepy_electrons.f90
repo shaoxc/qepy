@@ -755,13 +755,15 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhoin, rho_core, rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, v)
-           !
-           IF (okpaw) THEN
-              CALL PAW_potential( rhoin%bec, ddd_paw, epaw,etot_cmp_paw )
-              CALL PAW_symmetrize_ddd( ddd_paw )
-           ENDIF
+           CALL qepy_v_of_rho_all( rhoin, rho_core, rhog_core, &
+              ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+           !CALL v_of_rho( rhoin, rho_core, rhog_core, &
+           !               ehart, etxc, vtxc, eth, etotefield, charge, v)
+           !!
+           !IF (okpaw) THEN
+           !   CALL PAW_potential( rhoin%bec, ddd_paw, epaw,etot_cmp_paw )
+           !   CALL PAW_symmetrize_ddd( ddd_paw )
+           !ENDIF
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -783,14 +785,16 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
-           CALL v_of_rho( rho,rho_core,rhog_core, &
-                      ehart, etxc, vtxc, eth, etotefield, charge, v)
+           !CALL v_of_rho( rho,rho_core,rhog_core, &
+           !           ehart, etxc, vtxc, eth, etotefield, charge, v)
+           CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
+              ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
-           IF (okpaw) THEN
-              CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
-              CALL PAW_symmetrize_ddd( ddd_paw )
-           ENDIF
+           !IF (okpaw) THEN
+           !   CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
+           !   CALL PAW_symmetrize_ddd( ddd_paw )
+           !ENDIF
            !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
@@ -805,25 +809,25 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         !
      ENDDO scf_step
      !
-     plugin_etot = 0.0_dp
+     !plugin_etot = 0.0_dp
      !
-     CALL plugin_scf_energy(plugin_etot,rhoin)
-     !
-     CALL plugin_scf_potential(rhoin,conv_elec,dr2,vltot)
-     !
-     ! ... define the total local potential (external + scf)
-     !
-     CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
-     !
-     ! ... interpolate the total local potential
-     !
-     CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
-     !
-     ! ... in the US case we have to recompute the self-consistent
-     ! ... term in the nonlocal potential
-     ! ... PAW: newd contains PAW updates of NL coefficients
-     !
-     CALL newd()
+     !CALL plugin_scf_energy(plugin_etot,rhoin)
+     !!
+     !CALL plugin_scf_potential(rhoin,conv_elec,dr2,vltot)
+     !!
+     !! ... define the total local potential (external + scf)
+     !!
+     !CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
+     !!
+     !! ... interpolate the total local potential
+     !!
+     !CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
+     !!
+     !! ... in the US case we have to recompute the self-consistent
+     !! ... term in the nonlocal potential
+     !! ... PAW: newd contains PAW updates of NL coefficients
+     !!
+     !CALL newd()
      !
      IF ( lelfield ) en_el =  calc_pol ( )
      !

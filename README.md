@@ -32,12 +32,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
  - **QE**
 
-	All static libraries must be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
+	All static libraries should be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc \
 	   --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
-	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
+	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
      ```
 
 	Parallel version:
@@ -45,32 +45,28 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc MPIF90=mpiifort \
-	   --with-scalapack=intel -enable-openmp=no -enable-parallel=yes \
-	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
+	   --with-scalapack=no -enable-openmp=no -enable-parallel=yes \
+	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
 	 ```
 
-   + After configuration, you also need add `-fPIC` to `FOX_FLAGS` in the *make.inc* file.
    + Build the normal ***pw*** or ***pwlibs***.
 
  - **QEPY**
 
-   + Copy the *qepy* into the ${QE} directory.
-   + Go to *qepy* directory and `make` (serial) or `make mpi` (parallel).
-   + Go to *qepy* directory and `make install`.
+   + `git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git`
+   + `qedir=${QE} python setup.py install --user`
 
 ## Tips
- - The ***QE*** and ***QEPY*** should be both either serial or parallel.
- - `make help` will show the Makefile.
- - The *variables* of Makefile help you customize your build.
+ - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
+ - If not clone the submodules in the beginning, can update through `git submodule update --init --recursive`.
+ - Set the *variables* can help you customize your build.
 
 	e.g.
 
-	- "`export oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
-	- "`export prefix=~/.local/lib/python3.8/site-packages/`" can set the folder for installation.
+	- "`oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
 
 ## FAQ
  - Some Intel MPI/MKL errors occur. What do I do?
-	+ Make sure QE and QEPY are of same version 
 	+ Try `export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_rt.so`
 
  - What is the *oldxml*?
@@ -84,5 +80,5 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). In doubt, simply use one processor to read.
 
 ## Todo
- - Update the Makefile to support Gfortran compiler
+ - ~~Update the Makefile to support Gfortran compiler~~
  - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*
