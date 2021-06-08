@@ -32,12 +32,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
  - **QE**
 
-	All static libraries must be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
+	All static libraries should be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc \
 	   --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
-	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
+	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
      ```
 
 	Parallel version:
@@ -45,11 +45,10 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
      ```shell
 	 ./configure F77=ifort F90=ifort CC=icc MPIF90=mpiifort \
-	   --with-scalapack=intel -enable-openmp=no -enable-parallel=yes \
-	   CFLAGS=-fPIC FFLAGS='-mcmodel=large -fPIC' FOXFLAGS=-fPIC
+	   --with-scalapack=no -enable-openmp=no -enable-parallel=yes \
+	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
 	 ```
 
-   + After configuration, you also need add `-fPIC` to `FOX_FLAGS` in the *make.inc* file.
    + Build the normal ***pw*** or ***pwlibs***.
 
  - **QEPY**
@@ -59,7 +58,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
 ## Tips
  - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
- - If already build once, please delete the *build* or simply through `python setup.py clean --all`.
+ - If not clone the submodules in the beginning, can update through `git submodule update --init --recursive`.
  - Set the *variables* can help you customize your build.
 
 	e.g.
@@ -81,5 +80,5 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). In doubt, simply use one processor to read.
 
 ## Todo
- - Update the Makefile to support Gfortran compiler
+ - ~~Update the Makefile to support Gfortran compiler~~
  - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*

@@ -32,8 +32,8 @@ class MakeBuild(build_ext):
             nprocs = 1
         build_args += ['-j', str(nprocs)]
 
-        # if env.get('enable_parallel', 'no').lower() == 'yes' :
-        #     build_args.append('mpi')
+        if os.path.exists(self.build_temp):
+            shutil.rmtree(self.build_temp)
 
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)

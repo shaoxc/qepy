@@ -65,7 +65,7 @@ F90WRAP_FILES = f90wrap_*.f90
 WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
 
 PWFLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
-NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large -g -C
+NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large -g -C -x f95-cpp-input
 F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS)) $(FOLDXML)
 
 $(info 'F2FLAGS', ${F2FLAGS})
@@ -74,6 +74,12 @@ ifeq ($(findstring -D__MPI, ${F2FLAGS}), -D__MPI)
    GOAL=mpi
 else
    GOAL=serial
+endif
+
+ifeq ($(findstring ifort, ${F90}), ifort)
+   FCOMPILER=intelem
+else
+   FCOMPILER=gnu95
 endif
 
 
@@ -92,23 +98,23 @@ ${WRAP_FPP_FILES}: ${WRAP_FILES}
 	for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
 
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	#@echo 'a'
 	f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map \
 		--init-file $(PY_SRC_DIR)/init.py -P
 
 .PHONY: serial mpi clean install help
 
 serial: ${F90WRAP_FILES}
-	f2py-f90wrap --fcompiler=intelem --build-dir . \
+	f2py-f90wrap \
+		--fcompiler=$(FCOMPILER) --build-dir . \
+		-c --f90exec=$(F90) --f77exec=$(F90) \
 		--opt=-O2 \
-		-c -m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
+		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
 		${F2FLAGS} ${QEMODS} $(LIBOBJS) $(QELIBS) -liomp5
 
 mpi: ${F90WRAP_FILES}
 	f2py-f90wrap \
-		--fcompiler=intelem --build-dir . \
-		--compiler=intelem \
-		-c --f90exec=mpiifort --f77exec=mpiifort \
+		--fcompiler=$(FCOMPILER) --build-dir . \
+		-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
 		--opt=-O2 \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
 		${F2FLAGS} ${QEMODS} $(LIBOBJS) $(QELIBS)
