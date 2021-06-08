@@ -9,7 +9,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
  - [NumPy](https://docs.scipy.org/doc/numpy/reference/) (>=1.18.0)
  - [f90wrap](https://github.com/jameskermode/f90wrap) (latest)
  - [Quantum ESPRESSO ](https://gitlab.com/QEF/q-e/-/releases/qe-6.5) (=6.5)
- - [Intel Compiler](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html)
+ - Compiler ([Intel](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html) or [GNU](https://gcc.gnu.org/fortran/))
 
 ## Optional (highly recommended):
  - [mpi4py](https://bitbucket.org/mpi4py/mpi4py) MPI for python
