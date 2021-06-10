@@ -55,8 +55,8 @@ subroutine qepy_molecule_optical_absorption(embed)
 
   integer :: istep, lter, flag_global
   integer :: ik, is, ibnd
-  complex(dp) :: ee                     ! i*dt/2
-  real(dp) :: anorm, wclock
+  complex(dp),save :: ee                     ! i*dt/2
+  real(dp),save :: anorm, wclock
   integer, external :: find_free_unit
   real(dp), external :: get_clock
   external tddft_ch_psi_all
