@@ -24,6 +24,7 @@ class MakeBuild(build_ext):
         topdir = './'
         build_args = []
         env = os.environ.copy()
+        self.build_name = self.build_lib+ os.sep + name
 
         try:
             import multiprocessing as mp
@@ -32,11 +33,9 @@ class MakeBuild(build_ext):
             nprocs = 1
         build_args += ['-j', str(nprocs)]
 
-        if os.path.exists(self.build_temp):
-            shutil.rmtree(self.build_temp)
+        if os.path.exists(self.build_temp): shutil.rmtree(self.build_temp)
 
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
+        if not os.path.exists(self.build_temp): os.makedirs(self.build_temp)
 
         #remove *.so files
         for f in pathlib.Path(self.build_temp).glob('*.so'):
@@ -54,13 +53,12 @@ class MakeBuild(build_ext):
 
         subprocess.check_call(['make', '-f', 'Makefile'] + build_args, cwd=self.build_temp, env = env)
 
-        if not os.path.exists(self.build_lib):
-            os.makedirs(self.build_lib)
-        elif os.path.exists(self.build_lib + os.sep + name):
-            shutil.rmtree(self.build_lib+ os.sep + name)
-        shutil.copytree(self.build_temp + os.sep + name, self.build_lib + os.sep + name)
+        if not os.path.exists(self.build_lib): os.makedirs(self.build_lib)
+        # if os.path.exists(self.build_name): shutil.rmtree(self.build_name)
+        for f in pathlib.Path(self.build_temp + os.sep + name).glob('*'):
+            shutil.copy2(f, self.build_name)
         for f in pathlib.Path(self.build_temp).glob('*.so'):
-            shutil.copy(f, self.build_lib + os.sep)
+            shutil.copy2(f, self.build_lib + os.sep)
 
 
 extensions_qepy = Extension(

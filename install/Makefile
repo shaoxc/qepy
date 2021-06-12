@@ -13,11 +13,11 @@ QEINC :=-I${QEDIR}/Modules/ -I${QEDIR}/KS_Solvers/ -I${QEDIR}/FFTXlib/ \
        -I${QEDIR}/iotk/src/ \
        -I.
 
-MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90
+MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 \
-			 atomic_wfc_mod.f90 close_files.f90
+			 atomic_wfc_mod.f90 close_files.f90 stress.f90
 PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
 
 TDDFT_SOURCES = tddft_module.f90
