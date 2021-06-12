@@ -1025,11 +1025,14 @@ MODULE qepy_pw_restart_new
       CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
       !!
       !! Basis set section
+      if (lalloc) then
+      !qepy: Here, npwx is npwx_g, which is greater than npwx in mpi
       CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only, ecutwfc,&
            ecutrho, dffts%nr1,dffts%nr2,dffts%nr3, dfftp%nr1,dfftp%nr2,dfftp%nr3, &
            dum1,dum2,dum3, ngm_g, ngms_g, npwx, bg(:,1), bg(:,2), bg(:,3) )
       ecutwfc = ecutwfc*e2
       ecutrho = ecutrho*e2
+      endif
       dual = ecutrho/ecutwfc
       ! FIXME: next line ensures exact consistency between reciprocal and
       ! direct lattice vectors, preventing weird phonon symmetry errors
