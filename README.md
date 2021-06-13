@@ -12,7 +12,7 @@
  - NSF for funding the Quantum-Multiscale collaboration
 
 # What's in this code?
-Small modifications to QE routines and a quick compilation with Python wrappers. `QEPy` is based on QE-6.5 and is kept up to date with the latest QE stable release.
+Small modifications to QE routines and a quick compilation with Python wrappers. `QEpy` is based on QE-6.5 and is kept up to date with the latest QE stable release.
 
 ## Requirements
  - [Python](https://www.python.org/) (>=3.6)
@@ -61,7 +61,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
    + Build the normal ***pw*** or ***pwlibs***.
 
- - **QEPY**
+ - **QEpy**
 
    + `git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git`
    + `qedir=${QE} python setup.py install --user`
