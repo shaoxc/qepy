@@ -5,7 +5,7 @@
 
  - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
  - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers) 
- - Oliviero Andreussi (UNT), Davide Ceresoli (CNR, Italy), Matthew Truscott (UNT), Michele Pavanello (Rutgers)
+ - Oliviero Andreussi (UNT), Davide Ceresoli (CNR, Italy), Matthew Truscott (UNT), Andrew Baczewski (Sandia), Michele Pavanello (Rutgers)
 
 # Thanks to ...
  - The Quantum ESPRESSO developers for the QE codebase
