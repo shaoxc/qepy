@@ -7,27 +7,6 @@ MODULE qepy_mod
    PUBLIC
    !
 CONTAINS
-   SUBROUTINE qepy_init_pointer()
-      use scf, only: rho,v,vnew
-      !
-      IMPLICIT NONE
-      REAL(DP), POINTER :: scf__rho__of_r(:,:)
-      REAL(DP), POINTER :: scf__v__of_r(:,:)
-      REAL(DP), POINTER :: scf__vnew__of_r(:,:)
-      !
-      IF (ALLOCATED(rho%of_r)) THEN
-         associate(scf__rho__of_r => rho%of_r)
-         end associate
-      ENDIF
-      IF (ALLOCATED(v%of_r)) THEN
-         associate(scf__v__of_r => v%of_r)
-         end associate
-      ENDIF
-      IF (ALLOCATED(vnew%of_r)) THEN
-         associate(scf__vnew__of_r => vnew%of_r)
-         end associate
-      ENDIF
-   END SUBROUTINE
 
    SUBROUTINE mp_gather(fin, fout)
       USE kinds,                ONLY : DP
@@ -226,12 +205,21 @@ CONTAINS
       END IF
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_mod_float(mod_name, param, value)
+   SUBROUTINE qepy_get_evc(ik, wfc)
+      USE kinds,                ONLY : DP
+      USE io_files,             ONLY : iunwfc, nwordwfc
+      USE buffers,              ONLY : get_buffer
+      USE wavefunctions,        ONLY : evc
+      USE klist,                ONLY : nks
       !
-      CHARACTER(LEN=*),INTENT(IN)  :: mod_name
-      CHARACTER(LEN=*),INTENT(IN)  :: param
-      REAL(DP),INTENT(IN)  :: value
+      IMPLICIT NONE
+      INTEGER,INTENT(IN) :: ik
+      COMPLEX(DP), INTENT(OUT),OPTIONAL :: wfc(:,:)
       !
+      IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+      IF ( present(wfc) ) THEN
+         wfc = evc
+      ENDIF
    END SUBROUTINE
 
 END MODULE qepy_mod

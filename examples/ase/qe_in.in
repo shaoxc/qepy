@@ -5,7 +5,7 @@
     outdir = 'al.wfx'
 !    tstress = .true.
     tprnfor = .true.
-    verbosity = 'high'
+!    verbosity = 'high'
     iprint = 1
     pseudo_dir = './'
 /
@@ -18,6 +18,8 @@
     smearing = 'gaussian'
     degauss = 0.001
     nosym = .true.
+!	nspin = 2
+!	tot_magnetization = 0.0
 /
 &electrons
 !    mixing_mode = 'plain'

@@ -125,5 +125,112 @@ class QEpyCalculator(Calculator):
         if self.rank == 0 :
             if np.prod(nr) != self.density.shape[0] or nspin != self.density.shape[0] :
                 self.density = np.empty((np.prod(nr), nspin), order = 'F')
+        else :
+            self.density = np.empty((1, nspin), order = 'F')
         qepy.qepy_mod.qepy_get_rho(self.density)
         return self.density / (units['Bohr'] ** 3)
+
+    #ASE interface to DFT-calculators <--
+    def get_number_of_bands(self):
+        """Return the number of bands."""
+        return qepy.wvfct.get_nbnd()
+
+    def get_xc_functional(self):
+        """Return the XC-functional identifier.
+
+        'LDA', 'PBE', ..."""
+        return qepy.funct.get_dft_short().decode("utf-8")
+
+    def get_bz_k_points(self):
+        """Return all the k-points in the 1. Brillouin zone.
+
+        The coordinates are relative to reciprocal latice vectors."""
+        return qepy.klist.get_array_xk()
+
+    def get_number_of_spins(self):
+        """Return the number of spins in the calculation.
+
+        Spin-paired calculations: 1, spin-polarized calculation: 2."""
+        return qepy.lsda_mod.get_nspin()
+
+    def get_spin_polarized(self):
+        """Is it a spin-polarized calculation?"""
+        return bool(qepy.lsda_mod.get_lsda())
+
+    def get_ibz_k_points(self):
+        """Return k-points in the irreducible part of the Brillouin zone.
+
+        The coordinates are relative to reciprocal latice vectors."""
+        return qepy.klist.get_array_xk()[:, :self.get_number_of_k_points()]
+
+    def get_k_point_weights(self):
+        """Weights of the k-points.
+
+        The sum of all weights is one."""
+        return qepy.klist.get_array_wk()[:self.get_number_of_k_points()]
+
+    def get_pseudo_density(self, spin=None, pad=True):
+        """Return pseudo-density array.
+
+        If *spin* is not given, then the total density is returned.
+        Otherwise, the spin up or down density is returned (spin=0 or
+        1)."""
+        density = self.get_density()
+        if spin is None :
+            return density.sum(axis=1)
+        else :
+            return density[:, spin]
+
+    def get_effective_potential(self, spin=0, pad=True):
+        """Return pseudo-effective-potential array."""
+        return qepy.scf.get_array_vrs()
+
+    def get_pseudo_wave_function(self, band=None, kpt=0, spin=0, broadcast=True,
+                                 pad=True):
+        """Return pseudo-wave-function array."""
+        qepy.qepy_mod.qepy_get_evc(kpt + 1)
+        evc = qepy.wavefunctions.get_array_evc()
+        if band is None :
+            return evc
+        else :
+            return evc[:, band]
+
+    def get_eigenvalues(self, kpt=0, spin=0):
+        """Return eigenvalue array."""
+        return qepy.wvfct.get_array_et()[:, kpt]
+
+    def get_occupation_numbers(self, kpt=0, spin=0):
+        """Return occupation number array."""
+        return qepy.wvfct.get_array_wg()[:, kpt]
+
+    def get_fermi_level(self):
+        """Return the Fermi level."""
+        return qepy.ener.get_ef()*units['Ry']
+
+    def initial_wannier(self, initialwannier, kpointgrid, fixedstates,
+                        edf, spin, nbands):
+        """Initial guess for the shape of wannier functions.
+
+        Use initial guess for wannier orbitals to determine rotation
+        matrices U and C.
+        """
+        raise NotImplementedError
+
+    def get_wannier_localization_matrix(self, nbands, dirG, kpoint,
+                                        nextkpoint, G_I, spin):
+        """Calculate integrals for maximally localized Wannier functions."""
+        raise NotImplementedError
+
+    def get_magnetic_moment(self, atoms=None):
+        """Return the total magnetic moment."""
+        return qepy.lsda_mod.get_magtot()
+
+    def get_number_of_grid_points(self):
+        """Return the shape of arrays."""
+        nr = np.zeros(3, dtype = 'int32')
+        qepy.qepy_mod.qepy_get_grid(nr)
+        return nr
+    #ASE interface to DFT-calculators -->
+
+    def get_number_of_k_points(self):
+        return qepy.klist.get_nks()
