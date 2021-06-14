@@ -48,7 +48,7 @@ class QEpyCalculator(Calculator):
             self.inputfile = 'qepy_input.in'
             ase.io.write(self.inputfile, self.atoms, format = 'espresso-in', **self.parameters)
         if self.comm is None :
-            comm = self.comm
+            comm = None
         else :
             comm = self.comm.py2f()
 
@@ -169,17 +169,20 @@ class QEpyCalculator(Calculator):
         The sum of all weights is one."""
         return qepy.klist.get_array_wk()[:self.get_number_of_k_points()]
 
-    def get_pseudo_density(self, spin=None, pad=True):
+    def get_pseudo_density(self, spin=None, pad=True, inone = False):
         """Return pseudo-density array.
 
         If *spin* is not given, then the total density is returned.
         Otherwise, the spin up or down density is returned (spin=0 or
         1)."""
-        density = self.get_density()
+        nr = self.get_number_of_grid_points(inone = inone)
+        nspin = qepy.lsda_mod.get_nspin()
+        density = np.empty((np.prod(nr), nspin), order = 'F')
+        qepy.qepy_mod.qepy_get_rho(density, inone = inone)
         if spin is None :
-            return density.sum(axis=1)
+            return density.sum(axis=1) / (units['Bohr'] ** 3)
         else :
-            return density[:, spin]
+            return density[:, spin] / (units['Bohr'] ** 3)
 
     def get_effective_potential(self, spin=0, pad=True):
         """Return pseudo-effective-potential array."""
@@ -225,10 +228,10 @@ class QEpyCalculator(Calculator):
         """Return the total magnetic moment."""
         return qepy.lsda_mod.get_magtot()
 
-    def get_number_of_grid_points(self):
+    def get_number_of_grid_points(self, inone = True):
         """Return the shape of arrays."""
         nr = np.zeros(3, dtype = 'int32')
-        qepy.qepy_mod.qepy_get_grid(nr)
+        qepy.qepy_mod.qepy_get_grid(nr, inone)
         return nr
     #ASE interface to DFT-calculators -->
 

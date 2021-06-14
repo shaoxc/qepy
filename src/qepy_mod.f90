@@ -38,7 +38,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_rho(rhor)
+   SUBROUTINE qepy_get_rho(rhor, inone)
       USE kinds,                ONLY : DP
       use scf, only: rho !! the charge density and its other components
       USE fft_base,         ONLY : dfftp, dffts
@@ -46,18 +46,26 @@ CONTAINS
       !
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhor(:,:)
-      !REAL(DP), INTENT(OUT) :: rhor(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
       !
       INTEGER  :: ispin
+      LOGICAL :: mflag
       !
-      !print *, 'get_rho_IN',minval(rho%of_r),maxval(rho%of_r),sum(rho%of_r)
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
       DO ispin = 1, nspin
-         CALL mp_gather(rho%of_r(:,ispin), rhor(:,ispin))
+         IF ( mflag ) THEN
+            CALL mp_gather(rho%of_r(:,ispin), rhor(:,ispin))
+         ELSE
+            rhor(:,ispin) = rho%of_r(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p,ispin)
+         ENDIF
       END DO
-      !print *, 'get_rho_OUT',minval(rhor),maxval(rhor),sum(rhor)
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_rho(rhor)
+   SUBROUTINE qepy_set_rho(rhor, inone)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,         ONLY : dfftp, dffts
@@ -66,35 +74,73 @@ CONTAINS
       !
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhor(:,:)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
       !
       INTEGER  :: ispin
+      LOGICAL :: mflag
+      !
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
       DO ispin = 1, nspin
-         CALL mp_scatter(rhor(:,ispin), rho%of_r(:,ispin))
+         IF ( mflag ) THEN
+            CALL mp_scatter(rhor(:,ispin), rho%of_r(:,ispin))
+         ELSE
+            rho%of_r(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p,ispin) = rhor(:,ispin)
+            rho%of_r(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr,ispin) = 0.d0
+         ENDIF
       END DO
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_rho_core(rhoc)
+   SUBROUTINE qepy_get_rho_core(rhoc, inone)
       USE kinds,                ONLY : DP
       use scf, only: rho_core !! the core charge in real space
       USE fft_base,         ONLY : dfftp, dffts
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhoc(:)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      CALL mp_gather(rho_core, rhoc)
+      LOGICAL :: mflag
+      !
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
+      IF ( mflag ) THEN
+         CALL mp_gather(rho_core, rhoc)
+      ELSE
+         rhoc = rho_core(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p)
+      ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_rho_core(rhoc)
+   SUBROUTINE qepy_set_rho_core(rhoc, inone)
       USE kinds,                ONLY : DP
       use scf, only: rho_core !! the core charge in real space
       USE fft_base,         ONLY : dfftp, dffts
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhoc(:)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      CALL mp_scatter(rhoc, rho_core)
+      LOGICAL :: mflag
+      !
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
+      IF ( mflag ) THEN
+         CALL mp_scatter(rhoc, rho_core)
+      ELSE
+         rho_core(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p) = rhoc
+         rho_core(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr) = 0.d0
+      ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_extpot(embed, vin)
+   SUBROUTINE qepy_set_extpot(embed, vin, inone)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,         ONLY : dfftp, dffts
@@ -102,22 +148,47 @@ CONTAINS
       IMPLICIT NONE
       TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: vin(:)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
       !
+      LOGICAL :: mflag
+      !
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
       IF (ALLOCATED(embed%extpot)) THEN
          IF (SIZE(embed%extpot) /= dfftp%nnr) DEALLOCATE(embed%extpot)
       ENDIF
       IF (.NOT.ALLOCATED(embed%extpot)) ALLOCATE(embed%extpot(dfftp%nnr))
-      CALL mp_scatter(vin, embed%extpot)
+      IF ( mflag ) THEN
+         CALL mp_scatter(vin, embed%extpot)
+      ELSE
+         embed%extpot(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p) = vin
+         embed%extpot(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr) = 0.d0
+      ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_grid(nr)
+   SUBROUTINE qepy_get_grid(nr, inone)
       USE kinds,                ONLY : DP
       USE fft_base,         ONLY : dfftp, dffts
       !
       IMPLICIT NONE
       INTEGER, INTENT(OUT) :: nr(3)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      nr=(/dfftp%nr1, dfftp%nr2, dfftp%nr3/)
+      LOGICAL :: mflag
+      !
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
+      IF ( mflag ) THEN
+         nr=(/dfftp%nr1, dfftp%nr2, dfftp%nr3/)
+      ELSE
+         nr=(/dfftp%nr1x, dfftp%my_nr2p, dfftp%my_nr3p/)
+      ENDIF
    END SUBROUTINE
 
    SUBROUTINE qepy_set_stdout(fname, uni)
