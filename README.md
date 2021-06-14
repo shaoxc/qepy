@@ -1,8 +1,18 @@
-# QEPY - Quantum ESPRESSO Python interface
-   `QEPy` turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose. 
+# QEpy - Quantum ESPRESSO in Python
+   `QEpy` turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose. 
    
+# Contributors and funding
+
+ - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
+ - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers) 
+ - Oliviero Andreussi (UNT), Davide Ceresoli (CNR, Italy), Matthew Truscott (UNT), Andrew Baczewski (Sandia), Michele Pavanello (Rutgers)
+
+# Thanks to ...
+ - The Quantum ESPRESSO developers for the QE codebase
+ - NSF for funding the Quantum-Multiscale collaboration
+
 # What's in this code?
-Small modifications to QE routines and a quick compilation with Python wrappers. `QEPy` is based on QE-6.5 and is kept up to date with the latest QE stable release.
+Small modifications to QE routines and a quick compilation with Python wrappers. `QEpy` is based on QE-6.5 and is kept up to date with the latest QE stable release.
 
 ## Requirements
  - [Python](https://www.python.org/) (>=3.6)
@@ -51,7 +61,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
    + Build the normal ***pw*** or ***pwlibs***.
 
- - **QEPY**
+ - **QEpy**
 
    + `git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git`
    + `qedir=${QE} python setup.py install --user`
