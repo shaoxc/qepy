@@ -103,6 +103,11 @@ subroutine qepy_molecule_optical_absorption(embed)
         call get_buffer (evc, nwordwfc, iunevcn, ik)
      end do
      
+     !qepy <--
+     ! replace the iunwfc with iunevcn for sum_band
+     iunwfc = iunevcn
+     call sum_band()
+     !qepy -->
      call qepy_update_hamiltonian(-1, embed)
  
      if (iverbosity > 0) write(stdout,'(5X,''Done with restart'')')
@@ -135,10 +140,6 @@ subroutine qepy_molecule_optical_absorption(embed)
     embed%tddft%istep = embed%tddft%istep + 1
     istep = embed%tddft%istep
      
-    if (istep==1) then
-    call sum_band()
-    endif
-
     call qepy_update_hamiltonian(istep, embed)
 
     ! calculate dipole moment along x, y, and z direction
@@ -155,7 +156,8 @@ subroutine qepy_molecule_optical_absorption(embed)
       call g2_kin(ik)
       call init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
       
-      if (nks>1) then
+      !print*, 'iunit', iunwfc, iunevcn, istep
+      if (nks>1 .or. ( l_tddft_restart .and. (istep == 1) ) ) then
       ! read wfcs from file and compute becp
       evc = (0.d0, 0.d0)
       if (istep == 1) then
@@ -167,9 +169,13 @@ subroutine qepy_molecule_optical_absorption(embed)
       if (.not. is_allocated_bec_type(becp)) call allocate_bec_type(nkb, nbnd, becp)
       call calbec( npw, vkb, evc, becp )
       if (nks>1) then
-      if ( (istep > 1) .or. (l_tddft_restart .and. (istep == 1)) ) then
+      !if ( (istep > 1) .or. (l_tddft_restart .and. (istep == 1)) ) then
+      if ( istep > 1 ) then
         call get_buffer (tddft_psi, nwordtdwfc, iuntdwfc, ik)
       endif
+      endif
+      if ( l_tddft_restart .and. (istep == 1) ) then
+        call get_buffer (tddft_psi, nwordtdwfc, iuntdwfc, ik)
       endif
 
       ! apply electric field
@@ -221,7 +227,11 @@ subroutine qepy_molecule_optical_absorption(embed)
 
     ! update the hamiltonian (recompute charge and potential)
     !call qepy_update_hamiltonian(istep, embed)
+    !qepy <--
+    ! replace the iunwfc with iunevcn for sum_band
+    iunwfc = iunevcn
     call sum_band()
+    !qepy -->
 
     ! print observables
     if (ionode) then
@@ -437,5 +447,3 @@ CONTAINS
   end subroutine compute_circular_dichroism
 
 END SUBROUTINE qepy_molecule_optical_absorption
- 
-
