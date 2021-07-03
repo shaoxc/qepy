@@ -737,6 +737,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
               !
               ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )
               !
+              !qepy <--
+              ethr = MAX( ethr, 1.D-13 )
+              !qepy -->
               CYCLE scf_step
               !
            ENDIF
