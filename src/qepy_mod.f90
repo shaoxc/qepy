@@ -205,9 +205,8 @@ CONTAINS
          stdout=666
       ENDIF
 
-      IF(ionode) THEN
-         OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
-      ENDIF
+      !IF(ionode)
+      OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
    END SUBROUTINE
 
    SUBROUTINE qepy_write_stdout(fstr)
