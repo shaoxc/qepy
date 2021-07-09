@@ -469,9 +469,11 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !! auxiliary variables for grimme-d3
   !
   INTEGER:: its
+  !!
+  REAL(DP) :: mixing_beta_new
   
   if (embed%finish) goto 10
-  if (embed%mix_coef>0.0) goto 100
+  if (embed%mix_coef>0.0_DP) goto 100
 
   if (embed%initial) then
   iter = 0
@@ -675,10 +677,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         !
         deband = delta_e()
         !
-100     if (.not. embed%initial .and. (embed%mix_coef<0)) then
+100     if (.not. embed%initial .and. (embed%mix_coef<0.0_DP)) then
            ! from second step directly return new density without mixing
            goto 111
-        else if ( embed%initial .and. (embed%mix_coef>0)) then
+        else if ( embed%initial .and. (embed%mix_coef>0.0_DP)) then
            ! the first step already mixing, so do nothing
            goto 111
         end if
@@ -691,7 +693,14 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         ! ... is parallelized on the entire image
         !
         ! IF ( my_pool_id == root_pool ) 
-        CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
+        !
+        if (embed%mix_coef>0.0_DP) then
+           mixing_beta_new = embed%mix_coef
+        else
+           mixing_beta_new = mixing_beta
+        endif
+        !
+        CALL mix_rho( rho, rhoin, mixing_beta_new, dr2, tr2_min, iter, nmix, &
                       iunmix, conv_elec )
         !
         ! ... Results are broadcast from pool 0 to others to prevent trouble
@@ -746,7 +755,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            !
         ENDIF
         !-----------------------------------------------------------------------
-        if (embed%exttype>0 .or. embed%mix_coef>0) then
+        if (embed%exttype>0 .or. embed%mix_coef>0.0_DP) then
            CALL scf_type_COPY( rhoin, rho )
            descf = 0._dp
            goto 111
@@ -850,7 +859,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      ENDIF  
 
      !
-111  IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
+111  if ( embed%mix_coef < 0.0_DP .and. niter==1 ) return
+     !
+     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
         IF ( lda_plus_U .AND. iverbosity == 0 ) THEN
            IF (noncolin) THEN
