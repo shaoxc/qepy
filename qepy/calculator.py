@@ -2,6 +2,7 @@ import numpy as np
 import qepy
 from ase.calculators.calculator import Calculator
 from ase.units import create_units
+from ase.geometry import wrap_positions
 import ase.io
 
 units = create_units('2006')
@@ -12,7 +13,8 @@ class QEpyCalculator(Calculator):
     """QEpy calculator for ase"""
     implemented_properties=['energy', 'forces', 'stress']
 
-    def __init__(self, atoms = None, comm = None, task = 'scf', embed = None, inputfile = None, input_data = None, **kwargs):
+    def __init__(self, atoms = None, comm = None, task = 'scf', embed = None, inputfile = None,
+            input_data = None, wrap = False, **kwargs):
         Calculator.__init__(self, atoms = atoms, input_data = input_data, **kwargs)
         self.optimizer = None
         self.restart()
@@ -28,6 +30,7 @@ class QEpyCalculator(Calculator):
         self.atoms = atoms
         self.comm = comm
         self.inputfile = inputfile
+        self.wrap = wrap
         if self.inputfile is not None :
             self.atoms = ase.io.read(self.inputfile, format='espresso-in')
 
@@ -46,6 +49,7 @@ class QEpyCalculator(Calculator):
     def driver_initialise(self, **kwargs):
         if self.inputfile is None :
             self.inputfile = 'qepy_input.in'
+            if self.wrap : self.atoms.wrap()
             ase.io.write(self.inputfile, self.atoms, format = 'espresso-in', **self.parameters)
         if self.comm is None :
             comm = None
@@ -61,7 +65,11 @@ class QEpyCalculator(Calculator):
     def update_atoms(self, atoms = None, first = False, update = 0, **kwargs):
         atoms = atoms or self.atoms
         if not first :
-            pos = atoms.positions.T / atoms.cell.cellpar()[0]
+            if self.wrap :
+                positions = wrap_positions(atoms.positions, atoms.cell)
+            else :
+                positions = atoms.positions
+            pos = positions.T / atoms.cell.cellpar()[0]
             qepy.qepy_mod.qepy_update_ions(self.embed, pos, update)
         if self.task == 'optical' :
             if first :

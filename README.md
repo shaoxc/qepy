@@ -21,7 +21,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
  - [NumPy](https://docs.scipy.org/doc/numpy/reference/) (>=1.18.0)
  - [f90wrap](https://github.com/jameskermode/f90wrap) (latest)
  - [Quantum ESPRESSO ](https://gitlab.com/QEF/q-e/-/releases/qe-6.5) (=6.5)
- - Compiler ([Intel](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html) or [GNU](https://gcc.gnu.org/fortran/))
+ - Compiler ([GNU](https://gcc.gnu.org/fortran/)(Recommended) or [Intel](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html))
 
 ## Optional (highly recommended):
  - [mpi4py](https://bitbucket.org/mpi4py/mpi4py) MPI for python
@@ -94,3 +94,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 ## Todo
  - ~~Update the Makefile to support Gfortran compiler~~
  - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*
+
+## Bugs
+ - Intel Compiler
+
+	If you met any problems like the following, please try latest Intel compiler or GNU compiler.
+
+	+ *[MPID_nem_tmi_pending_ssend_dequeue]: ERROR: can not find matching ssend...*
+	+ The initial density totally wrong with more than one nodes.
+
