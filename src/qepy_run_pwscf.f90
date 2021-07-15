@@ -53,6 +53,8 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml )
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
   USE mp_world, ONLY: world_comm
   !
+  USE kinds,                ONLY : DP
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(OUT) :: exit_status
@@ -137,6 +139,10 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml )
      RETURN
   ENDIF
   exit_status = 255
+  !qepy -->
+  !fix: force allocate with NaN
+  force=0.0_dp
+  !qepy <--
   !
   !main_loop: DO idone = 1, nstep
      !!

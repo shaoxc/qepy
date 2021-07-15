@@ -1009,7 +1009,6 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )
   CALL stop_clock( 'electrons' )
-  CALL punch( 'config-nowf' )
   !
   RETURN
   !
