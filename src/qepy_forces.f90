@@ -175,7 +175,9 @@ SUBROUTINE qepy_forces(icalc)
   !
   ! ... The SCF contribution
   !
+  if (.not. present(icalc) .or. icalc<1) then
   CALL force_corr( forcescc )
+  endif
   !
   IF (do_comp_mt) THEN
     !
