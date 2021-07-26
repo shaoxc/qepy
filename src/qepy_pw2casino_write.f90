@@ -367,6 +367,9 @@
       REAL(DP) :: ek, eloc, enl, etot_
       REAL (DP), EXTERNAL :: ewald, w1gauss
       INTEGER :: nk
+      !
+      REAL(DP) :: eext
+      !
 
       IF( lsda )THEN
          !nbndup = nbnd
@@ -491,12 +494,20 @@
       ENDDO
 
       DEALLOCATE ( g2kin )
+      eext=0.0_DP
+      IF (ALLOCATED(embed%extpot)) THEN
+         DO ispin = 1, nspin
+            eext = eext + sum(embed%extpot*rho%of_r(:, ispin))
+         ENDDO
+         eext = eext * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+      ENDIF
 #if defined(__MPI)
       CALL mp_sum( eloc,  intra_bgrp_comm )
       CALL mp_sum( ek,    intra_bgrp_comm )
       CALL mp_sum( ek,    inter_pool_comm )
       CALL mp_sum( enl,   inter_pool_comm )
       CALL mp_sum( demet, inter_pool_comm )
+      CALL mp_sum( eext,  intra_bgrp_comm )
 #endif
       eloc = eloc * omega
       !
@@ -506,7 +517,7 @@
       ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
            g, gg, ngm, gcutm, gstart, gamma_only, strf )
       else
-         ewld=0.D0
+         ewld=0.0_DP
       end if
       !
       ! compute hartree and xc contribution
@@ -551,7 +562,8 @@
       IF( degauss > 0.0_dp ) &
          WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
       WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
-      WRITE (stdout,*) 'Total energy0     ', etot_/e2, ' au  =  ', etot_, ' Ry'
+      WRITE (stdout,*) 'Total energy0    ', etot_/e2, ' au  =  ', etot_, ' Ry'
+      WRITE (stdout,*) 'External energy0 ', eext/e2, ' au  =  ', eext, ' Ry'
       WRITE (stdout,*)
       embed%etotal=etot_
 

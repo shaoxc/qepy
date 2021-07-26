@@ -191,12 +191,15 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_stdout(fname, uni)
+   SUBROUTINE qepy_set_stdout(fname, uni, append)
       USE io_global,     ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
       CHARACTER(LEN=*),INTENT(IN),OPTIONAL  :: fname
       INTEGER,INTENT(in),OPTIONAL :: uni
+      LOGICAL,INTENT(in),OPTIONAL :: append
+      !
+      LOGICAL :: exst
       !
       IF ( .NOT. present(fname) ) return
       IF ( present(uni) ) THEN
@@ -206,7 +209,16 @@ CONTAINS
       ENDIF
 
       !IF(ionode)
-      OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
+      exst=.false.
+      IF ( present(append) .and. append) THEN
+         INQUIRE (file = TRIM(fname), exist = exst)
+      ENDIF
+
+      IF (exst) THEN
+         OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', POSITION= 'append', iostat = ierr )
+      ELSE
+         OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
+      ENDIF
    END SUBROUTINE
 
    SUBROUTINE qepy_write_stdout(fstr)
