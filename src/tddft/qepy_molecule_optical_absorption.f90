@@ -43,6 +43,7 @@ subroutine qepy_molecule_optical_absorption(embed)
                                       tddft_Ppsi, &
                                       charge, dipole, quadrupole, &
                                       circular, circular_local
+  USE uspp,                    ONLY : nkb, vkb, okvan
   !
   IMPLICIT NONE
 
@@ -230,6 +231,7 @@ subroutine qepy_molecule_optical_absorption(embed)
     !qepy <--
     ! replace the iunwfc with iunevcn for sum_band
     iunwfc = iunevcn
+    if (okvan .and. is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
     call sum_band()
     !qepy -->
 
