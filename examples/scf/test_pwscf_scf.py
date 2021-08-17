@@ -28,6 +28,8 @@ for i in range(nstep):
     qepy.qepy_electrons_scf(0, 0, embed)
     embed.mix_coef = 0.7
     qepy.qepy_electrons_scf(2, 0, embed)
+embed.finish = True
+qepy.qepy_electrons_scf(2, 0, embed)
 
 qepy.qepy_calc_energies(embed)
 etotal = embed.etotal

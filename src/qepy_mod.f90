@@ -48,7 +48,7 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      INTEGER  :: ispin
+      INTEGER  :: ispin, nnr
       LOGICAL :: mflag
       !
       IF ( present(inone) ) THEN
@@ -60,7 +60,8 @@ CONTAINS
          IF ( mflag ) THEN
             CALL mp_gather(rho%of_r(:,ispin), rhor(:,ispin))
          ELSE
-            rhor(:,ispin) = rho%of_r(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p,ispin)
+            nnr=dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
+            rhor(1:nnr,ispin) = rho%of_r(1:nnr,ispin)
          ENDIF
       END DO
    END SUBROUTINE
@@ -76,7 +77,7 @@ CONTAINS
       REAL(DP), INTENT(IN) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      INTEGER  :: ispin
+      INTEGER  :: ispin, nnr
       LOGICAL :: mflag
       !
       IF ( present(inone) ) THEN
@@ -88,8 +89,9 @@ CONTAINS
          IF ( mflag ) THEN
             CALL mp_scatter(rhor(:,ispin), rho%of_r(:,ispin))
          ELSE
-            rho%of_r(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p,ispin) = rhor(:,ispin)
-            rho%of_r(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr,ispin) = 0.d0
+            nnr=dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
+            rho%of_r(1:nnr,ispin) = rhor(1:nnr,ispin)
+            rho%of_r(nnr:dfftp%nnr,ispin) = 0.d0
          ENDIF
       END DO
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
