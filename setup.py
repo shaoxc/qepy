@@ -95,4 +95,5 @@ if __name__ == "__main__":
                 'Topic :: Scientific/Engineering :: Chemistry',
                 'Topic :: Scientific/Engineering :: Physics'
                 ],
+            zip_safe = False,
             )

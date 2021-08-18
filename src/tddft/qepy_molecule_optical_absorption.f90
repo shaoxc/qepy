@@ -107,6 +107,7 @@ subroutine qepy_molecule_optical_absorption(embed)
      !qepy <--
      ! replace the iunwfc with iunevcn for sum_band
      iunwfc = iunevcn
+     if (okvan .and. is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
      call sum_band()
      !qepy -->
      call qepy_update_hamiltonian(-1, embed)
