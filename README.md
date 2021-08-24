@@ -76,6 +76,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	e.g.
 
 	- "`oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
+	- "`original=yes`" only wrap original QE files and a ``qepy_mod``, which support most of versions QE.
 
 ## FAQ
  - Some Intel MPI/MKL errors occur. What do I do?

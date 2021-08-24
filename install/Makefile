@@ -5,13 +5,13 @@ include ${QEDIR}/make.inc
 SRC_DIRS := ./
 PY_SRC_DIR := ./
 
-QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/KS_Solvers/libks_solvers.a ${QEDIR}/FFTXlib/libqefft.a \
-       ${QEDIR}/LAXlib/libqela.a ${QEDIR}/UtilXlib/libutil.a ${QEDIR}/dft-d3/libdftd3qe.a ${QEDIR}/dft-d3/libdftd3qe.a
+QEMODS := $(wildcard ${QEDIR}/*/*.a)
 
-QEINC :=-I${QEDIR}/Modules/ -I${QEDIR}/KS_Solvers/ -I${QEDIR}/FFTXlib/ \
-       -I${QEDIR}/LAXlib/ -I${QEDIR}/UtilXlib/ -I${QEDIR}/dft-d3/ -I${QEDIR}/PW/src/ \
-       -I${QEDIR}/iotk/src/ \
-       -I.
+QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/src/Makefile)
+QEINC := $(addprefix -I, ${QEINC})
+QEINC := $(QEINC:%/Makefile=%/) -I.
+
+#$(info 'qemods', ${QEMODS})
 
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 funct.f90 recvec.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
@@ -23,12 +23,12 @@ PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
 
-QEPY_SOURCES := qepy_scatter_mod.f90 \
-              qepy_common.f90 qepy_mod.f90 \
-              qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
+QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90
+
+QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
               qepy_hinit1.f90 qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90 \
               qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
-              qepy_forces.f90 qepy_stop_run.f90
+              qepy_forces.f90 qepy_stop_run.f90 qepy_api.f90
 
 OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
                 oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
@@ -41,6 +41,14 @@ QEPY_TDDFT_SOURCES := qepy_tddft_common.f90 \
 
 FOLDXML =
 EXT_FILES=
+
+ifeq ($(original), yes)
+   QEPY_SOURCES := ${QEPY_ADD}
+   oldxml = no
+   tddft = no
+else
+   QEPY_SOURCES += ${QEPY_ADD}
+endif
 
 ifeq ($(oldxml), yes)
    QEPY_SOURCES := ${OLDXML_SOURCES} ${QEPY_SOURCES}
@@ -55,7 +63,7 @@ endif
 
 QEPY_FILES = ${QEPY_SOURCES}
 
-#$(info 'files', ${QEPY_FILES}})
+#$(info 'files', ${QEPY_FILES})
 
 QEPY_OBJS = $(QEPY_SOURCES:%.f90=%.o)
 

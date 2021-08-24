@@ -11,6 +11,7 @@ oldxml_read_file.o : oldxml_io_rho_xml.o
 oldxml_read_file.o : oldxml_pw_restart.o
 oldxml_read_file.o : oldxml_xml_io_base.o
 oldxml_wfcinit.o : oldxml_pw_restart.o
+qepy_api.o : qepy_common.o
 qepy_electrons.o : qepy_common.o
 qepy_mod.o : qepy_common.o
 qepy_mod.o : qepy_scatter_mod.o
