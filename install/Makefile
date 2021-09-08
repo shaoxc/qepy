@@ -16,7 +16,8 @@ QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/src/Makefile)
 QEINC := $(addprefix -I, ${QEINC})
 QEINC := $(QEINC:%/Makefile=%/) -I.
 
-MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 funct.f90 recvec.f90
+MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 funct.f90 \
+				  recvec.f90 control_flags.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 \
