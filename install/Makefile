@@ -5,15 +5,19 @@ include ${QEDIR}/make.inc
 SRC_DIRS := ./
 PY_SRC_DIR := ./
 
-QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/KS_Solvers/libks_solvers.a ${QEDIR}/FFTXlib/libqefft.a \
-       ${QEDIR}/LAXlib/libqela.a ${QEDIR}/UtilXlib/libutil.a ${QEDIR}/dft-d3/libdftd3qe.a ${QEDIR}/dft-d3/libdftd3qe.a
+QEMODS := $(wildcard ${QEDIR}/*/*.a)
+QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${QEDIR}/Modules/libqemod.a, $(QEMODS))
+#QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/KS_Solvers/libks_solvers.a ${QEDIR}/FFTXlib/libqefft.a \
+#       ${QEDIR}/LAXlib/libqela.a ${QEDIR}/UtilXlib/libutil.a ${QEDIR}/dft-d3/libdftd3qe.a
+#
+#$(info 'qemods', ${QEMODS})
 
-QEINC :=-I${QEDIR}/Modules/ -I${QEDIR}/KS_Solvers/ -I${QEDIR}/FFTXlib/ \
-       -I${QEDIR}/LAXlib/ -I${QEDIR}/UtilXlib/ -I${QEDIR}/dft-d3/ -I${QEDIR}/PW/src/ \
-       -I${QEDIR}/iotk/src/ \
-       -I.
+QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/src/Makefile)
+QEINC := $(addprefix -I, ${QEINC})
+QEINC := $(QEINC:%/Makefile=%/) -I.
 
-MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 funct.f90 recvec.f90
+MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 funct.f90 \
+				  recvec.f90 control_flags.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 \
@@ -23,12 +27,12 @@ PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
 
-QEPY_SOURCES := qepy_scatter_mod.f90 \
-              qepy_common.f90 qepy_mod.f90 \
-              qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
+QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90
+
+QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
               qepy_hinit1.f90 qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90 \
               qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
-              qepy_forces.f90 qepy_stop_run.f90
+              qepy_forces.f90 qepy_stop_run.f90 qepy_api.f90
 
 OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
                 oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
@@ -41,6 +45,14 @@ QEPY_TDDFT_SOURCES := qepy_tddft_common.f90 \
 
 FOLDXML =
 EXT_FILES=
+
+ifeq ($(original), yes)
+   QEPY_SOURCES := ${QEPY_ADD}
+   oldxml = no
+   tddft = no
+else
+   QEPY_SOURCES += ${QEPY_ADD}
+endif
 
 ifeq ($(oldxml), yes)
    QEPY_SOURCES := ${OLDXML_SOURCES} ${QEPY_SOURCES}
@@ -55,7 +67,7 @@ endif
 
 QEPY_FILES = ${QEPY_SOURCES}
 
-#$(info 'files', ${QEPY_FILES}})
+#$(info 'files', ${QEPY_FILES})
 
 QEPY_OBJS = $(QEPY_SOURCES:%.f90=%.o)
 
@@ -66,8 +78,8 @@ F90WRAP_FILES = f90wrap_*.f90
 WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
 
 PWFLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
-NOTI = -fPIC -nomodule -qopenmp -fpp -mcmodel=large -g -C -x f95-cpp-input
-F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS)) $(FOLDXML)
+NOTI = 
+F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS))
 
 $(info 'F2FLAGS', ${F2FLAGS})
 
@@ -109,16 +121,17 @@ serial: ${F90WRAP_FILES}
 		--fcompiler=$(FCOMPILER) --build-dir . \
 		-c --f90exec=$(F90) --f77exec=$(F90) \
 		--opt=-O2 \
+		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
-		${F2FLAGS} ${QEMODS} $(LIBOBJS) $(QELIBS) -liomp5
+		${QEMODS} $(LIBOBJS) $(QELIBS) -liomp5
 
 mpi: ${F90WRAP_FILES}
 	f2py-f90wrap \
 		--fcompiler=$(FCOMPILER) --build-dir . \
 		-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
-		--opt=-O2 \
+		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
-		${F2FLAGS} ${QEMODS} $(LIBOBJS) $(QELIBS)
+		${QEMODS} $(LIBOBJS) $(QELIBS)
 
 install:
 	cp -r qepy _qepy*.so ${PY3_DIR}
@@ -140,4 +153,3 @@ test: rmso mpi uninstall
 	cp -r qepy _qepy*.so ${PY3_DIR}
 
 include make.depend
-
