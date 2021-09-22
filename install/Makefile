@@ -1,28 +1,15 @@
-QEDIR := $(or ${qedir}, ../../../)
-
-include ${QEDIR}/make.inc
+include make.qe.inc
 
 SRC_DIRS := ./
 PY_SRC_DIR := ./
 
-QEMODS := $(wildcard ${QEDIR}/*/*.a)
+QEMODS := $(wildcard ${QEDIR}/*/*.a) $(wildcard ${QEDIR}/*/*/*.a)
 QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${QEDIR}/Modules/libqemod.a, $(QEMODS))
-#QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/KS_Solvers/libks_solvers.a ${QEDIR}/FFTXlib/libqefft.a \
-#       ${QEDIR}/LAXlib/libqela.a ${QEDIR}/UtilXlib/libutil.a ${QEDIR}/dft-d3/libdftd3qe.a
-#
-#$(info 'qemods', ${QEMODS})
+#$(info 'QEMODS', ${QEMODS})
 
-QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/src/Makefile)
+QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/*/Makefile)
 QEINC := $(addprefix -I, ${QEINC})
 QEINC := $(QEINC:%/Makefile=%/) -I.
-
-MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 funct.f90 \
-				  recvec.f90 control_flags.f90
-MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
-
-PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 \
-			 atomic_wfc_mod.f90 close_files.f90 stress.f90
-PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
 
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
@@ -68,20 +55,19 @@ endif
 QEPY_FILES = ${QEPY_SOURCES}
 
 #$(info 'files', ${QEPY_FILES})
+#$(info 'files', ${QE_FILES})
 
 QEPY_OBJS = $(QEPY_SOURCES:%.f90=%.o)
 
-WRAP_FILES = ${MODULES_FILES} ${PW_FILES} ${QEPY_FILES} ${EXT_FILES}
+WRAP_FILES = ${QE_FILES} ${QEPY_FILES} ${EXT_FILES}
 
 F90WRAP_FILES = f90wrap_*.f90
 
 WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
 
-PWFLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
-NOTI = 
-F2FLAGS = $(filter-out $(NOTI),$(PWFLAGS))
-
-$(info 'F2FLAGS', ${F2FLAGS})
+$(info 'F90FLAGS', ${F90FLAGS})
+F2FLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
+#$(info 'F2FLAGS', ${F2FLAGS})
 
 ifeq ($(findstring -D__MPI, ${F2FLAGS}), -D__MPI)
    GOAL=mpi
@@ -105,7 +91,7 @@ default: ${GOAL}
 vpath %.f90 $(SRC_DIRS)
 
 $(filter %.o,${QEPY_OBJS}):%.o : %.f90
-	$(LD) -c $(PWFLAGS) $< -o $@
+	$(LD) -c $(F2FLAGS) $< -o $@
 
 ${WRAP_FPP_FILES}: ${WRAP_FILES}
 	for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
