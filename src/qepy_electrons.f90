@@ -991,6 +991,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   WRITE( stdout, 9120 ) iter
   !
 10  FLUSH( stdout )
+  !qepy <--
+  n_scf_steps = iter
+  scf_error = dr2
+  !qepy -->
   !
   ! ... exiting: write (unless disabled) the charge density to file
   ! ... (also write ldaU ns coefficients and PAW becsum)
