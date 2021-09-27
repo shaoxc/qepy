@@ -70,7 +70,7 @@ class QEpyCalculator(Calculator):
             else :
                 positions = atoms.positions
             pos = positions.T / atoms.cell.cellpar()[0]
-            qepy.qepy_mod.qepy_update_ions(self.embed, pos, update)
+            qepy.qepy_api.qepy_update_ions(self.embed, pos, update)
         if self.task == 'optical' :
             if first :
                 self.embed.tddft.initial = True
