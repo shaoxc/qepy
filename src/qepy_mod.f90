@@ -6,9 +6,17 @@ MODULE qepy_mod
    IMPLICIT NONE
    PUBLIC
    !
+   INTERFACE mp_gather
+      MODULE PROCEDURE mp_gather_real, mp_gather_complex
+   END INTERFACE
+
+   INTERFACE mp_scatter
+      MODULE PROCEDURE mp_scatter_real, mp_scatter_complex
+   END INTERFACE
+   !
 CONTAINS
 
-   SUBROUTINE mp_gather(fin, fout)
+   SUBROUTINE mp_gather_real(fin, fout)
       USE kinds,                ONLY : DP
       USE fft_base,         ONLY : dfftp
       !
@@ -23,13 +31,43 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE mp_scatter(fin, fout)
+   SUBROUTINE mp_scatter_real(fin, fout)
       USE kinds,                ONLY : DP
       USE fft_base,         ONLY : dfftp
       !
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: fin(:)
       REAL(DP), INTENT(OUT) :: fout(:)
+      !
+      IF (dfftp%nproc > 1) THEN
+         CALL scatter_grid(dfftp, fin, fout)
+      ELSE
+         fout(:) = fin(:)
+      ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE mp_gather_complex(fin, fout)
+      USE kinds,                ONLY : DP
+      USE fft_base,         ONLY : dfftp
+      !
+      IMPLICIT NONE
+      COMPLEX(DP), INTENT(IN) :: fin(:)
+      COMPLEX(DP), INTENT(OUT) :: fout(:)
+      !
+      IF (dfftp%nproc > 1) THEN
+         CALL gather_grid(dfftp, fin, fout)
+      ELSE
+         fout(:) = fin(:)
+      ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE mp_scatter_complex(fin, fout)
+      USE kinds,                ONLY : DP
+      USE fft_base,         ONLY : dfftp
+      !
+      IMPLICIT NONE
+      COMPLEX(DP), INTENT(IN) :: fin(:)
+      COMPLEX(DP), INTENT(OUT) :: fout(:)
       !
       IF (dfftp%nproc > 1) THEN
          CALL scatter_grid(dfftp, fin, fout)
@@ -173,7 +211,7 @@ CONTAINS
 
    SUBROUTINE qepy_get_grid(nr, inone)
       USE kinds,                ONLY : DP
-      USE fft_base,         ONLY : dfftp, dffts
+      USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
       INTEGER, INTENT(OUT) :: nr(3)
@@ -190,6 +228,28 @@ CONTAINS
          nr=(/dfftp%nr1, dfftp%nr2, dfftp%nr3/)
       ELSE
          nr=(/dfftp%nr1x, dfftp%my_nr2p, dfftp%my_nr3p/)
+      ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE qepy_get_grid_smooth(nr, inone)
+      USE kinds,                ONLY : DP
+      USE fft_base,             ONLY : dffts
+      !
+      IMPLICIT NONE
+      INTEGER, INTENT(OUT) :: nr(3)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
+      !
+      LOGICAL :: mflag
+      !
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
+      IF ( mflag ) THEN
+         nr=(/dffts%nr1, dffts%nr2, dffts%nr3/)
+      ELSE
+         nr=(/dffts%nr1x, dffts%my_nr2p, dffts%my_nr3p/)
       ENDIF
    END SUBROUTINE
 
@@ -255,6 +315,57 @@ CONTAINS
       IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
       IF ( present(wfc) ) THEN
          wfc = evc
+      ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE qepy_get_wf(ik, ibnd, wf, inone)
+      USE kinds,                ONLY : DP
+      USE io_files,             ONLY : iunwfc, nwordwfc
+      USE buffers,              ONLY : get_buffer
+      USE wavefunctions,        ONLY : evc, psic
+      USE klist,                ONLY : nks, igk_k, ngk
+      USE fft_base,             ONLY : dfftp, dffts
+      USE fft_interfaces,       ONLY : invfft
+      USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+      !
+      IMPLICIT NONE
+      INTEGER,INTENT(IN) :: ik, ibnd
+      COMPLEX(DP), INTENT(OUT) :: wf(:)
+      LOGICAL,INTENT(in),OPTIONAL :: inone
+      !
+      INTEGER :: j, nnr, npw
+      LOGICAL :: mflag
+      !
+      IF ( dffts%has_task_groups ) THEN
+         call errore('qepy_get_wf', 'Sorry this one not support task-group version', 1)
+      ENDIF
+      !
+!$omp parallel
+      psic(:) = (0.D0, 0.D0)
+      npw=ngk(ik)
+      !$omp do
+      IF ( gamma_only ) THEN
+         psic(dffts%nl (1:npw))  = evc(1:npw,ibnd)
+         psic(dffts%nlm(1:npw)) = CONJG( evc(1:npw,ibnd) )
+      ELSE
+         DO j = 1, npw
+            psic(dffts%nl(igk_k(j,ik))) = evc(j,ibnd)
+         ENDDO
+      END IF
+      !$omp end do nowait
+!$omp end parallel
+      CALL invfft ('Wave', psic, dffts)
+
+      IF ( present(inone) ) THEN
+         mflag=inone
+      ELSE
+         mflag=.true.
+      ENDIF
+      IF ( mflag ) THEN
+         CALL mp_gather(psic(1:dffts%nnr), wf)
+      ELSE
+         nnr = min(size(wf), dffts%nnr)
+         wf(1:nnr)=psic(1:nnr)
       ENDIF
    END SUBROUTINE
 

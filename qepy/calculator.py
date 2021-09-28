@@ -127,6 +127,7 @@ class QEpyCalculator(Calculator):
         return stress * -1 * units['Ry'] / (units['Bohr'] ** 3)
 
     def get_density(self):
+        """Return density array in real space."""
         nr = np.zeros(3, dtype = 'int32')
         qepy.qepy_mod.qepy_get_grid(nr)
         nspin = qepy.lsda_mod.get_nspin()
@@ -137,6 +138,30 @@ class QEpyCalculator(Calculator):
             self.density = np.empty((1, nspin), order = 'F')
         qepy.qepy_mod.qepy_get_rho(self.density)
         return self.density / (units['Bohr'] ** 3)
+
+    def get_wave_function(self, band=None, kpt=0):
+        """Return wave-function array in real space."""
+        qepy.qepy_mod.qepy_get_evc(kpt + 1)
+        nrs = np.zeros(3, dtype = 'int32')
+        qepy.qepy_mod.qepy_get_grid_smooth(nrs)
+        if self.rank == 0 :
+            wf = np.empty(np.prod(nrs), order = 'F', dtype = np.complex128)
+        else :
+            wf = np.empty(1, order = 'F', dtype = np.complex128)
+        if band is None :
+            band = np.arange(self.get_number_of_bands)
+        else :
+            band = np.asarray(band)
+            if band.ndim == 0 : band = [band]
+        wfs = []
+        for ibnd in band :
+            qepy.qepy_mod.qepy_get_wf(kpt + 1, ibnd, wf)
+            wfs.append(wf)
+        return wfs
+        # if len(band) == 1 :
+        #     return wfs[0]
+        # else :
+        #     return wfs
 
     #ASE interface to DFT-calculators <--
     def get_number_of_bands(self):
