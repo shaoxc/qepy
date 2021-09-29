@@ -3,31 +3,26 @@ import qepy
 
 try:
     from mpi4py import MPI
-except Exception:
-    comm = None
-else:
     comm = MPI.COMM_WORLD
     comm = comm.py2f()
+except Exception:
+    comm = None
 
-fname = 'qe_scf.in'
+fname = 'qe_in.in'
 
 qepy.qepy_pwscf(fname, comm)
 
 embed = qepy.qepy_common.embed_base()
-embed.exttype = 0
-embed.finish = False
 
-nstep = 50
-for i in range(nstep):
-    if i == 0 :
-        initial = True
-    else :
-        initial = False
-    embed.initial = initial
+qepy.control_flags.set_niter(1)
+for i in range(60):
     embed.mix_coef = -1.0
     qepy.qepy_electrons_scf(0, 0, embed)
     embed.mix_coef = 0.7
     qepy.qepy_electrons_scf(2, 0, embed)
+    embed.initial = False
+    if qepy.control_flags.get_conv_elec() : break
+
 embed.finish = True
 qepy.qepy_electrons_scf(2, 0, embed)
 

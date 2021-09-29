@@ -1,18 +1,17 @@
 import qepy
 try:
     from mpi4py import MPI
-except Exception:
-    comm = None
-else:
     comm = MPI.COMM_WORLD
     comm = comm.py2f()
+except Exception:
+    comm = None
 
 oldxml = False # oldxml version QE
 
 inputobj = qepy.qepy_common.input_base()
 #-----------------------------------------------------------------------
 inputobj.prefix = 'al'
-inputobj.tmp_dir = './al.wfx/'
+# inputobj.tmp_dir = './al.wfx/'
 #-----------------------------------------------------------------------
 if comm : inputobj.my_world_comm = comm
 qepy.qepy_initial(inputobj)

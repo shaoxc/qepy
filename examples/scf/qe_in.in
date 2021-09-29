@@ -2,8 +2,6 @@
     calculation = 'scf'
     restart_mode = 'from_scratch'
     prefix = 'al'
-    outdir = 'al.wfx'
-    tstress = .true.
     tprnfor = .true.
 !   verbosity = 'high'
 !   iprint = 1

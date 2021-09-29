@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-import os
 import qepy
 
 try:
     from mpi4py import MPI
+    comm = MPI.COMM_WORLD
 except Exception:
     comm = None
-else:
-    comm = MPI.COMM_WORLD
 
 from qepy.calculator import QEpyCalculator
 import ase.io
@@ -38,7 +36,7 @@ def printenergy(a=atoms):
     ekin = a.get_kinetic_energy() / len(a)
     if a.calc.rank == 0 :
         print("Step={:<8d} Epot={:.5f} Ekin={:.5f} T={:.3f} Etot={:.5f}".format(
-                step, epot, ekin, ekin / (1.5 * units.kB), epot + ekin))
+                step, epot, ekin, ekin / (1.5 * units.kB), epot + ekin), flush = True)
     step += interval
 
 

@@ -1,11 +1,10 @@
 import qepy
 try:
     from mpi4py import MPI
-except Exception:
-    comm = None
-else:
     comm = MPI.COMM_WORLD
     comm = comm.py2f()
+except Exception:
+    comm = None
 
 oldxml = False # oldxml version QE
 

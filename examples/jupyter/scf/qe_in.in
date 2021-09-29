@@ -3,8 +3,8 @@
     restart_mode = 'from_scratch'
     prefix = 'al'
     tprnfor = .true.
-    verbosity = 'high'
-    iprint = 1
+!   verbosity = 'high'
+!   iprint = 1
     pseudo_dir = './'
 /
 &system
@@ -18,8 +18,8 @@
     nosym = .true.
 /
 &electrons
-    mixing_beta = 0.7
     conv_thr = 1e-8
+    mixing_beta = 0.7
     electron_maxstep = 200
 /
 &IONS
