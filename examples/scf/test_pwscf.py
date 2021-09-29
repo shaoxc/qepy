@@ -27,5 +27,8 @@ etotal = embed.etotal
 qepy.qepy_forces(0)
 forces = qepy.force_mod.get_array_force().T
 
+stress = np.ones((3, 3), order='F')
+qepy.stress(stress)
+
 qepy.punch('all')
 qepy.qepy_stop_run(0, what = 'no')

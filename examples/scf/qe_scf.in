@@ -3,7 +3,7 @@
     restart_mode = 'from_scratch'
     prefix = 'al'
     outdir = 'al.wfx'
-!    tstress = .true.
+    tstress = .true.
     tprnfor = .true.
     verbosity = 'high'
     iprint = 1
@@ -20,13 +20,9 @@
     nosym = .true.
 /
 &electrons
-!    mixing_mode = 'plain'
-!    diagonalization = 'cg'
     conv_thr = 0.0
     mixing_beta = 0.7
     electron_maxstep = 1
-!	startingpot = 'file'
-!	startingwfc = 'file'
 /
 &IONS
 /
