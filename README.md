@@ -27,21 +27,6 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
  - [mpi4py](https://bitbucket.org/mpi4py/mpi4py) MPI for python
 
 ## Install
- - **f90wrap**
-
-    Install the origin version:
-
-    ```shell
-	pip install git+https://github.com/jameskermode/f90wrap
-    ```
-	If you struggle, try our own modified version of f90wrap:
-
-    ```shell
-	pip install git+https://github.com/shaoxc/f90wrap
-    ```
-
-
-
  - **QE**
 
 	All static libraries should be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
@@ -61,12 +46,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
 	 ```
 
-   + Build the normal ***pw*** or ***pwlibs***.
+   + `make pw` or `make pwlibs`.
 
  - **QEpy**
 
    + `git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git`
-   + `qedir=${QE} python setup.py install --user`
+   + `qedir=${QE} python -m pip install ./qepy`
 
 ## Tips
  - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
@@ -77,6 +62,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
 	- "`oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
 	- "`original=yes`" only wrap original QE files and a ``qepy_mod``, which support most of versions QE.
+
+ - If you struggle with original f90wrap, try our own modified version of f90wrap:
+
+    ```shell
+	pip install git+https://github.com/shaoxc/f90wrap.git
+    ```
 
 ## FAQ
  - Some Intel MPI/MKL errors occur. What do I do?
