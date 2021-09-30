@@ -61,6 +61,7 @@ SUBROUTINE qepy_forces(icalc)
   IMPLICIT NONE
   !
   integer, intent(in), optional :: icalc
+  integer                       :: calctype
   REAL(DP), ALLOCATABLE :: forcenl(:,:),   &
                            forcelc(:,:),   &
                            forcecc(:,:),   &
@@ -89,6 +90,11 @@ SUBROUTINE qepy_forces(icalc)
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
+  if ( present(icalc) ) then
+     calctype = icalc
+  else
+     calctype = 0
+  end if
   !
   CALL start_clock( 'forces' )
   !
@@ -108,7 +114,7 @@ SUBROUTINE qepy_forces(icalc)
   !
   ! ... The local contribution
   !
-  if (.not. present(icalc) .or. icalc<1) then
+  if (iand(calctype,2) == 0) then
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
@@ -129,7 +135,7 @@ SUBROUTINE qepy_forces(icalc)
   !
   ! ... The ionic contribution is computed here
   !
-  if (.not. present(icalc) .or. icalc<2) then
+  if (iand(calctype,1) == 0) then
   IF( do_comp_esm ) THEN
      CALL esm_force_ew( forceion )
   ELSE
