@@ -4,10 +4,9 @@ import time
 
 try:
     from mpi4py import MPI
+    comm = MPI.COMM_WORLD
 except Exception:
     comm = None
-else:
-    comm = MPI.COMM_WORLD
 
 from qepy.calculator import QEpyCalculator
 

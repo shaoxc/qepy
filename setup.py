@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import pathlib
 import shutil
@@ -6,10 +7,13 @@ import shutil
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-__author__ = "Pavanello Research Group"
-__contact__ = "m.pavanello@rutgers.edu"
-__version__ = "0.0.1"
-__license__ = "GPL"
+with open('qepy/__init__.py') as fd :
+    lines = fd.read()
+    __version__ = re.search('__version__ = "(.*)"', lines).group(1)
+    __author__ = re.search('__author__ = "(.*)"', lines).group(1)
+    __contact__ = re.search('__contact__ = "(.*)"', lines).group(1)
+    __license__ = re.search('__license__ = "(.*)"', lines).group(1)
+
 name = 'qepy'
 description = "QEPY: Quantum ESPRESSO Python interface",
 long_description = """ QEPY turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose."""
@@ -41,7 +45,7 @@ class MakeBuild(build_ext):
         for f in pathlib.Path(self.build_temp).glob('*.so'):
             os.remove(f)
 
-        makefiles = list(pathlib.Path(topdir + '/Python/').glob('*')) + \
+        makefiles = list(pathlib.Path(topdir + '/qepy/').glob('*')) + \
                 list(pathlib.Path(topdir + '/install/').glob('*')) + \
                 list(pathlib.Path(topdir + '/src/').glob('**/*.f90'))
 
@@ -74,6 +78,8 @@ if __name__ == "__main__":
             url='https://gitlab.com/shaoxc/qepy',
             description=description,
             version=__version__,
+            use_scm_version={'version_scheme': 'post-release'},
+            setup_requires=['setuptools_scm'],
             author=__author__,
             author_email=__contact__,
             license=__license__,
@@ -87,6 +93,7 @@ if __name__ == "__main__":
                 },
             packages=find_packages('./'),
             ext_modules=ext_modules,
+            # include_package_data=True,
             cmdclass = {"build_ext" : MakeBuild},
             classifiers=[
                 'Development Status :: 1 - Beta',
