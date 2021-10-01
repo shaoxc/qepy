@@ -3,6 +3,7 @@
     restart_mode = 'from_scratch'
     prefix = 'al'
     tprnfor = .true.
+    tstress = .true.
 !   verbosity = 'high'
 !   iprint = 1
     pseudo_dir = './'
