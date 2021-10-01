@@ -756,9 +756,13 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         ENDIF
         !-----------------------------------------------------------------------
         if (embed%exttype>0 .or. embed%mix_coef>0.0_DP) then
-           CALL scf_type_COPY( rhoin, rho )
-           descf = 0._dp
-           goto 111
+           IF ( embed%exttype==0 .and. conv_elec ) THEN
+              embed%finish = .TRUE.
+           ELSE
+              CALL scf_type_COPY( rhoin, rho )
+              descf = 0._dp
+              goto 111
+           ENDIF
         end if
         !-----------------------------------------------------------------------
         !
