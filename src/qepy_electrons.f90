@@ -1018,6 +1018,11 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   call destroy_scf_type ( rhoin )
   CALL stop_clock( 'electrons' )
   !
+  !qepy <-- reset embed
+  embed%initial = .TRUE.
+  embed%finish = .FALSE.
+  embed%mix_coef = -1.0
+  !qepy -->
   RETURN
   !
   ! ... formats
