@@ -471,9 +471,20 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   INTEGER:: its
   !!
   REAL(DP) :: mixing_beta_new
-  
+  !qepy <-- add descf
+  TYPE(scf_type),save :: rho_prev
+  !! save the last step unmix density for descf
+  !
+  LOGICAL :: add_descf
+  !! add the descf to the total energy for last step
+  !
+  !
+  if ( embed%ldescf .and. embed%exttype==0 .and. niter==1 .and. iter>1 ) add_descf = .TRUE.
   if (embed%finish) goto 10
   if (embed%mix_coef>0.0_DP) goto 100
+  !!! If we change some parts to functions will make the code clean.
+  !!! But to keep the structure of the code, we add many goto functions.
+  !qepy -->
 
   if (embed%initial) then
   iter = 0
@@ -527,12 +538,15 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   !
   CALL create_scf_type( rhoin )
+  if (embed%ldescf) then
+     CALL create_scf_type( rho_prev )
+  endif
   !
   WRITE( stdout, 9002 )
   FLUSH( stdout )
   !
   CALL open_mix_file( iunmix, 'mix', exst )
-  end if
+  end if ! if (embed%initial)
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
@@ -544,8 +558,13 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
    !endif
   !endif
+  if ( add_descf .and. embed%mix_coef<0.0_DP ) then
+     descf = qepy_delta_escf(rho, rho_prev)
+     goto 112
+  endif
+  descf = 0._dp
 
-  DO idum = 1, niter
+113 DO idum = 1, niter
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
@@ -677,6 +696,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         !
         deband = delta_e()
         !
+        if (embed%ldescf) then
+           CALL scf_type_COPY( rho, rho_prev )
+        endif
 100     if (.not. embed%initial .and. (embed%mix_coef<0.0_DP)) then
            ! from second step directly return new density without mixing
            goto 111
@@ -760,7 +782,6 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
               embed%finish = .TRUE.
            ELSE
               CALL scf_type_COPY( rhoin, rho )
-              descf = 0._dp
               goto 111
            ENDIF
         end if
@@ -788,7 +809,8 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            ! ... above, using the mixed charge density rhoin%of_r.
            ! ... delta_escf corrects for this difference at first order
            !
-           descf = delta_escf()
+           !descf = delta_escf()
+           descf = qepy_delta_escf(rhoin, rho)
            !
            ! ... now copy the mixed charge density in R- and G-space in rho
            !
@@ -864,8 +886,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
 
      !
 111  if ( embed%mix_coef < 0.0_DP .and. niter==1 ) return
+     if ( add_descf .and. (.not. conv_elec) ) return
      !
-     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
+112  IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
         IF ( lda_plus_U .AND. iverbosity == 0 ) THEN
            IF (noncolin) THEN
@@ -951,9 +974,11 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      !
      CALL print_energies ( printout )
      !call qepy_calc_energies(etot, exttype)
-     !
      embed%etotal=etot
      embed%dnorm = dr2
+     !
+     if ( add_descf .and. embed%mix_coef<0.0_DP ) goto 113
+     !
      if (embed%exttype>0 .or. niter==1) return
      !if (embed%exttype>0) return
      !
@@ -1172,7 +1197,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      END FUNCTION delta_e
      !
      !-----------------------------------------------------------------------
-     FUNCTION delta_escf()
+     FUNCTION qepy_delta_escf(rhoin, rho)
        !-----------------------------------------------------------------------
        !! This function calculates the difference between the Hartree and XC energy
        !! at first order in the charge density difference \(\textrm{delta_rho(r)}\):
@@ -1194,6 +1219,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
        IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)
        INTEGER  :: ir
+       !
+       TYPE(scf_type) :: rhoin, rho
+       REAL(DP) :: qepy_delta_escf
        !
        delta_escf=0._dp
        IF ( nspin==2 ) THEN
@@ -1233,9 +1261,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
        IF ( okpaw ) delta_escf = delta_escf - &
                                  SUM(ddd_paw(:,:,:)*(rhoin%bec(:,:,:)-rho%bec(:,:,:)))
 
+       qepy_delta_escf = delta_escf
        RETURN
        !
-     END FUNCTION delta_escf
+     END FUNCTION qepy_delta_escf
      !
      !-----------------------------------------------------------------------
      FUNCTION calc_pol( ) RESULT ( en_el )

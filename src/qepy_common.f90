@@ -36,6 +36,8 @@ MODULE qepy_common
       logical                         :: lewald = .true.
       logical                         :: nlpp = .true.
       real(kind=dp)                   :: diag_conv = 1.D-2
+      logical                         :: ldescf = .false.
+      !! add correction for variational energy
    end type embed_base
    !
 END MODULE qepy_common
