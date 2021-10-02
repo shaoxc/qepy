@@ -16,11 +16,11 @@ embed = qepy.qepy_common.embed_base()
 
 qepy.control_flags.set_niter(1)
 for i in range(60):
+    if i>0 : embed.initial = False
     embed.mix_coef = -1.0
     qepy.qepy_electrons_scf(0, 0, embed)
     embed.mix_coef = 0.7
     qepy.qepy_electrons_scf(0, 0, embed)
-    embed.initial = False
     if qepy.control_flags.get_conv_elec() : break
 
 qepy.qepy_calc_energies(embed)

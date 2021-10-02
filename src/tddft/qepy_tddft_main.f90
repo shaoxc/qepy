@@ -133,6 +133,8 @@ SUBROUTINE qepy_tddft_main_setup(embed)
   use_para_diag = .false.
 #endif
 
+  io_level = 1
+
   call tddft_openfil
 
   if (gamma_only) call errore ('tdddft_main', 'Cannot run TDFFT with gamma_only == .true. ', 1)
