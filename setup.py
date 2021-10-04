@@ -85,7 +85,11 @@ if __name__ == "__main__":
             license=__license__,
             long_description=long_description,
             python_requires = '>=3.6',
-            install_requires=['numpy>=1.18.0', 'f90wrap>=0.2.5'],
+            install_requires=[
+                'numpy>=1.18.0',
+                'f90wrap>=0.2.5',
+                'importlib-metadata>=0.12;python_version<"3.8"'
+                ],
             extras_require={
                 'mpi': [
                     'mpi4py>=3.0.2',

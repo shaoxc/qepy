@@ -23,9 +23,15 @@ __version__ = "0.0.1"
 __license__ = "GPL"
 __date__ = "2021-09-30"
 
-from importlib.metadata import version, PackageNotFoundError
+try:
+    from importlib.metadata import version # python >= 3.8
+except Exception :
+    try:
+        from importlib_metadata import version
+    except Exception :
+        pass
 
 try:
     __version__ = version("qepy")
-except PackageNotFoundError:
+except Exception :
     pass
