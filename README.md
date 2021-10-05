@@ -95,3 +95,19 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	+ *[MPID_nem_tmi_pending_ssend_dequeue]: ERROR: can not find matching ssend...*
 	+ The initial density totally wrong with more than one nodes.
 
+ - OpenMPI
+
+	If you met some problems like the following:
+
+	+ *mca_base_component_repository_open: unable to open mca_patcher_overwrite...*
+
+	Please update to latest version of OpenMPI, or fix with `patchelf` ([openmpi=2.1.1](https://github.com/open-mpi/ompi/issues/3705)):
+
+    ```shell
+	#!/bin/sh
+	prefix="/usr/lib/x86_64-linux-gnu/openmpi"
+	for filename in $(ls $prefix/lib/openmpi/*.so); do
+		patchelf --add-needed libmpi.so.20 $filename
+		patchelf --set-rpath "\$ORIGIN/.." $filename
+	done
+    ```
