@@ -445,7 +445,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   REAL(DP) :: tr2_min
   !! estimated error on energy coming from diagonalization
-  REAL(DP) :: descf
+  REAL(DP),save :: descf
   !! correction for variational energy
   REAL(DP) :: en_el=0.0_DP
   !! electric field contribution to the total energy
@@ -562,7 +562,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      descf = qepy_delta_escf(rho, rho_prev)
      goto 112
   endif
-  descf = 0._dp
+  if (.not. embed%ldescf) descf = 0._dp
 
 113 DO idum = 1, niter
      !
@@ -1041,6 +1041,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )
+  if (embed%ldescf) then
+     CALL destroy_scf_type( rho_prev )
+  endif
   CALL stop_clock( 'electrons' )
   !
   !qepy <-- reset embed
