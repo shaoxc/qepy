@@ -487,8 +487,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !qepy -->
 
   if (embed%initial) then
+  embed%initial = .FALSE.
   iter = 0
   dr2  = 0.0_dp
+  descf = 0.0_dp
   IF ( restart ) CALL restart_in_electrons( iter, dr2, ethr, et )
   !end if
   !
@@ -552,12 +554,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  !if (embed%exttype>0 .or. (.not. embed%initial)) then
-  !if (embed%initial) then
-     CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-        ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
-   !endif
-  !endif
+  CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
+     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+
   if ( add_descf .and. embed%mix_coef<0.0_DP ) then
      descf = qepy_delta_escf(rho, rho_prev)
      goto 112
@@ -580,7 +579,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      ! ... Convergence threshold for iterative diagonalization is
      ! ... automatically updated during self consistency
      !
-     IF ( iter > 1 .or. (.not. embed%initial)) THEN
+     IF ( iter > 1 ) THEN
         !
         IF ( iter == 2 ) ethr = 1.D-2
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
@@ -591,11 +590,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         !
      ENDIF
      !
-     if (embed%initial) then
      first = ( iter == 1 )
-     else
-     first = .false.
-     end if
      !
      if (first) ethr = MAX( ethr, 1.D-6 )
      !
@@ -644,10 +639,6 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
-        !if (.not.initial .and. (.not. present(mix_coef))) then
-           !!return
-           !goto 111
-        !end if
         CALL sum_band()
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
@@ -699,10 +690,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         if (embed%ldescf) then
            CALL scf_type_COPY( rho, rho_prev )
         endif
-100     if (.not. embed%initial .and. (embed%mix_coef<0.0_DP)) then
+100     if (iter > 1 .and. niter==1 .and. (embed%mix_coef<0.0_DP)) then
            ! from second step directly return new density without mixing
            goto 111
-        else if ( embed%initial .and. (embed%mix_coef>0.0_DP)) then
+        else if ( iter==1 .and. (embed%mix_coef>0.0_DP)) then
            ! the first step already mixing, so do nothing
            goto 111
         end if

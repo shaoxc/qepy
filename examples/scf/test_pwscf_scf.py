@@ -17,7 +17,6 @@ embed.ldescf = True # add scf correction energy
 
 qepy.control_flags.set_niter(1)
 for i in range(60):
-    if i>0 : embed.initial = False
     embed.mix_coef = -1.0
     qepy.qepy_electrons_scf(2, 0, embed)
     embed.mix_coef = 0.7

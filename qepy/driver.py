@@ -11,10 +11,6 @@ class QEpyDriver :
         self.iter = 0
 
     def diagonalize(self, print_level = 2, **kwargs):
-        if self.iter > 0 :
-            self.embed.initial = False
-        else :
-            self.embed.initial = True
         self.iter += 1
         self.embed.mix_coef = -1.0
         qepy.qepy_electrons_scf(print_level, 0, self.embed)
