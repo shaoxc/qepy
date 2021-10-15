@@ -479,6 +479,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !! add the descf to the total energy for last step
   !
   !
+  add_descf = .FALSE.
   if ( embed%ldescf .and. embed%exttype==0 .and. niter==1 .and. iter>1 ) add_descf = .TRUE.
   if (embed%finish) goto 10
   if (embed%mix_coef>0.0_DP) goto 100
