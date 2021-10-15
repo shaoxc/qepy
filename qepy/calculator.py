@@ -270,3 +270,6 @@ class QEpyCalculator(Calculator):
 
     def get_number_of_k_points(self):
         return qepy.klist.get_nks()
+
+    def stop(self, what = 'all', **kwargs):
+        qepy.qepy_stop_run(0, what = what)

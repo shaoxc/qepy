@@ -35,6 +35,5 @@ class QEpyDriver :
         qepy.stress(stress)
         return stress
 
-    def stop(self, **kwargs):
-        qepy.punch('all')
-        qepy.qepy_stop_run(0, what = 'no')
+    def stop(self, what = 'all', **kwargs):
+        qepy.qepy_stop_run(0, what = what)
