@@ -3,7 +3,7 @@ image: registry.gitlab.com/shaoxc/qepy:qepy-6.5g
 Test:
   before_script:
    - home=$( pwd )
-   - qedir=/usr/src/app/q-e/ tddft=yes python -m pip install .
+   - qedir=/usr/src/app/q-e/ python -m pip install .
   script:
    - cd examples/test
    - bash test.sh
