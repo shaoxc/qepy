@@ -109,7 +109,7 @@ serial: ${F90WRAP_FILES}
 		--opt=-O2 \
 		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
-		${QEMODS} $(LIBOBJS) $(QELIBS) -liomp5
+		${QEMODS} -liomp5
 
 mpi: ${F90WRAP_FILES}
 	f2py-f90wrap \
@@ -117,8 +117,7 @@ mpi: ${F90WRAP_FILES}
 		-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
 		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
-		${QEMODS} $(LIBOBJS) $(QELIBS)
-
+		${QEMODS}
 install:
 	cp -r qepy _qepy*.so ${PY3_DIR}
 

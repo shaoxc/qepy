@@ -26,7 +26,7 @@ QEMODS = $(QE_SOURCE)/Modules/libqemod.a \
          $(QE_SOURCE)/FFTXlib/libqefft.a \
          $(QE_SOURCE)/LAXlib/libqela.a \
          $(QE_SOURCE)/UtilXlib/libutil.a \
-	 $(QE_SOURCE)/dft-d3/libdftd3qe.a
+         $(QE_SOURCE)/dft-d3/libdftd3qe.a
 
 PWOBJS = $(QE_SOURCE)/PW/src/libpw.a
 
