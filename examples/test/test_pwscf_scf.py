@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
         qepy.qepy_pwscf(fname, comm)
         embed = qepy.qepy_common.embed_base()
         # embed.ldescf = True # add scf correction energy
-        qepy.control_flags.set_niter(1)
+        embed.iterative = True
         for i in range(60):
             embed.mix_coef = -1.0
             qepy.qepy_electrons_scf(2, 0, embed)

@@ -42,3 +42,12 @@ ATOMIC_POSITIONS (angstrom)
 
 K_POINTS (automatic)
 1 1 1 0 0 0
+
+&inputtddft
+    job            = 'optical'
+    prefix         = 'al'
+    tmp_dir        = './'
+    dt             = 1.0
+    nstep          = 5
+    conv_threshold = 1e-14
+/

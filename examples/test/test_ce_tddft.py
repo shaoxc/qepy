@@ -16,6 +16,7 @@ class Test(unittest.TestCase):
         global comm
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
+
         qepy.qepy_pwscf(fname, comm)
         qepy.electrons()
 
@@ -25,40 +26,39 @@ class Test(unittest.TestCase):
         etotal = qepy.ener.get_etot()
         self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
 
-        qepy.qepy_stop_run(0, what = 'all')
+        qepy.punch('all')
 
-    def test_1_read(self):
-        global comm
-        inputobj = qepy.qepy_common.input_base()
-        inputobj.prefix = 'al'
-        if comm : inputobj.my_world_comm = comm
-
-        qepy.qepy_initial(inputobj)
-
-        qepy.read_file()
-
-        embed = qepy.qepy_common.embed_base()
-        qepy.qepy_calc_energies(embed)
-        self.assertTrue(np.isclose(embed.etotal, -552.93477389, rtol = 1E-6))
-        qepy.qepy_stop_run(0, what = 'no')
-
-    def test_2_read_pw(self):
+    def test_1_tddft_continue(self):
         global comm
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
 
-        qepy.qepy_pwscf(fname, comm)
         embed = qepy.qepy_common.embed_base()
-
-        qepy.qepy_pw_restart_new.qepy_read_xml_file(alloc=False)
-        if qepy.basis.get_starting_pot().strip() != 'file' :
-            qepy.qepy_potinit(starting = 'file')
-        if qepy.basis.get_starting_wfc().strip() != 'file' :
-            qepy.qepy_wfcinit(starting = 'file')
-
-        qepy.qepy_calc_energies(embed)
-        self.assertTrue(np.isclose(embed.etotal, -552.93477389, rtol = 1E-6))
+        qepy.qepy_tddft_readin(fname)
+        qepy.qepy_tddft_main_setup(embed)
+        qepy.qepy_molecule_optical_absorption(embed)
         qepy.qepy_stop_run(0, what = 'no')
+        qepy.qepy_stop_tddft(0)
+
+    def test_2_tddft_iterative(self):
+        global comm
+        path = pathlib.Path(__file__).resolve().parent / 'DATA'
+        fname = path / 'qe_in.in'
+
+        qepy.qepy_tddft_main_initial(fname, comm)
+        qepy.read_file()
+        embed = qepy.qepy_common.embed_base()
+        embed.tddft.iterative = True
+        qepy.qepy_tddft_main_setup(embed)
+
+        for i in range(5):
+            qepy.qepy_molecule_optical_absorption(embed)
+        dip = qepy.qepy_tddft_common.get_array_dipole().copy()
+        embed.tddft.finish = True
+        qepy.qepy_molecule_optical_absorption(embed)
+        qepy.qepy_stop_tddft(0)
+
+        assert(abs(dip[0, 0] - 0.54355185)<1E-6)
 
     def test_9_clean(self):
         path = pathlib.Path('.')

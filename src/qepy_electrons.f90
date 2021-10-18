@@ -480,7 +480,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   !
   add_descf = .FALSE.
-  if ( embed%ldescf .and. embed%exttype==0 .and. niter==1 .and. iter>1 ) add_descf = .TRUE.
+  if ( embed%ldescf .and. embed%iterative .and. iter>1 ) add_descf = .TRUE.
   if (embed%finish) goto 10
   if (embed%mix_coef>0.0_DP) goto 100
   !!! If we change some parts to functions will make the code clean.
@@ -691,12 +691,14 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         if (embed%ldescf) then
            CALL scf_type_COPY( rho, rho_prev )
         endif
-100     if (iter > 1 .and. niter==1 .and. (embed%mix_coef<0.0_DP)) then
-           ! from second step directly return new density without mixing
-           goto 111
-        else if ( iter==1 .and. (embed%mix_coef>0.0_DP)) then
-           ! the first step already mixing, so do nothing
-           goto 111
+100     if ( embed%iterative ) then
+           if (iter > 1 .and. (embed%mix_coef<0.0_DP)) then
+              ! from second step directly return new density without mixing
+              goto 111
+           else if ( iter==1 .and. (embed%mix_coef>0.0_DP)) then
+              ! the first step already mixing, so do nothing
+              goto 111
+           end if
         end if
         !
         !
@@ -869,7 +871,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      !
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
-     IF ( conv_elec ) WRITE( stdout, 9101 )
+111  IF ( conv_elec ) WRITE( stdout, 9101 )
  
      IF ( conv_elec ) THEN 
            scf_error = dr2
@@ -877,8 +879,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      ENDIF  
 
      !
-111  if ( embed%mix_coef < 0.0_DP .and. niter==1 ) return
-     if ( add_descf .and. (.not. conv_elec) ) return
+     if ( embed%iterative ) then
+        if ( embed%mix_coef < 0.0_DP ) return
+        if ( add_descf .and. (.not. conv_elec) ) return
+     endif
      !
 112  IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
@@ -893,7 +897,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         !
      ENDIF
      !
-     if (embed%exttype<1 .and. niter>1) then
+     if (embed%exttype<1 .and. (.not. embed%iterative) ) then
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
         IF ( ABS( charge - nelec ) / charge > 1.D-3 ) THEN
@@ -969,10 +973,14 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      embed%etotal=etot
      embed%dnorm = dr2
      !
-     if ( add_descf .and. embed%mix_coef<0.0_DP ) goto 113
-     !
-     if (embed%exttype>0 .or. niter==1) return
-     !if (embed%exttype>0) return
+     if ( embed%iterative ) then
+        if ( add_descf .and. embed%mix_coef<0.0_DP ) then
+           ! back to run diagonalize
+           goto 113
+        else
+           return
+        endif
+     endif
      !
      IF ( conv_elec ) THEN
         !

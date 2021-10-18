@@ -85,7 +85,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
 ## Todo
  - ~~Update the Makefile to support Gfortran compiler~~
- - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*
+ - Support the updating the cell lattice.
 
 ## Bugs
  - Intel Compiler

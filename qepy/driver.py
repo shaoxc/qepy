@@ -2,10 +2,11 @@ import numpy as np
 import qepy
 
 class QEpyDriver :
-    def __init__(self, inputfile, comm = None, ldescf = False, **kwargs):
+    def __init__(self, inputfile, comm = None, ldescf = False, iterative = True, **kwargs):
         qepy.qepy_pwscf(inputfile, comm)
         embed = qepy.qepy_common.embed_base()
         embed.ldescf = ldescf
+        embed.iterative = iterative
         qepy.control_flags.set_niter(1)
         self.embed = embed
         self.iter = 0

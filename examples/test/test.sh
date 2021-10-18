@@ -1,4 +1,4 @@
 for f in *py
 do
-	pytest --cov-report term-missing --cov=./ $f
+	python -m pytest --cov-report term-missing --cov=./ $f
 done
