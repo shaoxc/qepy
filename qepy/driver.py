@@ -2,10 +2,11 @@ import numpy as np
 import qepy
 
 class QEpyDriver :
-    def __init__(self, inputfile, comm = None, ldescf = False, **kwargs):
+    def __init__(self, inputfile, comm = None, ldescf = False, iterative = True, **kwargs):
         qepy.qepy_pwscf(inputfile, comm)
         embed = qepy.qepy_common.embed_base()
         embed.ldescf = ldescf
+        embed.iterative = iterative
         qepy.control_flags.set_niter(1)
         self.embed = embed
         self.iter = 0
@@ -35,6 +36,13 @@ class QEpyDriver :
         qepy.stress(stress)
         return stress
 
-    def stop(self, **kwargs):
-        qepy.punch('all')
-        qepy.qepy_stop_run(0, what = 'no')
+    def scf(self, print_level = 2):
+        qepy.qepy_electrons_scf(print_level, 0, self.embed)
+
+    def end_scf(self, **kwargs):
+        if self.embed.iterative :
+            self.embed.finish = True
+            qepy.qepy_electrons_scf(0, 0, self.embed)
+
+    def stop(self, what = 'all', **kwargs):
+        qepy.qepy_stop_run(0, what = what)

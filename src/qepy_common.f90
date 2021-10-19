@@ -20,6 +20,7 @@ MODULE qepy_common
       logical                         :: finish = .false.
       integer                         :: istep = 0
       integer                         :: nstep = 1
+      logical                         :: iterative = .false.
    end type tddft_base
    !
    type, public :: embed_base
@@ -37,7 +38,17 @@ MODULE qepy_common
       logical                         :: nlpp = .true.
       real(kind=dp)                   :: diag_conv = 1.D-2
       logical                         :: ldescf = .false.
+      !! add scf correction energy
+      logical                         :: iterative = .false.
       !! add correction for variational energy
+      logical                         :: lmovecell = .false.
+      !! allow change the cell
+      logical                         :: oldxml = .false.
+      !! Olderversion QE (XML file name is 'data-file.xml')
    end type embed_base
+   !
+   !
+   TYPE ( embed_base ) :: messenger
+   !
    !
 END MODULE qepy_common

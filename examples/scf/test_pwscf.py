@@ -25,11 +25,11 @@ qepy.qepy_mod.qepy_write_stdout(info)
 # qepy.qepy_calc_energies(embed)
 etotal = embed.etotal
 
-qepy.qepy_forces(0)
+qepy.qepy_forces()
 forces = qepy.force_mod.get_array_force().T
 
 stress = np.ones((3, 3), order='F')
-qepy.stress(stress)
+qepy.qepy_stress(stress)
 
 qepy.punch('all')
 qepy.qepy_stop_run(0, what = 'no')

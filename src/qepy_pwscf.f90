@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml)
+SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   !! Author: Paolo Giannozzi
   !
   !! Version: v6.1
@@ -46,14 +46,16 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml)
   USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
   USE command_line_options, ONLY : input_file_, command_line, ndiag_
+  USE qepy_common,          ONLY : embed_base, messenger
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: infile
   INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
   LOGICAL, INTENT(IN), OPTIONAL :: oldxml
-  LOGICAL               :: oldver
+  type(embed_base), intent(inout), optional :: embed
   !
+  LOGICAL               :: oldver
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
   CHARACTER(len=256) :: get_server_address
@@ -129,7 +131,11 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml)
   !
   input_file_=trim(infile)
   CALL read_input_file( 'PW', input_file_ )
-  call qepy_run_pwscf(exit_status, oldver)
+  if (present(embed)) then
+     call qepy_run_pwscf(exit_status, oldver, embed)
+  else
+     call qepy_run_pwscf(exit_status, oldver, messenger)
+  endif
 END SUBROUTINE qepy_pwscf
    !
 SUBROUTINE qepy_pwscf_finalise()

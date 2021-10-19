@@ -84,8 +84,8 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). In doubt, simply use one processor to read.
 
 ## Todo
- - ~~Update the Makefile to support Gfortran compiler~~
- - Write a python script that can automatically update the *qepy* code according to the new version of the *QE*
+ - ~~Update the Makefile to support Gfortran compiler.~~
+ - ~~Support the updating the cell lattice.~~
 
 ## Bugs
  - Intel Compiler

@@ -67,6 +67,7 @@ SUBROUTINE qepy_tddft_setup(embed)
      call errore('gipaw_setup','TDDFT + two Fermi energies not implemented', 1)
 
   ! computes the number of occupied bands for each k point
+  IF (ALLOCATED(nbnd_occ)) DEALLOCATE(nbnd_occ)
   allocate(nbnd_occ(nks))
   nbnd_occ(:) = 0
   if (lgauss) then

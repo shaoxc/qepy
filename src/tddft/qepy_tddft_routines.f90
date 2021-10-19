@@ -275,23 +275,28 @@ END SUBROUTINE qepy_tddft_allocate
 !END SUBROUTINE tddft_openfil
 
 
-!!-----------------------------------------------------------------------
-!SUBROUTINE tddft_closefil
-!  !-----------------------------------------------------------------------
-!  !
-!  ! ... Close files opened by TDDFT
-!  !
-!  USE ldaU,             ONLY : lda_plus_U  
-!  USE io_files,         ONLY : iunhub, iunwfc
-!  USE buffers,          ONLY : close_buffer
-!  USE tddft_module
-!  IMPLICIT NONE
+!-----------------------------------------------------------------------
+SUBROUTINE qepy_tddft_closefil
+  !-----------------------------------------------------------------------
+  !
+  ! ... Close files opened by TDDFT
+  !
+  USE ldaU,             ONLY : lda_plus_U  
+  USE io_files,         ONLY : iunhub, iunwfc
+  USE buffers,          ONLY : close_buffer
+  USE tddft_module
+  IMPLICIT NONE
+  logical :: opnd
 
-!  call close_buffer( iunwfc, 'keep' )
-!  call close_buffer( iunevcn, 'keep' )
-!  if ( lda_plus_u ) call close_buffer ( iunhub, status = 'keep' )
+  call close_buffer( iunwfc, 'keep' )
+  call close_buffer( iunevcn, 'keep' )
+  call close_buffer( iuntdwfc, 'keep' )
+  if ( lda_plus_u ) call close_buffer ( iunhub, status = 'keep' )
+  inquire (unit = iunwfc, opened = opnd)
+  inquire (unit = iunevcn, opened = opnd)
+  inquire (unit = iuntdwfc, opened = opnd)
 
-!END SUBROUTINE tddft_closefil
+END SUBROUTINE qepy_tddft_closefil
 
 
 

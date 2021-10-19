@@ -188,7 +188,7 @@ SUBROUTINE qepy_stop_tddft(print_flag)
   ENDIF
 
   ! print timings and stop the code
-  call tddft_closefil
+  call qepy_tddft_closefil
   IF ( iprint > 0 .and. iprint<10 ) THEN
   call print_clock_tddft
   call environment_end(code)
