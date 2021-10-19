@@ -86,6 +86,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 ## Todo
  - ~~Update the Makefile to support Gfortran compiler.~~
  - ~~Support the updating the cell lattice.~~
+ - Support hybrid functionals in embedding/iterative way.
 
 ## Bugs
  - Intel Compiler
