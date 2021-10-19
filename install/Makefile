@@ -19,7 +19,7 @@ QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
               qepy_hinit1.f90 qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90 \
               qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
-              qepy_forces.f90 qepy_stop_run.f90 qepy_api.f90
+              qepy_forces.f90 qepy_stress.f90 qepy_stop_run.f90 qepy_api.f90
 
 OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
                 oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \

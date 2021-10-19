@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
         self.assertTrue(np.isclose(forces[0, 0], -0.00835135, rtol = 1E-3))
 
         stress = np.ones((3, 3), order='F')
-        qepy.stress(stress)
+        qepy.qepy_stress(stress)
         self.assertTrue(np.isclose(stress[1, 1], -0.00256059, rtol = 1E-3))
 
         qepy.qepy_stop_run(0, what = 'no')

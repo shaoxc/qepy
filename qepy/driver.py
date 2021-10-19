@@ -36,5 +36,13 @@ class QEpyDriver :
         qepy.stress(stress)
         return stress
 
+    def scf(self, print_level = 2):
+        qepy.qepy_electrons_scf(print_level, 0, self.embed)
+
+    def end_scf(self, **kwargs):
+        if self.embed.iterative :
+            self.embed.finish = True
+            qepy.qepy_electrons_scf(0, 0, self.embed)
+
     def stop(self, what = 'all', **kwargs):
         qepy.qepy_stop_run(0, what = what)
