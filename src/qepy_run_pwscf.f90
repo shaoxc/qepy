@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_run_pwscf( exit_status, oldxml ) 
+SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
   !----------------------------------------------------------------------------
   !! Author: Paolo Giannozzi  
   !! License: GNU  
@@ -38,7 +38,7 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml )
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
-  USE cellmd,               ONLY : lmovecell
+  USE cellmd,               ONLY : lmovecell, cell_factor
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : lforce, lstres, sigma, force
   USE check_stop,           ONLY : check_stop_init, check_stop_now
@@ -54,6 +54,7 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml )
   USE mp_world, ONLY: world_comm
   !
   USE kinds,                ONLY : DP
+  USE qepy_common,          ONLY : embed_base
   !
   IMPLICIT NONE
   !
@@ -74,10 +75,21 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml )
   ! ions_status =  0  converged, exiting
   LOGICAL, INTENT(IN), OPTIONAL :: oldxml
   LOGICAL               :: oldver
+  type(embed_base), intent(inout), optional :: embed
   !
   exit_status = 0
   IF ( ionode ) WRITE( UNIT = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
+  !qepy --> lmovecell
+  if (present(embed)) then
+     if (.not. lmovecell) then
+        lmovecell = embed%lmovecell
+     endif
+  endif
+  if (lmovecell) then
+     if (cell_factor < 1.2d0 ) cell_factor = 2.d0
+  endif
+  !qepy <-- lmovecell
   IF (ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast( ionode_id, intra_image_comm )
   !

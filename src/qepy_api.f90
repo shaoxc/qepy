@@ -7,11 +7,18 @@ MODULE qepy_api
    !
 CONTAINS
 
-   SUBROUTINE qepy_update_ions(embed, pos, ikind)
+   SUBROUTINE qepy_update_ions(embed, pos, ikind, lattice)
       !-----------------------------------------------------------------------
-      ! This is function Combined 'run_pwscf' and 'move_ions'
-      ! ikind = 0  all
-      ! ikind = 1  atomic configuration dependent information
+      ! This is function Combined 'run_pwscf' and 'move_ions'.
+      !***********************************************************************
+      ! pos:
+      !   ionic positions in bohr
+      ! ikind:
+      !   ikind = 0  all
+      !   ikind = 1  atomic configuration dependent information
+      ! lattice:
+      !   lattice parameter in bohr
+      !***********************************************************************
       !-----------------------------------------------------------------------
       USE mp_images,            ONLY : intra_image_comm
       USE extrapolation,        ONLY : update_file, update_pot
@@ -20,11 +27,15 @@ CONTAINS
       USE symm_base,            ONLY : checkallsym
       USE mp,                   ONLY : mp_bcast
       USE control_flags,        ONLY : treinit_gvecs
+      USE cell_base,            ONLY : alat, at, bg, omega, cell_force, &
+                                     fix_volume, fix_area, ibrav, enforce_ibrav
+      USE cellmd,               ONLY : omega_old, at_old, press, lmovecell, calc, cell_factor
       !
       INTEGER                  :: ierr
       TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: pos(:,:)
       INTEGER,INTENT(IN),OPTIONAL  :: ikind
+      REAL(DP), INTENT(IN), OPTIONAL  :: lattice(3,3)
       !
       INTEGER   :: iflag
       !
@@ -33,14 +44,45 @@ CONTAINS
       ELSE
          iflag = 0
       ENDIF
+      !
+      IF ( present(lattice) ) THEN
+         lmovecell = .TRUE.
+      ELSE
+         lmovecell = .FALSE.
+      ENDIF
 
       CALL update_file()
 
       IF ( ionode ) THEN
-         tau(:,:)=pos(:,:)
+         tau(:,:)=pos(:,:) / alat
          CALL checkallsym( nat, tau, ityp)
+         IF ( lmovecell ) THEN
+            !
+            IF (ALLOCATED(embed%extpot)) DEALLOCATE(embed%extpot)
+            !
+            at_old = at
+            omega_old = omega
+            IF (fix_volume) CALL impose_deviatoric_strain( alat*at, lattice )
+            IF (fix_area)   CALL impose_deviatoric_strain_2d( alat*at, lattice )
+            at = lattice / alat
+            IF(enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3) )
+            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
+            CALL volume( alat, at(1,1),at(1,2),at(1,3), omega )
+            !
+         ENDIF
       ENDIF
+      !
       CALL mp_bcast( tau, ionode_id, intra_image_comm )
+      !
+      IF ( lmovecell ) THEN
+         !
+         CALL mp_bcast( at,        ionode_id, intra_image_comm )
+         CALL mp_bcast( at_old,    ionode_id, intra_image_comm )
+         CALL mp_bcast( omega,     ionode_id, intra_image_comm )
+         CALL mp_bcast( omega_old, ionode_id, intra_image_comm )
+         CALL mp_bcast( bg,        ionode_id, intra_image_comm )
+         !
+      ENDIF
       IF (iflag == 0 ) THEN
          CALL punch( 'config-nowf' )
          IF ( treinit_gvecs ) THEN

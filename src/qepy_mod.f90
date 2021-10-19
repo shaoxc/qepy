@@ -209,15 +209,36 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_grid(nr, inone)
+   FUNCTION qepy_get_grid(nr, inone) RESULT( nrw )
       USE kinds,                ONLY : DP
       USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
-      INTEGER, INTENT(OUT) :: nr(3)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      INTEGER,INTENT(OUT),OPTIONAL :: nr(3)
+      LOGICAL,INTENT(in),OPTIONAL  :: inone
       !
-      LOGICAL :: mflag
+      LOGICAL                      :: mflag
+      INTEGER                      :: nrw(3)
+      !
+      IF ( present(inone) ) THEN
+         nrw = qepy_get_grid_shape(dfftp, inone)
+      ELSE
+         nrw = qepy_get_grid_shape(dfftp)
+      ENDIF
+      !
+      IF ( present(nr) ) nr = nrw
+   END FUNCTION
+
+   FUNCTION qepy_get_grid_shape(dfft, inone) RESULT( nrw )
+      USE kinds,                ONLY : DP
+      USE fft_types,           ONLY : fft_type_descriptor
+      !
+      IMPLICIT NONE
+      TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+      LOGICAL,INTENT(in),OPTIONAL          :: inone
+      !
+      LOGICAL                              :: mflag
+      INTEGER                              :: nrw(3)
       !
       IF ( present(inone) ) THEN
          mflag=inone
@@ -225,33 +246,32 @@ CONTAINS
          mflag=.true.
       ENDIF
       IF ( mflag ) THEN
-         nr=(/dfftp%nr1, dfftp%nr2, dfftp%nr3/)
+         nrw =(/dfft%nr1, dfft%nr2, dfft%nr3/)
       ELSE
-         nr=(/dfftp%nr1x, dfftp%my_nr2p, dfftp%my_nr3p/)
+         nrw =(/dfft%nr1x, dfft%my_nr2p, dfft%my_nr3p/)
       ENDIF
-   END SUBROUTINE
+      !
+   END FUNCTION
 
-   SUBROUTINE qepy_get_grid_smooth(nr, inone)
+   FUNCTION qepy_get_grid_smooth(nr, inone) RESULT(nrw)
       USE kinds,                ONLY : DP
       USE fft_base,             ONLY : dffts
       !
       IMPLICIT NONE
-      INTEGER, INTENT(OUT) :: nr(3)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      INTEGER,INTENT(OUT),OPTIONAL :: nr(3)
+      LOGICAL,INTENT(in),OPTIONAL  :: inone
       !
-      LOGICAL :: mflag
+      LOGICAL                      :: mflag
+      INTEGER                      :: nrw(3)
       !
       IF ( present(inone) ) THEN
-         mflag=inone
+         nrw = qepy_get_grid_shape(dffts, inone)
       ELSE
-         mflag=.true.
+         nrw = qepy_get_grid_shape(dffts)
       ENDIF
-      IF ( mflag ) THEN
-         nr=(/dffts%nr1, dffts%nr2, dffts%nr3/)
-      ELSE
-         nr=(/dffts%nr1x, dffts%my_nr2p, dffts%my_nr3p/)
-      ENDIF
-   END SUBROUTINE
+      !
+      IF ( present(nr) ) nr = nrw
+   END FUNCTION
 
    SUBROUTINE qepy_set_stdout(fname, uni, append)
       USE io_global,     ONLY : stdout, ionode

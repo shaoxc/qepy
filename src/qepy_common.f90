@@ -40,6 +40,7 @@ MODULE qepy_common
       logical                         :: ldescf = .false.
       logical                         :: iterative = .false.
       !! add correction for variational energy
+      logical                         :: lmovecell = .false.
    end type embed_base
    !
 END MODULE qepy_common

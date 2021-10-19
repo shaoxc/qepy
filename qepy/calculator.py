@@ -14,7 +14,7 @@ class QEpyCalculator(Calculator):
     implemented_properties=['energy', 'forces', 'stress']
 
     def __init__(self, atoms = None, comm = None, task = 'scf', embed = None, inputfile = None,
-            input_data = None, wrap = False, **kwargs):
+            input_data = None, wrap = False, lmovecell = False, **kwargs):
         Calculator.__init__(self, atoms = atoms, input_data = input_data, **kwargs)
         self.optimizer = None
         self.restart()
@@ -31,6 +31,7 @@ class QEpyCalculator(Calculator):
         self.comm = comm
         self.inputfile = inputfile
         self.wrap = wrap
+        self.embed.lmovecell = lmovecell
         if self.inputfile is not None :
             self.atoms = ase.io.read(self.inputfile, format='espresso-in')
 
@@ -60,7 +61,7 @@ class QEpyCalculator(Calculator):
             qepy.qepy_tddft_main_initial(self.inputfile, comm)
             qepy.read_file()
         else :
-            qepy.qepy_pwscf(self.inputfile, comm)
+            qepy.qepy_pwscf(self.inputfile, comm, embed = self.embed)
 
     def update_atoms(self, atoms = None, first = False, update = 0, **kwargs):
         atoms = atoms or self.atoms
@@ -69,13 +70,16 @@ class QEpyCalculator(Calculator):
                 positions = wrap_positions(atoms.positions, atoms.cell)
             else :
                 positions = atoms.positions
-            pos = positions.T / atoms.cell.cellpar()[0]
-            qepy.qepy_api.qepy_update_ions(self.embed, pos, update)
+
+            pos = positions.T / units['Bohr']
+            lattice = atoms.cell.T / units['Bohr']
+
+            if self.embed.lmovecell :
+                qepy.qepy_api.qepy_update_ions(self.embed, pos, update, lattice)
+            else :
+                qepy.qepy_api.qepy_update_ions(self.embed, pos, update)
         if self.task == 'optical' :
             if first :
-                self.embed.tddft.initial = True
-                self.embed.tddft.finish = False
-                self.embed.tddft.nstep = 900000 # Any large enough number
                 qepy.qepy_tddft_readin(self.prefix + self._input_ext)
                 qepy.qepy_tddft_main_setup(self.embed)
 
@@ -103,7 +107,7 @@ class QEpyCalculator(Calculator):
             if self.task == 'optical' :
                 qepy.qepy_molecule_optical_absorption(self.embed)
             else :
-                qepy.qepy_electrons_scf(0, 0, self.embed)
+                qepy.qepy_electrons_scf(2, 0, self.embed)
 
     def get_potential_energy(self, atoms = None, **kwargs):
         self.update_optimizer(atoms)
