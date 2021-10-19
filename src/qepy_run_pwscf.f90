@@ -74,7 +74,6 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
   LOGICAL, INTENT(IN), OPTIONAL :: oldxml
-  LOGICAL               :: oldver
   type(embed_base), intent(inout), optional :: embed
   !
   exit_status = 0

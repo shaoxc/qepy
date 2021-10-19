@@ -46,7 +46,7 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
   USE command_line_options, ONLY : input_file_, command_line, ndiag_
-  USE qepy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed_base, messenger
   !
   IMPLICIT NONE
   !
@@ -66,7 +66,6 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   !! true if running "manypw.x"
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
-  !type(embed_base)  :: embed_
   !
   if (present(oldxml)) then
      oldver = oldxml
@@ -135,7 +134,7 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   if (present(embed)) then
      call qepy_run_pwscf(exit_status, oldver, embed)
   else
-     call qepy_run_pwscf(exit_status, oldver)
+     call qepy_run_pwscf(exit_status, oldver, messenger)
   endif
 END SUBROUTINE qepy_pwscf
    !
