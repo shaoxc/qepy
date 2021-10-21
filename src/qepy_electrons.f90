@@ -968,7 +968,11 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      !
      etot = etot + plugin_etot 
      !
+     !qepy --> add extene
      etot = etot + embed%extene
+     hwf_energy = hwf_energy + plugin_etot
+     hwf_energy = hwf_energy + embed%extene
+     !qepy <-- add extene
      !
      CALL print_energies ( printout )
      !call qepy_calc_energies(etot, exttype)
