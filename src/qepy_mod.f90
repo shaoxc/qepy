@@ -389,4 +389,21 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
+   SUBROUTINE qepy_set_extforces(embed, forces)
+      USE kinds,                ONLY : DP
+      USE ions_base,            ONLY : nat, ntyp => nsp
+      !
+      IMPLICIT NONE
+      TYPE(embed_base), INTENT(INOUT) :: embed
+      REAL(DP), INTENT(IN) :: forces(:,:)
+      !
+      IF (ALLOCATED(embed%extforces)) THEN
+         IF (SIZE(embed%extforces,2) /= nat) DEALLOCATE(embed%extforces)
+      ENDIF
+      IF (.NOT.ALLOCATED(embed%extforces)) ALLOCATE(embed%extforces(3, nat))
+      !
+      embed%extforces(:,:) = forces(:,1:nat)
+      !
+   END SUBROUTINE
+
 END MODULE qepy_mod

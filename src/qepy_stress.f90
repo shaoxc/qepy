@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE qepy_stress(sigma, icalc)
+SUBROUTINE qepy_stress(sigma, icalc, embed)
   !----------------------------------------------------------------------
   !! Computes the total stress.
   !
@@ -39,6 +39,8 @@ SUBROUTINE qepy_stress(sigma, icalc)
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
   !
+  USE qepy_common,          ONLY : embed_base
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: sigma(3,3)
@@ -62,6 +64,7 @@ SUBROUTINE qepy_stress(sigma, icalc)
   REAL(DP), ALLOCATABLE :: force_d3(:,:)
   !
   integer, intent(in), optional   :: icalc
+  type(embed_base),intent(inout),optional :: embed
   !
   integer                       :: calctype
   !
@@ -204,6 +207,11 @@ SUBROUTINE qepy_stress(sigma, icalc)
   ELSE
      sigmaexx = 0.d0
   ENDIF
+  !qepy --> add extstress
+  if (present(embed)) then
+     sigma(:,:) = sigma(:,:) + embed%extstress
+  endif
+  !qepy <-- add extstress
   ! Resymmetrize the total stress. This should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs
 

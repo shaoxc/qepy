@@ -66,8 +66,6 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   !! electric field energy - inout due to the screwed logic of add_efield
   !
   INTEGER :: is, ir
-  INTEGER :: i
-  REAL(DP) :: split_energy
   LOGICAL :: conv_elec
   REAL(DP) :: dr2
   REAL(DP) :: etot_cmp_paw(nat,2,2)
@@ -153,25 +151,8 @@ SUBROUTINE qepy_v_of_rho( rho, rho_core, rhog_core, &
   !! electric field energy - inout due to the screwed logic of add_efield
   !
   INTEGER :: is, ir
-  INTEGER :: i
-  REAL(DP) :: split_energy
   !
   CALL start_clock( 'v_of_rho' )
-
-  i=0
-  if (iand(embed%exttype,1) == 1) then
-     i = i+1
-  end if
-  if (iand(embed%exttype,2) == 2) then
-     i = i+1
-  end if
-  if (iand(embed%exttype,4) == 4) then
-     i = i+1
-  end if
-  if (i>0) then
-     split_energy = embed%extene / i
-  endif
-
   !
   ! ... calculate exchange-correlation potential
   !
@@ -183,7 +164,7 @@ SUBROUTINE qepy_v_of_rho( rho, rho_core, rhog_core, &
   ENDIF
   else
   v%of_r(:,:) = 0.0
-  etxc = split_energy
+  etxc = 0.0
   end if
   !
   ! ... add a magnetic field  (if any)
@@ -195,7 +176,7 @@ SUBROUTINE qepy_v_of_rho( rho, rho_core, rhog_core, &
   if (iand(embed%exttype,2) == 0) then ! Hartree
   CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
   else
-     ehart=split_energy
+     ehart=0.0
   end if
   !
   ! ... LDA+U: build up Hubbard potential 

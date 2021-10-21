@@ -13,9 +13,11 @@ fname = 'qe_in.in'
 qepy.qepy_pwscf(fname, comm)
 
 embed = qepy.qepy_common.embed_base()
-embed.ldescf = True # add scf correction energy
+# embed.ldescf = True # add scf correction energy
+embed.extene = 0.0
+#
+embed.iterative = True
 
-qepy.control_flags.set_niter(1)
 for i in range(60):
     embed.mix_coef = -1.0
     qepy.qepy_electrons_scf(2, 0, embed)
@@ -26,11 +28,19 @@ for i in range(60):
 # qepy.qepy_calc_energies(embed)
 etotal = embed.etotal
 
-qepy.qepy_forces(0)
+#
+nat = qepy.ions_base.get_nat()
+forces = np.zeros((3, nat), order = 'F')
+qepy.qepy_mod.qepy_set_extforces(embed, forces)
+#
+qepy.qepy_forces(embed = embed)
 forces = qepy.force_mod.get_array_force().T
 
+#
+embed.extstress = 0.0
+#
 stress = np.ones((3, 3), order='F')
-qepy.stress(stress)
+qepy.qepy_stress(stress, embed=embed)
 
 qepy.punch('all')
 qepy.qepy_stop_run(0, what = 'no')

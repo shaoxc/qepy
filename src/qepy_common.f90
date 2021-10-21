@@ -29,6 +29,8 @@ MODULE qepy_common
       real(kind=dp), allocatable      :: extpot(:)
       real(kind=dp)                   :: extene = 0.0
       integer                         :: exttype = 0
+      real(kind=dp), allocatable      :: extforces(:,:)
+      real(kind=dp)                   :: extstress(3,3)
       logical                         :: initial = .true.
       real(kind=dp)                   :: mix_coef = -1.0
       logical                         :: finish = .false.
