@@ -55,7 +55,6 @@ CONTAINS
 
       IF ( ionode ) THEN
          tau(:,:)=pos(:,:) / alat
-         CALL checkallsym( nat, tau, ityp)
          IF ( lmovecell ) THEN
             !
             IF (ALLOCATED(embed%extpot)) DEALLOCATE(embed%extpot)
@@ -70,6 +69,7 @@ CONTAINS
             CALL volume( alat, at(1,1),at(1,2),at(1,3), omega )
             !
          ENDIF
+         CALL checkallsym( nat, tau, ityp)
       ENDIF
       !
       CALL mp_bcast( tau, ionode_id, intra_image_comm )
