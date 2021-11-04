@@ -16,7 +16,7 @@ from ase.optimize.sciopt import SciPyFminBFGS, SciPyFminCG
 from ase.constraints import StrainFilter, UnitCellFilter
 from ase.spacegroup.symmetrize import FixSymmetry, check_symmetry
 
-inputfile = 'scf.in'
+inputfile = 'vcrelax.in'
 
 calc = QEpyCalculator(comm = comm, inputfile = inputfile, lmovecell = True)
 

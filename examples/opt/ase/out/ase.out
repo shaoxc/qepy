@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.5 starts on  3Nov2021 at 16: 6:23 
+     Program PWSCF v.6.5 starts on  3Nov2021 at 21:11:28 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,16 +13,7 @@
 
      MPI processes distributed on     1 nodes
      R & G space division:  proc/nbgrp/npool/nimage =       4
-     Reading input from scf.in
-Warning: card &IONS ignored
-Warning: card     ION_DYNAMICS = 'BFGS' ignored
-Warning: card / ignored
-Warning: card &CELL ignored
-Warning: card     CELL_DOFREE = "ALL" ignored
-Warning: card     CELL_DYNAMICS = "BFGS" ignored
-Warning: card     PRESS = 100.0 ignored
-Warning: card     PRESS_CONV_THR = 0.5 ignored
-Warning: card / ignored
+     Reading input from vcrelax.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
@@ -60,6 +51,8 @@ Warning: card / ignored
      number of iterations used =            8  plain     mixing
      Exchange-correlation= SLA  PW   PBE  PBE
                            (   1   4   3   4   0   0   0)
+     nstep                     =           50
+
 
      celldm(1)=   8.842478  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -179,7 +172,7 @@ Warning: card / ignored
      Davidson diagonalization with overlap
      ethr =  1.45E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.8 secs
+     total cpu time spent up to now is        2.9 secs
 
      total energy              =     -38.29189267 Ry
      Harris-Foulkes estimate   =     -38.29188144 Ry
@@ -189,7 +182,7 @@ Warning: card / ignored
      Davidson diagonalization with overlap
      ethr =  1.19E-05,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is        3.5 secs
+     total cpu time spent up to now is        3.6 secs
 
      total energy              =     -38.29193590 Ry
      Harris-Foulkes estimate   =     -38.29193832 Ry
@@ -199,7 +192,7 @@ Warning: card / ignored
      Davidson diagonalization with overlap
      ethr =  5.23E-08,  avg # of iterations =  3.6
 
-     total cpu time spent up to now is        4.4 secs
+     total cpu time spent up to now is        4.5 secs
 
      total energy              =     -38.29195061 Ry
      Harris-Foulkes estimate   =     -38.29195065 Ry
@@ -219,7 +212,7 @@ Warning: card / ignored
      Davidson diagonalization with overlap
      ethr =  3.68E-10,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is        6.0 secs
 
      End of self-consistent calculation
 
@@ -436,79 +429,13 @@ Warning: card / ignored
      atom    4 type  1   force =     0.00000000    0.00000000    0.00000510
 
      Total force =     0.000007     Total SCF correction =     0.000000
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       99.08
-   0.00074450   0.00000000   0.00000000          109.52        0.00        0.00
-   0.00000000   0.00074450   0.00000000            0.00      109.52        0.00
-   0.00000000   0.00000000   0.00053154            0.00        0.00       78.19
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000510
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000510
-
-     Total force =     0.000007     Total SCF correction =     0.000000
        Step     Time          Energy         fmax
 *Force-consistent energies used in optimization.
-LBFGS:    0 16:06:30     -517.439873*       0.1935
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       99.08
-   0.00074450   0.00000000   0.00000000          109.52        0.00        0.00
-   0.00000000   0.00074450   0.00000000            0.00      109.52        0.00
-   0.00000000   0.00000000   0.00053154            0.00        0.00       78.19
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000510
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000510
-
-     Total force =     0.000007     Total SCF correction =     0.000000
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       99.08
-   0.00074450   0.00000000   0.00000000          109.52        0.00        0.00
-   0.00000000   0.00074450   0.00000000            0.00      109.52        0.00
-   0.00000000   0.00000000   0.00053154            0.00        0.00       78.19
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000510
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000510
-
-     Total force =     0.000007     Total SCF correction =     0.000000
- tau00  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.500000000000000       0.000000000000000E+000  0.416202411145992     
-  0.500000000000000       0.500000000000000       0.277468274097328     
-  0.000000000000000E+000  0.500000000000000       0.138734137048664     
- tau01  0.000000000000000E+000  0.000000000000000E+000 -4.272121782016427E-034
-  0.500150807208078       0.000000000000000E+000  0.415914834525789     
-  0.500150807208078       0.500150807208078       0.277276556350526     
-  0.000000000000000E+000  0.500150807208078       0.138638278175263     
- pos  0.000000000000000E+000  0.000000000000000E+000 -3.777614444459122E-033
-   4.42257269366826       0.000000000000000E+000   3.67771792738517     
-   4.42257269366826        4.42257269366826        2.45181195159011     
-  0.000000000000000E+000   4.42257269366826        1.22590597579506     
+LBFGS:    0 21:11:34     -517.439873*       0.1935
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   15.99859, renormalised to   16.00000
 
-     total cpu time spent up to now is        8.8 secs
+     total cpu time spent up to now is        6.8 secs
 
      Self-consistent Calculation
 
@@ -522,7 +449,7 @@ LBFGS:    0 16:06:30     -517.439873*       0.1935
      Davidson diagonalization with overlap
      ethr =  3.15E-09,  avg # of iterations =  2.9
 
-     total cpu time spent up to now is       10.3 secs
+     total cpu time spent up to now is        8.6 secs
 
      total energy              =     -38.29198072 Ry
      Harris-Foulkes estimate   =     -38.29198104 Ry
@@ -532,7 +459,7 @@ LBFGS:    0 16:06:30     -517.439873*       0.1935
      Davidson diagonalization with overlap
      ethr =  4.33E-09,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is       10.9 secs
+     total cpu time spent up to now is        9.3 secs
 
      End of self-consistent calculation
 
@@ -749,59 +676,11 @@ LBFGS:    0 16:06:30     -517.439873*       0.1935
      atom    4 type  1   force =     0.00000000    0.00000000    0.00000591
 
      Total force =     0.000008     Total SCF correction =     0.000000
-LBFGS:    1 16:06:34     -517.440595*       0.1891
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       98.72
-   0.00073913   0.00000000   0.00000000          108.73        0.00        0.00
-   0.00000000   0.00073913   0.00000000            0.00      108.73        0.00
-   0.00000000   0.00000000   0.00053497            0.00        0.00       78.70
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000591
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000591
-
-     Total force =     0.000008     Total SCF correction =     0.000000
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       98.72
-   0.00073913   0.00000000   0.00000000          108.73        0.00        0.00
-   0.00000000   0.00073913   0.00000000            0.00      108.73        0.00
-   0.00000000   0.00000000   0.00053497            0.00        0.00       78.70
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000591
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000591
-
-     Total force =     0.000008     Total SCF correction =     0.000000
- tau00  0.000000000000000E+000  0.000000000000000E+000 -4.272121782016427E-034
-  0.500150807208078       0.000000000000000E+000  0.415914834525789     
-  0.500150807208078       0.500150807208078       0.277276556350526     
-  0.000000000000000E+000  0.500150807208078       0.138638278175263     
- tau01  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.503739255133341       0.000000000000000E+000  0.408627958320164     
-  0.503739255133341       0.503739255133341       0.272418638880110     
-  0.000000000000000E+000  0.503739255133341       0.136209319440055     
- pos  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-   4.45430346682348       0.000000000000000E+000   3.61328388216382     
-   4.45430346682348        4.45430346682348        2.40885592144255     
-  0.000000000000000E+000   4.45430346682348        1.20442796072127     
+LBFGS:    1 21:11:38     -517.440595*       0.1891
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   15.94588, renormalised to   16.00000
 
-     total cpu time spent up to now is       13.2 secs
+     total cpu time spent up to now is       10.2 secs
 
      Self-consistent Calculation
 
@@ -809,7 +688,7 @@ LBFGS:    1 16:06:34     -517.440595*       0.1891
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.9
 
-     total cpu time spent up to now is       14.3 secs
+     total cpu time spent up to now is       11.4 secs
 
      total energy              =     -38.29166466 Ry
      Harris-Foulkes estimate   =     -38.29186004 Ry
@@ -819,7 +698,7 @@ LBFGS:    1 16:06:34     -517.440595*       0.1891
      Davidson diagonalization with overlap
      ethr =  2.71E-06,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is       15.0 secs
+     total cpu time spent up to now is       12.0 secs
 
      total energy              =     -38.29169504 Ry
      Harris-Foulkes estimate   =     -38.29169657 Ry
@@ -829,7 +708,7 @@ LBFGS:    1 16:06:34     -517.440595*       0.1891
      Davidson diagonalization with overlap
      ethr =  2.85E-08,  avg # of iterations =  2.6
 
-     total cpu time spent up to now is       15.7 secs
+     total cpu time spent up to now is       12.8 secs
 
      total energy              =     -38.29169754 Ry
      Harris-Foulkes estimate   =     -38.29169756 Ry
@@ -839,7 +718,7 @@ LBFGS:    1 16:06:34     -517.440595*       0.1891
      Davidson diagonalization with overlap
      ethr =  7.86E-10,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is       16.5 secs
+     total cpu time spent up to now is       13.5 secs
 
      total energy              =     -38.29169757 Ry
      Harris-Foulkes estimate   =     -38.29169758 Ry
@@ -849,7 +728,7 @@ LBFGS:    1 16:06:34     -517.440595*       0.1891
      Davidson diagonalization with overlap
      ethr =  9.32E-11,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is       17.2 secs
+     total cpu time spent up to now is       14.3 secs
 
      End of self-consistent calculation
 
@@ -1067,61 +946,11 @@ LBFGS:    1 16:06:34     -517.440595*       0.1891
 
      Total force =     0.000004     Total SCF correction =     0.000002
      SCF correction compared to forces is large: reduce conv_thr to get better values
-LBFGS:    2 16:06:41     -517.448705*       0.0963
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       96.21
-   0.00060519   0.00000000   0.00000000           89.03        0.00        0.00
-  -0.00000000   0.00060519   0.00000000           -0.00       89.03        0.00
-   0.00000000   0.00000000   0.00075171            0.00        0.00      110.58
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000257
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000257
-
-     Total force =     0.000004     Total SCF correction =     0.000002
-     SCF correction compared to forces is large: reduce conv_thr to get better values
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       96.21
-   0.00060519   0.00000000   0.00000000           89.03        0.00        0.00
-  -0.00000000   0.00060519   0.00000000           -0.00       89.03        0.00
-   0.00000000   0.00000000   0.00075171            0.00        0.00      110.58
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000257
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000257
-
-     Total force =     0.000004     Total SCF correction =     0.000002
-     SCF correction compared to forces is large: reduce conv_thr to get better values
- tau00  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.503739255133341       0.000000000000000E+000  0.408627958320164     
-  0.503739255133341       0.503739255133341       0.272418638880110     
-  0.000000000000000E+000  0.503739255133341       0.136209319440055     
- tau01  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.502234834710287       0.000000000000000E+000  0.411562293032190     
-  0.502234834710287       0.502234834710287       0.274374862021460     
-  0.000000000000000E+000  0.502234834710287       0.137187431010730     
- pos  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-   4.44100066177567       0.000000000000000E+000   3.63923067338051     
-   4.44100066177567        4.44100066177567        2.42615378225367     
-  0.000000000000000E+000   4.44100066177567        1.21307689112684     
+LBFGS:    2 21:11:43     -517.448705*       0.0963
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   16.01876, renormalised to   16.00000
 
-     total cpu time spent up to now is       19.4 secs
+     total cpu time spent up to now is       15.1 secs
 
      Self-consistent Calculation
 
@@ -1129,7 +958,7 @@ LBFGS:    2 16:06:41     -517.448705*       0.0963
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.8
 
-     total cpu time spent up to now is       20.5 secs
+     total cpu time spent up to now is       16.2 secs
 
      total energy              =     -38.29203020 Ry
      Harris-Foulkes estimate   =     -38.29205510 Ry
@@ -1139,7 +968,7 @@ LBFGS:    2 16:06:41     -517.448705*       0.0963
      Davidson diagonalization with overlap
      ethr =  3.47E-07,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is       21.1 secs
+     total cpu time spent up to now is       16.9 secs
 
      total energy              =     -38.29203417 Ry
      Harris-Foulkes estimate   =     -38.29203446 Ry
@@ -1149,7 +978,7 @@ LBFGS:    2 16:06:41     -517.448705*       0.0963
      Davidson diagonalization with overlap
      ethr =  4.84E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is       22.0 secs
+     total cpu time spent up to now is       17.7 secs
 
      total energy              =     -38.29203454 Ry
      Harris-Foulkes estimate   =     -38.29203463 Ry
@@ -1159,7 +988,7 @@ LBFGS:    2 16:06:41     -517.448705*       0.0963
      Davidson diagonalization with overlap
      ethr =  1.27E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       22.7 secs
+     total cpu time spent up to now is       18.4 secs
 
      total energy              =     -38.29203459 Ry
      Harris-Foulkes estimate   =     -38.29203459 Ry
@@ -1169,7 +998,7 @@ LBFGS:    2 16:06:41     -517.448705*       0.0963
      Davidson diagonalization with overlap
      ethr =  9.30E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       23.4 secs
+     total cpu time spent up to now is       19.1 secs
 
      End of self-consistent calculation
 
@@ -1386,59 +1215,11 @@ LBFGS:    2 16:06:41     -517.448705*       0.0963
      atom    4 type  1   force =     0.00000000    0.00000000    0.00000530
 
      Total force =     0.000007     Total SCF correction =     0.000000
-LBFGS:    3 16:06:47     -517.449139*       0.1268
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       96.81
-   0.00069539  -0.00000000   0.00000000          102.30       -0.00        0.00
-  -0.00000000   0.00069539   0.00000000           -0.00      102.30        0.00
-   0.00000000   0.00000000   0.00058347            0.00        0.00       85.83
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000530
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000530
-
-     Total force =     0.000007     Total SCF correction =     0.000000
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       96.81
-   0.00069539  -0.00000000   0.00000000          102.30       -0.00        0.00
-  -0.00000000   0.00069539   0.00000000           -0.00      102.30        0.00
-   0.00000000   0.00000000   0.00058347            0.00        0.00       85.83
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000530
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000530
-
-     Total force =     0.000007     Total SCF correction =     0.000000
- tau00  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.502234834710287       0.000000000000000E+000  0.411562293032190     
-  0.502234834710287       0.502234834710287       0.274374862021460     
-  0.000000000000000E+000  0.502234834710287       0.137187431010730     
- tau01  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.502855593194692       0.000000000000000E+000  0.410200769479256     
-  0.502855593194692       0.502855593194692       0.273467179652837     
-  0.000000000000000E+000  0.502855593194692       0.136733589826419     
- pos  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-   4.44648970524601       0.000000000000000E+000   3.62719143081564     
-   4.44648970524601        4.44648970524601        2.41812762054376     
-  0.000000000000000E+000   4.44648970524601        1.20906381027188     
+LBFGS:    3 21:11:48     -517.449139*       0.1268
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   15.98651, renormalised to   16.00000
 
-     total cpu time spent up to now is       25.6 secs
+     total cpu time spent up to now is       19.9 secs
 
      Self-consistent Calculation
 
@@ -1452,7 +1233,7 @@ LBFGS:    3 16:06:47     -517.449139*       0.1268
      Davidson diagonalization with overlap
      ethr =  7.08E-08,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is       27.2 secs
+     total cpu time spent up to now is       21.5 secs
 
      total energy              =     -38.29188561 Ry
      Harris-Foulkes estimate   =     -38.29189072 Ry
@@ -1462,7 +1243,7 @@ LBFGS:    3 16:06:47     -517.449139*       0.1268
      Davidson diagonalization with overlap
      ethr =  7.13E-08,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is       27.9 secs
+     total cpu time spent up to now is       22.2 secs
 
      total energy              =     -38.29188634 Ry
      Harris-Foulkes estimate   =     -38.29188639 Ry
@@ -1472,7 +1253,7 @@ LBFGS:    3 16:06:47     -517.449139*       0.1268
      Davidson diagonalization with overlap
      ethr =  1.00E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is       28.6 secs
+     total cpu time spent up to now is       23.0 secs
 
      End of self-consistent calculation
 
@@ -1690,61 +1471,11 @@ LBFGS:    3 16:06:47     -517.449139*       0.1268
 
      Total force =     0.000004     Total SCF correction =     0.000001
      SCF correction compared to forces is large: reduce conv_thr to get better values
-LBFGS:    4 16:06:52     -517.450107*       0.0269
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       97.05
-   0.00065901   0.00000000   0.00000000           96.94        0.00        0.00
-  -0.00000000   0.00065901   0.00000000           -0.00       96.94        0.00
-   0.00000000   0.00000000   0.00066115            0.00        0.00       97.26
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000316
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000316
-
-     Total force =     0.000004     Total SCF correction =     0.000001
-     SCF correction compared to forces is large: reduce conv_thr to get better values
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       97.05
-   0.00065901   0.00000000   0.00000000           96.94        0.00        0.00
-  -0.00000000   0.00065901   0.00000000           -0.00       96.94        0.00
-   0.00000000   0.00000000   0.00066115            0.00        0.00       97.26
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000316
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000316
-
-     Total force =     0.000004     Total SCF correction =     0.000001
-     SCF correction compared to forces is large: reduce conv_thr to get better values
- tau00  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
-  0.502855593194692       0.000000000000000E+000  0.410200769479256     
-  0.502855593194692       0.502855593194692       0.273467179652837     
-  0.000000000000000E+000  0.502855593194692       0.136733589826419     
- tau01  0.000000000000000E+000  0.000000000000000E+000  4.212622029237476E-034
-  0.502826228339487       0.000000000000000E+000  0.410122202411332     
-  0.502826228339487       0.502826228339487       0.273414801607554     
-  0.000000000000000E+000  0.502826228339487       0.136707400803777     
- pos  0.000000000000000E+000  0.000000000000000E+000  3.725001916771902E-033
-   4.44623004714907       0.000000000000000E+000   3.62649670321705     
-   4.44623004714907        4.44623004714907        2.41766446881137     
-  0.000000000000000E+000   4.44623004714907        1.20883223440568     
+LBFGS:    4 21:11:52     -517.450107*       0.0269
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   15.99507, renormalised to   16.00000
 
-     total cpu time spent up to now is       30.9 secs
+     total cpu time spent up to now is       23.8 secs
 
      Self-consistent Calculation
 
@@ -1758,7 +1489,7 @@ LBFGS:    4 16:06:52     -517.450107*       0.0269
      Davidson diagonalization with overlap
      ethr =  2.22E-10,  avg # of iterations =  2.6
 
-     total cpu time spent up to now is       32.5 secs
+     total cpu time spent up to now is       25.3 secs
 
      total energy              =     -38.29180832 Ry
      Harris-Foulkes estimate   =     -38.29180835 Ry
@@ -1768,7 +1499,7 @@ LBFGS:    4 16:06:52     -517.450107*       0.0269
      Davidson diagonalization with overlap
      ethr =  2.96E-10,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is       33.3 secs
+     total cpu time spent up to now is       26.0 secs
 
      total energy              =     -38.29180832 Ry
      Harris-Foulkes estimate   =     -38.29180835 Ry
@@ -1778,7 +1509,7 @@ LBFGS:    4 16:06:52     -517.450107*       0.0269
      Davidson diagonalization with overlap
      ethr =  2.96E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       34.1 secs
+     total cpu time spent up to now is       26.8 secs
 
      End of self-consistent calculation
 
@@ -1995,59 +1726,11 @@ LBFGS:    4 16:06:52     -517.450107*       0.0269
      atom    4 type  1   force =     0.00000000    0.00000000    0.00000513
 
      Total force =     0.000007     Total SCF correction =     0.000001
-LBFGS:    5 16:06:57     -517.450135*       0.0240
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       97.49
-   0.00066123   0.00000000   0.00000000           97.27        0.00        0.00
-   0.00000000   0.00066123   0.00000000            0.00       97.27        0.00
-   0.00000000   0.00000000   0.00066562            0.00        0.00       97.92
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000513
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000513
-
-     Total force =     0.000007     Total SCF correction =     0.000001
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       97.49
-   0.00066123   0.00000000   0.00000000           97.27        0.00        0.00
-   0.00000000   0.00066123   0.00000000            0.00       97.27        0.00
-   0.00000000   0.00000000   0.00066562            0.00        0.00       97.92
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000513
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000513
-
-     Total force =     0.000007     Total SCF correction =     0.000001
- tau00  0.000000000000000E+000  0.000000000000000E+000  4.212622029237476E-034
-  0.502826228339487       0.000000000000000E+000  0.410122202411332     
-  0.502826228339487       0.502826228339487       0.273414801607554     
-  0.000000000000000E+000  0.502826228339487       0.136707400803777     
- tau01  0.000000000000000E+000  0.000000000000000E+000  2.104984902049977E-033
-  0.502592714607679       0.000000000000000E+000  0.409863993531650     
-  0.502592714607679       0.502592714607679       0.273242662354433     
-  0.000000000000000E+000  0.502592714607679       0.136621331177217     
- pos  0.000000000000000E+000  0.000000000000000E+000  1.861328346215619E-032
-   4.44416520702683       0.000000000000000E+000   3.62421349678394     
-   4.44416520702683        4.44416520702683        2.41614233118930     
-  0.000000000000000E+000   4.44416520702683        1.20807116559465     
+LBFGS:    5 21:11:55     -517.450135*       0.0240
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   15.97504, renormalised to   16.00000
 
-     total cpu time spent up to now is       36.3 secs
+     total cpu time spent up to now is       27.6 secs
 
      Self-consistent Calculation
 
@@ -2061,7 +1744,7 @@ LBFGS:    5 16:06:57     -517.450135*       0.0240
      Davidson diagonalization with overlap
      ethr =  6.23E-10,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is       37.8 secs
+     total cpu time spent up to now is       29.2 secs
 
      total energy              =     -38.29140881 Ry
      Harris-Foulkes estimate   =     -38.29140884 Ry
@@ -2071,7 +1754,7 @@ LBFGS:    5 16:06:57     -517.450135*       0.0240
      Davidson diagonalization with overlap
      ethr =  6.39E-10,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is       38.5 secs
+     total cpu time spent up to now is       29.9 secs
 
      total energy              =     -38.29140881 Ry
      Harris-Foulkes estimate   =     -38.29140882 Ry
@@ -2081,7 +1764,7 @@ LBFGS:    5 16:06:57     -517.450135*       0.0240
      Davidson diagonalization with overlap
      ethr =  9.92E-11,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is       39.2 secs
+     total cpu time spent up to now is       30.6 secs
 
      total energy              =     -38.29140881 Ry
      Harris-Foulkes estimate   =     -38.29140882 Ry
@@ -2091,7 +1774,7 @@ LBFGS:    5 16:06:57     -517.450135*       0.0240
      Davidson diagonalization with overlap
      ethr =  9.92E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       40.0 secs
+     total cpu time spent up to now is       31.3 secs
 
      End of self-consistent calculation
 
@@ -2308,40 +1991,4 @@ LBFGS:    5 16:06:57     -517.450135*       0.0240
      atom    4 type  1   force =     0.00000000    0.00000000    0.00000478
 
      Total force =     0.000007     Total SCF correction =     0.000000
-LBFGS:    6 16:07:03     -517.450208*       0.0040
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       99.78
-   0.00067668  -0.00000000   0.00000000           99.54       -0.00        0.00
-  -0.00000000   0.00067668   0.00000000           -0.00       99.54        0.00
-   0.00000000   0.00000000   0.00068159            0.00        0.00      100.27
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000478
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000478
-
-     Total force =     0.000007     Total SCF correction =     0.000000
-
-
-     Computing stress (Cartesian axis) and pressure
-
-          total   stress  (Ry/bohr**3)                   (kbar)     P=       99.78
-   0.00067668  -0.00000000   0.00000000           99.54       -0.00        0.00
-  -0.00000000   0.00067668   0.00000000           -0.00       99.54        0.00
-   0.00000000   0.00000000   0.00068159            0.00        0.00      100.27
-
-
-     Forces acting on atoms (cartesian axes, Ry/au):
-
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000478
-     atom    3 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    4 type  1   force =     0.00000000    0.00000000    0.00000478
-
-     Total force =     0.000007     Total SCF correction =     0.000000
+LBFGS:    6 21:12:00     -517.450208*       0.0040

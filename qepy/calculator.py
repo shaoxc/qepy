@@ -38,7 +38,7 @@ class QEpyCalculator(Calculator):
     def restart(self):
         self._energy = None
         self._forces = None
-        self._stress = np.zeros((3, 3), order='F')
+        self._stress = None
 
     @property
     def rank(self):
@@ -103,11 +103,15 @@ class QEpyCalculator(Calculator):
 
     def update_optimizer(self, atoms = None):
         if self.check_restart(atoms):
+            restart = True
             self.iter += 1
             if self.task == 'optical' :
                 qepy.qepy_molecule_optical_absorption(self.embed)
             else :
                 qepy.qepy_electrons_scf(2, 0, self.embed)
+        else :
+            restart = False
+        return restart
 
     def get_potential_energy(self, atoms = None, **kwargs):
         self.update_optimizer(atoms)
@@ -117,14 +121,15 @@ class QEpyCalculator(Calculator):
         return self._energy * units['Ry']
 
     def get_forces(self, atoms = None, icalc = 0):
-        self.update_optimizer(atoms)
-        qepy.qepy_forces(icalc)
+        if self.update_optimizer(atoms) or self._forces is None:
+            qepy.qepy_forces(icalc)
         self._forces = qepy.force_mod.get_array_force().T
         return self._forces * units['Ry'] / units['Bohr']
 
     def get_stress(self, atoms = None):
-        self.update_optimizer(atoms)
-        qepy.stress(self._stress)
+        if self.update_optimizer(atoms) or self._stress is None:
+            self._stress = np.zeros((3, 3), order='F')
+            qepy.stress(self._stress)
         stress = np.array(
             [self._stress[0, 0], self._stress[1, 1], self._stress[2, 2],
              self._stress[1, 2], self._stress[0, 2], self._stress[0, 1]])
