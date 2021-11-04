@@ -22,6 +22,14 @@ conv_flag = bool(qepy.control_flags.get_conv_elec())
 info = 'Converged {} at {} steps'.format(conv_flag, nscf)
 qepy.qepy_mod.qepy_write_stdout(info)
 
+# get density
+nr = qepy.qepy_mod.qepy_get_grid()
+nspin = qepy.lsda_mod.get_nspin()
+rho = np.empty((np.prod(nr), nspin), order = 'F')
+qepy.qepy_mod.qepy_get_rho(rho)
+ncharge = rho.sum()*qepy.cell_base.get_omega()/np.prod(nr)
+if comm is None or comm.rank == 0 : print('ncharge', ncharge, flush = True)
+
 # qepy.qepy_calc_energies(embed)
 etotal = embed.etotal
 
