@@ -4,10 +4,43 @@
    Check out a [YouTube video](https://www.youtube.com/watch?v=cWt0BVQs-_U) with additional information (installation and examples).
    
 # Contributors and funding
-
  - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
  - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers) 
  - Oliviero Andreussi (UNT), Davide Ceresoli (CNR, Italy), Matthew Truscott (UNT), Andrew Baczewski (Sandia), Quinn Campbell (Sandia), Michele Pavanello (Rutgers)
+
+ # How to cite
+
+Cite QEpy like this:
+```
+@misc{qepy,
+	author = {Xuecheng Shao and Oliviero Andreussi and Davide Ceresoli and Matthew Truscott 
+		and Andrew Baczewski and Quinn Campbell and Michele Pavanello},
+	title = {QEpy: Quantum ESPRESSO in Python},
+	note = {https://gitlab.com/shaoxc/qepy},
+	url = {https://gitlab.com/shaoxc/qepy}
+	}
+```
+...and don't forget to cite the original QE paper:
+```
+@article{QE-2017,
+  author={P Giannozzi and O Andreussi and T Brumme and O Bunau and M Buongiorno Nardelli
+	and M Calandra and R Car and C Cavazzoni and D Ceresoli and M Cococcioni and N Colonna
+	and I Carnimeo and A Dal Corso and S de Gironcoli and P Delugas and R A DiStasio Jr and A Ferretti
+	and A Floris and G Fratesi and G Fugallo and R Gebauer and U Gerstmann and F Giustino and T Gorni
+	and J Jia and M Kawamura and H-Y Ko and A Kokalj and E Küçükbenli and M Lazzeri and M Marsili
+	and N Marzari and F Mauri and N L Nguyen and H-V Nguyen and A Otero-de-la-Roza and L Paulatto
+	and S Poncé and D Rocca and R Sabatini and B Santra and M Schlipf and A P Seitsonen
+	and A Smogunov and I Timrov and T Thonhauser and P Umari and N Vast and X Wu and S Baroni},
+  title={Advanced capabilities for materials modelling with QUANTUM ESPRESSO},
+  journal={Journal of Physics: Condensed Matter},
+  volume={29},
+  number={46},
+  pages={465901},
+  url={http://stacks.iop.org/0953-8984/29/i=46/a=465901},
+  year={2017},
+}
+```
+
 
 # Thanks to ...
  - The Quantum ESPRESSO developers for the QE codebase
