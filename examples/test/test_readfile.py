@@ -7,16 +7,16 @@ import shutil
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
-    comm = comm.py2f()
+    commf = comm.py2f()
 except Exception:
     comm = None
+    commf = None
 
 class Test(unittest.TestCase):
     def test_0_scf(self):
-        global comm
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
-        qepy.qepy_pwscf(fname, comm)
+        qepy.qepy_pwscf(fname, commf)
         qepy.electrons()
 
         conv_flag = bool(qepy.control_flags.get_conv_elec())
@@ -28,10 +28,9 @@ class Test(unittest.TestCase):
         qepy.qepy_stop_run(0, what = 'all')
 
     def test_1_read(self):
-        global comm
         inputobj = qepy.qepy_common.input_base()
         inputobj.prefix = 'al'
-        if comm : inputobj.my_world_comm = comm
+        if commf : inputobj.my_world_comm = commf
 
         qepy.qepy_initial(inputobj)
 
@@ -43,11 +42,10 @@ class Test(unittest.TestCase):
         qepy.qepy_stop_run(0, what = 'no')
 
     def test_2_read_pw(self):
-        global comm
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
 
-        qepy.qepy_pwscf(fname, comm)
+        qepy.qepy_pwscf(fname, commf)
         embed = qepy.qepy_common.embed_base()
 
         qepy.qepy_pw_restart_new.qepy_read_xml_file(alloc=False)
@@ -61,12 +59,13 @@ class Test(unittest.TestCase):
         qepy.qepy_stop_run(0, what = 'no')
 
     def test_9_clean(self):
-        path = pathlib.Path('.')
-        for f in path.glob('al.*'):
-            if f.is_file():
-                f.unlink()
-            else :
-                shutil.rmtree(f)
+        if comm and comm.rank == 0 :
+            path = pathlib.Path('.')
+            for f in path.glob('al.*'):
+                if f.is_file():
+                    f.unlink()
+                else :
+                    shutil.rmtree(f)
 
 
 if __name__ == "__main__":

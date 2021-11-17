@@ -7,17 +7,18 @@ import shutil
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
-    comm = comm.py2f()
+    commf = comm.py2f()
 except Exception:
     comm = None
+    commf = None
 
 class Test(unittest.TestCase):
     def test_0_scf(self):
-        global comm
+        global commf
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
 
-        qepy.qepy_pwscf(fname, comm)
+        qepy.qepy_pwscf(fname, commf)
         qepy.electrons()
 
         conv_flag = bool(qepy.control_flags.get_conv_elec())
@@ -29,7 +30,7 @@ class Test(unittest.TestCase):
         qepy.punch('all')
 
     def test_1_tddft_continue(self):
-        global comm
+        global commf
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
 
@@ -41,11 +42,11 @@ class Test(unittest.TestCase):
         qepy.qepy_stop_tddft(0)
 
     def test_2_tddft_iterative(self):
-        global comm
+        global commf
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
 
-        qepy.qepy_tddft_main_initial(fname, comm)
+        qepy.qepy_tddft_main_initial(fname, commf)
         qepy.read_file()
         embed = qepy.qepy_common.embed_base()
         embed.tddft.iterative = True
@@ -58,15 +59,16 @@ class Test(unittest.TestCase):
         qepy.qepy_molecule_optical_absorption(embed)
         qepy.qepy_stop_tddft(0)
 
-        assert(abs(dip[0, 0] - 0.54355185)<1E-6)
+        assert(abs(dip[0, 0] - 0.5435)<1E-3)
 
     def test_9_clean(self):
-        path = pathlib.Path('.')
-        for f in path.glob('al.*'):
-            if f.is_file():
-                f.unlink()
-            else :
-                shutil.rmtree(f)
+        if comm and comm.rank == 0 :
+            path = pathlib.Path('.')
+            for f in path.glob('al.*'):
+                if f.is_file():
+                    f.unlink()
+                else :
+                    shutil.rmtree(f)
 
 
 if __name__ == "__main__":

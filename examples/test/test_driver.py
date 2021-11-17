@@ -4,20 +4,20 @@ from qepy.driver import QEpyDriver
 import unittest
 import pathlib
 import shutil
+try:
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    commf = comm.py2f()
+except Exception:
+    comm = None
+    commf = None
 
 class Test(unittest.TestCase):
     def test_driver(self):
-        try:
-            from mpi4py import MPI
-            comm = MPI.COMM_WORLD
-            comm = comm.py2f()
-        except Exception:
-            comm = None
-
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
         fname = path / 'qe_in.in'
 
-        driver = QEpyDriver(fname, comm)
+        driver = QEpyDriver(fname, commf)
 
         for i in range(60):
             driver.diagonalize()
@@ -36,12 +36,13 @@ class Test(unittest.TestCase):
         driver.stop()
 
     def tearDown(self):
-        path = pathlib.Path('.')
-        for f in path.glob('al.*'):
-            if f.is_file():
-                f.unlink()
-            else :
-                shutil.rmtree(f)
+        if comm and comm.rank == 0 :
+            path = pathlib.Path('.')
+            for f in path.glob('al.*'):
+                if f.is_file():
+                    f.unlink()
+                else :
+                    shutil.rmtree(f)
 
 
 if __name__ == "__main__":
