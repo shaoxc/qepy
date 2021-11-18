@@ -8,39 +8,6 @@
  - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers) 
  - Oliviero Andreussi (UNT), Davide Ceresoli (CNR, Italy), Matthew Truscott (UNT), Andrew Baczewski (Sandia), Quinn Campbell (Sandia), Michele Pavanello (Rutgers)
 
- # How to cite
-
-Cite QEpy like this:
-```
-@misc{qepy,
-	author = {Xuecheng Shao and Oliviero Andreussi and Davide Ceresoli and Matthew Truscott 
-		and Andrew Baczewski and Quinn Campbell and Michele Pavanello},
-	title = {QEpy: Quantum ESPRESSO in Python},
-	note = {https://gitlab.com/shaoxc/qepy},
-	url = {https://gitlab.com/shaoxc/qepy}
-	}
-```
-...and don't forget to cite the original QE paper:
-```
-@article{QE-2017,
-  author={P Giannozzi and O Andreussi and T Brumme and O Bunau and M Buongiorno Nardelli
-	and M Calandra and R Car and C Cavazzoni and D Ceresoli and M Cococcioni and N Colonna
-	and I Carnimeo and A Dal Corso and S de Gironcoli and P Delugas and R A DiStasio Jr and A Ferretti
-	and A Floris and G Fratesi and G Fugallo and R Gebauer and U Gerstmann and F Giustino and T Gorni
-	and J Jia and M Kawamura and H-Y Ko and A Kokalj and E Küçükbenli and M Lazzeri and M Marsili
-	and N Marzari and F Mauri and N L Nguyen and H-V Nguyen and A Otero-de-la-Roza and L Paulatto
-	and S Poncé and D Rocca and R Sabatini and B Santra and M Schlipf and A P Seitsonen
-	and A Smogunov and I Timrov and T Thonhauser and P Umari and N Vast and X Wu and S Baroni},
-  title={Advanced capabilities for materials modelling with QUANTUM ESPRESSO},
-  journal={Journal of Physics: Condensed Matter},
-  volume={29},
-  number={46},
-  pages={465901},
-  url={http://stacks.iop.org/0953-8984/29/i=46/a=465901},
-  year={2017},
-}
-```
-
 
 # Thanks to ...
  - The Quantum ESPRESSO developers for the QE codebase
@@ -84,7 +51,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
  - **QEpy**
 
    + `git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git`
-   + `qedir=${QE} python -m pip install ./qepy`
+   + `qedir=${QE} python -m pip install -U ./qepy`
 
 ## Tips
  - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
@@ -116,9 +83,39 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	+ If the wavefunctions were stored by old version QE (<6.4) or [eQE](http://eqe.rutgers.edu), please try *oldxml*.
 	+ There are two different ways to store wavefunctions in QE, which is controls by PW parameter [`wf_collect`](http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68). In doubt, simply use one processor to read.
 
+ - How to cite
+
+	+ Cite QEpy and original QE paper ([QEpy.bib](doc/QEpy.bib)):
+
+		```
+		@misc{qepy,
+		  author={Xuecheng Shao and Oliviero Andreussi and Davide Ceresoli and Matthew Truscott 
+			and Andrew Baczewski and Quinn Campbell and Michele Pavanello},
+		  title={{QEpy: Quantum ESPRESSO in Python}},
+		  note={{https://gitlab.com/shaoxc/qepy}},
+		  url={https://gitlab.com/shaoxc/qepy}
+		}
+	
+		@article{QE-2017,
+		  author={P Giannozzi and O Andreussi and T Brumme and O Bunau and M Buongiorno Nardelli
+			and M Calandra and R Car and C Cavazzoni and D Ceresoli and M Cococcioni and N Colonna
+			and I Carnimeo and A Dal Corso and S de Gironcoli and P Delugas and R A DiStasio Jr and A Ferretti
+			and A Floris and G Fratesi and G Fugallo and R Gebauer and U Gerstmann and F Giustino and T Gorni
+			and J Jia and M Kawamura and H-Y Ko and A Kokalj and E Küçükbenli and M Lazzeri and M Marsili
+			and N Marzari and F Mauri and N L Nguyen and H-V Nguyen and A Otero-de-la-Roza and L Paulatto
+			and S Poncé and D Rocca and R Sabatini and B Santra and M Schlipf and A P Seitsonen
+			and A Smogunov and I Timrov and T Thonhauser and P Umari and N Vast and X Wu and S Baroni},
+		  title={Advanced capabilities for materials modelling with QUANTUM ESPRESSO},
+		  journal={Journal of Physics: Condensed Matter},
+		  volume={29},
+		  number={46},
+		  pages={465901},
+		  url={http://stacks.iop.org/0953-8984/29/i=46/a=465901},
+		  year={2017},
+		}
+		```
+
 ## Todo
- - ~~Update the Makefile to support Gfortran compiler.~~
- - ~~Support the updating the cell lattice.~~
  - Support hybrid functionals in embedding/iterative way.
 
 ## Bugs
