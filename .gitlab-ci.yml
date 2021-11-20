@@ -1,10 +1,58 @@
-image: registry.gitlab.com/shaoxc/qepy:qepy-6.5g
+stages:
+  - build
+  - deploy
 
-Test:
+variables:
+  PACKAGE: '/usr/local/lib/python3.8/site-packages'
+  CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
+  QTAG: 'qe-6.5g'
+  QTAGNEW: 'qepy-6.5g-dev'
+  QEDIR: '/usr/src/app/q-e/'
+  PUBLIC: 'package'
+
+
+test:
+  stage: build
+  image: $CONTAINER_IMAGE:$QTAG
   before_script:
-   - home=$( pwd )
    - git clone https://github.com/dceresoli/ce-tddft.git src/ce-tddft
-   - qedir=/usr/src/app/q-e/ tddft=yes python -m pip install .
+   - qedir=$QEDIR tddft=yes python -m pip install .
+
   script:
    - cd examples/test
    - bash test.sh
+   - PACKAGE=$(python -c 'import qepy, os; print(os.path.split(qepy.__path__[0])[0])')
+   - cd -
+   - mkdir $PUBLIC
+   - cp -r $PACKAGE/qepy* $PUBLIC
+   - cp $PACKAGE/_qepy* $PUBLIC
+   - ls $PUBLIC/*
+
+  artifacts:
+    name: "QEpy-$CI_COMMIT_REF_SLUG-${CI_COMMIT_SHA::9}"
+    paths:
+      - $PUBLIC
+
+docker_image:
+  stage: deploy
+  only:
+    refs:
+      - docker
+  image: docker:stable
+  services:
+    - docker:dind
+  
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+  
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  
+  script:
+    - docker pull $CONTAINER_IMAGE:$QTAG || true
+    - docker run -t -d --name qepy_con $CONTAINER_IMAGE:$QTAG
+    - docker cp $PUBLIC/qepy qepy_con:$PACKAGE
+    - docker cp $PUBLIC/qepy-* qepy_con:$PACKAGE
+    - docker cp $PUBLIC/_qepy* qepy_con:$PACKAGE
+    - docker commit qepy_con $CONTAINER_IMAGE:$QTAGNEW
+    - docker push $CONTAINER_IMAGE:$QTAGNEW
