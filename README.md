@@ -116,6 +116,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 		```
 
 ## Todo
+ - Auto update the ldaU patch files to support more elements during installation.
  - Support hybrid functionals in embedding/iterative way.
 
 ## Bugs
