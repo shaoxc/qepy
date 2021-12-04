@@ -30,9 +30,11 @@ QEPY_TDDFT_SOURCES := qepy_tddft_common.f90 \
                     qepy_tddft_routines.f90 qepy_tddft_setup.f90 qepy_update_ham.f90 \
                     qepy_tddft_mod.f90
 
-QEPY_PATCH := tabd.f90 set_hubbard_l.f90 set_hubbard_n.f90
+QEPY_LDAU := tabd.f90 set_hubbard_l.f90 set_hubbard_n.f90
 
-QEPY_ADD += ${QEPY_PATCH}
+ifeq ($(ldau), yes)
+   QEPY_ADD += ${QEPY_LDAU}
+endif
 
 FOLDXML =
 EXT_FILES=

@@ -10,3 +10,4 @@ bak/
 .buildconfig
 .eggs/
 log*
+dev

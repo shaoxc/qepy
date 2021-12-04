@@ -61,6 +61,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	e.g.
 
 	- "`oldxml=yes`" can read old version QE xml file (i.e., qe-5.x).
+	- "`ldau=yes`" will generate LDA+U (DFT+U) files based on given [electron configuration](src/ldau/qepy_econf.ini).
 	- "`original=yes`" only wrap original QE files and a ``qepy_mod``, which also can support other version of QE (e.g. [6.5](examples/original/6.5), [6.8](examples/original/6.8)).
 
  - If you struggle with original f90wrap, try our own modified version of f90wrap:

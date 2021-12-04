@@ -38,19 +38,34 @@ class MakeBuild(build_ext):
         build_args += ['-j', str(nprocs)]
 
         if os.path.exists(self.build_temp): shutil.rmtree(self.build_temp)
+        #remove *.so files
+        # for f in pathlib.Path(self.build_temp).glob('*.so'): os.remove(f)
 
         if not os.path.exists(self.build_temp): os.makedirs(self.build_temp)
 
-        #remove *.so files
-        for f in pathlib.Path(self.build_temp).glob('*.so'):
-            os.remove(f)
-
         makefiles = list(pathlib.Path(topdir + '/qepy/').glob('*')) + \
-                list(pathlib.Path(topdir + '/install/').glob('*')) + \
-                list(pathlib.Path(topdir + '/src/').glob('**/*.f90'))
+            list(pathlib.Path(topdir + '/install/').glob('*')) + \
+            list(pathlib.Path(topdir + '/src/').glob('*'))
+
+        qeversion = 'qe-' + env.get('qeversion', '6.5')
 
         for f in makefiles :
-            shutil.copy2(f, self.build_temp)
+            if f.is_file():
+                shutil.copy2(f, self.build_temp)
+            else :
+                if f.name.startswith('qe-') :
+                    if f.name != qeversion : continue
+                shutil.copytree(f, self.build_temp+os.sep+f.name)
+
+        makefiles = list(pathlib.Path(self.build_temp).glob('**/*.f90'))
+        for f in makefiles : shutil.copy2(f, self.build_temp)
+
+        cwd = os.getcwd()
+        os.chdir(self.build_temp)
+        if env.get('ldau', 'no').lower() == 'yes' :
+            from ldau.qepy_ldau_patch import ini2files
+            ini2files('ldau/qepy_econf.ini')
+        os.chdir(cwd)
 
         if env.get('tddft', 'no').lower() == 'yes' :
             subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
