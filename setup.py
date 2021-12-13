@@ -32,9 +32,9 @@ class MakeBuild(build_ext):
 
         try:
             import multiprocessing as mp
-            nprocs = mp.cpu_count()
+            nprocs = mp.cpu_count() // 2
         except ImportError:
-            nprocs = 1
+            nprocs = 4
         build_args += ['-j', str(nprocs)]
 
         if os.path.exists(self.build_temp): shutil.rmtree(self.build_temp)
