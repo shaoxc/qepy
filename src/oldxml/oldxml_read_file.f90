@@ -47,6 +47,7 @@ SUBROUTINE oldxml_read_file()
   LOGICAL :: exst, exst_mem, exst_file, opnd_file
   CHARACTER( 256 )  :: dirname
   INTEGER  :: ik
+  INTEGER  :: file_size
   !
   !
   ierr = 0 
@@ -93,13 +94,24 @@ SUBROUTINE oldxml_read_file()
      ierr = 1
      CALL pw_readfile( 'wave', ierr )
      IF ( ierr > 0 ) THEN
-        CALL errore( 'read_file ', 'file not found', ierr )
-     END IF
+        WRITE( stdout, '(5x,A)') &
+             'oldxml_read_file: Wavefunctions in collected format not available'
+        !CALL errore( 'read_file ', 'file not found', ierr )
+     !END IF
+     ELSE
      !
      ! ... workaround: with k-point parallelization and 1 k-point per pool,
      ! ... pw_readfile does not leave evc properly initialized on all pools
      !
+     inquire (unit = iunwfc, size = file_size)
+     !qepy --> skip empty file
+     if (file_size /= 0) then
      IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
+     else
+        WRITE( stdout, '(5x,A)') 'oldxml_read_file: Wavefunctions is empty!'
+     endif
+     !qepy <-- skip empty file
+     END IF
      !
   ELSE
      !
@@ -111,7 +123,14 @@ SUBROUTINE oldxml_read_file()
      IF ( nks == 1 ) THEN
          inquire (unit = iunwfc, opened = opnd_file)
          if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+         inquire (unit = iunwfc, size = file_size)
+         !qepy --> skip empty file
+         if (file_size /= 0) then
          CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+         else
+            WRITE( stdout, '(5x,A)') 'oldxml_read_file: Wavefunctions is empty!'
+         endif
+         !qepy <-- skip empty file
          if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      END IF
      !
