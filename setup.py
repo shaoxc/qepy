@@ -32,7 +32,7 @@ class MakeBuild(build_ext):
 
         try:
             import multiprocessing as mp
-            nprocs = mp.cpu_count() // 2
+            nprocs = max(mp.cpu_count()//2, 2)
         except ImportError:
             nprocs = 4
         build_args += ['-j', str(nprocs)]
