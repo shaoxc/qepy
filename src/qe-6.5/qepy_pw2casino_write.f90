@@ -496,10 +496,7 @@
       DEALLOCATE ( g2kin )
       eext=0.0_DP
       IF (ALLOCATED(embed%extpot)) THEN
-         DO ispin = 1, nspin
-            eext = eext + sum(embed%extpot*rho%of_r(:, ispin))
-         ENDDO
-         eext = eext * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+         eext = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
       ENDIF
 #if defined(__MPI)
       CALL mp_sum( eloc,  intra_bgrp_comm )

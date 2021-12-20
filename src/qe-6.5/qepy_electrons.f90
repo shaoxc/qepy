@@ -696,8 +696,13 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
               ! from second step directly return new density without mixing
               goto 111
            else if ( iter==1 .and. (embed%mix_coef>0.0_DP)) then
-              ! the first step already mixing, so do nothing
-              goto 111
+              if (conv_elec) then
+                 ! converged at first step
+                 return
+              else
+                 ! the first step already mixing, so do nothing
+                 goto 111
+              endif
            end if
         end if
         !

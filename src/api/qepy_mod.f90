@@ -9,7 +9,7 @@ MODULE qepy_mod
    INTERFACE mp_gather
       MODULE PROCEDURE mp_gather_real, mp_gather_complex
    END INTERFACE
-
+   !
    INTERFACE mp_scatter
       MODULE PROCEDURE mp_scatter_real, mp_scatter_complex
    END INTERFACE
@@ -86,7 +86,7 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      INTEGER  :: ispin, nnr
+      INTEGER :: ispin, nnr
       LOGICAL :: mflag
       !
       IF ( present(inone) ) THEN
@@ -115,7 +115,7 @@ CONTAINS
       REAL(DP), INTENT(IN) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
       !
-      INTEGER  :: ispin, nnr
+      INTEGER :: ispin, nnr
       LOGICAL :: mflag
       !
       IF ( present(inone) ) THEN
@@ -129,7 +129,7 @@ CONTAINS
          ELSE
             nnr=dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
             rho%of_r(1:nnr,ispin) = rhor(1:nnr,ispin)
-            rho%of_r(nnr:dfftp%nnr,ispin) = 0.d0
+            rho%of_r(nnr:dfftp%nnr,ispin) = 0.0_DP
          ENDIF
       END DO
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
@@ -176,20 +176,22 @@ CONTAINS
          CALL mp_scatter(rhoc, rho_core)
       ELSE
          rho_core(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p) = rhoc
-         rho_core(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr) = 0.d0
+         rho_core(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr) = 0.0_DP
       ENDIF
    END SUBROUTINE
 
    SUBROUTINE qepy_set_extpot(embed, vin, inone)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
-      USE fft_base,         ONLY : dfftp, dffts
+      USE fft_base,             ONLY : dfftp, dffts
+      USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
       !
       IMPLICIT NONE
       TYPE(embed_base), INTENT(INOUT) :: embed
-      REAL(DP), INTENT(IN) :: vin(:)
+      REAL(DP), INTENT(IN) :: vin(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
       !
+      INTEGER :: ispin, ns
       LOGICAL :: mflag
       !
       IF ( present(inone) ) THEN
@@ -197,16 +199,23 @@ CONTAINS
       ELSE
          mflag=.true.
       ENDIF
-      IF (ALLOCATED(embed%extpot)) THEN
-         IF (SIZE(embed%extpot) /= dfftp%nnr) DEALLOCATE(embed%extpot)
-      ENDIF
-      IF (.NOT.ALLOCATED(embed%extpot)) ALLOCATE(embed%extpot(dfftp%nnr))
-      IF ( mflag ) THEN
-         CALL mp_scatter(vin, embed%extpot)
-      ELSE
-         embed%extpot(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p) = vin
-         embed%extpot(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr) = 0.d0
-      ENDIF
+      !
+      call embed%allocate_extpot()
+      !
+      ns = size(vin,2)
+      !
+      DO ispin = 1, ns
+         IF ( mflag ) THEN
+            CALL mp_scatter(vin(:,ispin), embed%extpot(:,ispin))
+         ELSE
+            embed%extpot(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p, ispin) = vin(:,ispin)
+            embed%extpot(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr, ispin) = 0.0_DP
+         ENDIF
+      END DO
+      DO ispin = ns+1, nspin
+         embed%extpot(:,ispin) = embed%extpot(:,1)
+      END DO
+      !
    END SUBROUTINE
 
    FUNCTION qepy_get_grid(nr, inone) RESULT( nrw )
@@ -361,7 +370,7 @@ CONTAINS
       ENDIF
       !
 !$omp parallel
-      psic(:) = (0.D0, 0.D0)
+      psic(:) = (0.0_DP, 0.0_DP)
       npw=ngk(ik)
       !$omp do
       IF ( gamma_only ) THEN
@@ -397,11 +406,7 @@ CONTAINS
       TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: forces(:,:)
       !
-      IF (ALLOCATED(embed%extforces)) THEN
-         IF (SIZE(embed%extforces,2) /= nat) DEALLOCATE(embed%extforces)
-      ENDIF
-      IF (.NOT.ALLOCATED(embed%extforces)) ALLOCATE(embed%extforces(3, nat))
-      !
+      call embed%allocate_extforces()
       embed%extforces(:,:) = forces(:,1:nat)
       !
    END SUBROUTINE

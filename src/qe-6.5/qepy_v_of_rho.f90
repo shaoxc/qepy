@@ -83,11 +83,9 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   !
   ! ... define the total local potential (external + scf)
   !
-  IF (.NOT.ALLOCATED(embed%extpot)) THEN
-     ALLOCATE(embed%extpot(dfftp%nnr))
-     embed%extpot=0.0
-  ENDIF
-  CALL sum_vrs( dfftp%nnr, nspin, embed%extpot, v%of_r, v%of_r )
+  CALL embed%allocate_extpot()
+  v%of_r = v%of_r + embed%extpot
+  !
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !
   ! ... interpolate the total local potential
