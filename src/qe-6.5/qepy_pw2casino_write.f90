@@ -568,8 +568,10 @@
       !
       ! compute hartree and xc contribution
       !
+      !qepy --> also paw
       call qepy_v_of_rho_all( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+      !qepy <-- also paw
       !
       ! compute exact exchange contribution (if present)
       !
@@ -606,11 +608,6 @@
          tau(:,:)=tau(:,:)/alat
       ELSE
          edftd3= 0.0
-      ENDIF
-      !
-      IF (okpaw) THEN
-         CALL PAW_potential( rho%bec, ddd_paw, epaw,etot_cmp_paw )
-         CALL PAW_symmetrize_ddd( ddd_paw )
       ENDIF
       !
       IF (okpaw) etot_ = etot_ + epaw

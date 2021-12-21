@@ -796,10 +796,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            !CALL v_of_rho( rhoin, rho_core, rhog_core, &
            !               ehart, etxc, vtxc, eth, etotefield, charge, v)
            !!
-           IF (okpaw) THEN
-              CALL PAW_potential( rhoin%bec, ddd_paw, epaw,etot_cmp_paw )
-              CALL PAW_symmetrize_ddd( ddd_paw )
-           ENDIF
+           !IF (okpaw) THEN
+           !   CALL PAW_potential( rhoin%bec, ddd_paw, epaw,etot_cmp_paw )
+           !   CALL PAW_symmetrize_ddd( ddd_paw )
+           !ENDIF
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -828,10 +828,10 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
               ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
-           IF (okpaw) THEN
-              CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
-              CALL PAW_symmetrize_ddd( ddd_paw )
-           ENDIF
+           !IF (okpaw) THEN
+           !   CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
+           !   CALL PAW_symmetrize_ddd( ddd_paw )
+           !ENDIF
            !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed

@@ -154,6 +154,7 @@ SUBROUTINE qepy_initial(input)
   USE environment, ONLY : environment_start, environment_end
   USE qepy_common, ONLY : input_base
   USE io_files,    ONLY : tmp_dir, prefix
+  USE check_stop,  ONLY : check_stop_init
   !
   IMPLICIT NONE
   !
@@ -177,6 +178,8 @@ SUBROUTINE qepy_initial(input)
      tmp_dir = input%tmp_dir
      CALL environment_start ( input%code )
   ENDIF
+  !
+  CALL check_stop_init()
   !
 END SUBROUTINE qepy_initial
 

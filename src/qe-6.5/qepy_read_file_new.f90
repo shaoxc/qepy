@@ -53,7 +53,7 @@ SUBROUTINE qepy_read_file()
           'read_file: Wavefunctions in collected format not available'
   END IF
   !
-  CALL close_buffer  ( iunwfc, 'KEEP' )
+  !CALL close_buffer  ( iunwfc, 'KEEP' )
   !
 END SUBROUTINE qepy_read_file
 !

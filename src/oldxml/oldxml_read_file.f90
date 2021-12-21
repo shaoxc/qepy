@@ -171,7 +171,7 @@ SUBROUTINE oldxml_read_file()
   !END IF
   !-----------------------------------------------------------------------
   !
-  CALL close_buffer  ( iunwfc, 'KEEP' )
+  !CALL close_buffer  ( iunwfc, 'KEEP' )
   !
 END SUBROUTINE oldxml_read_file
 !
