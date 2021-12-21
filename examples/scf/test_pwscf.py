@@ -3,15 +3,15 @@ import qepy
 
 try:
     from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    commf = comm.py2f()
 except Exception:
     comm = None
-else:
-    comm = MPI.COMM_WORLD
-    comm = comm.py2f()
+    commf = None
 
 fname = 'qe_in.in'
 
-qepy.qepy_pwscf(fname, comm)
+qepy.qepy_pwscf(fname, commf)
 
 embed = qepy.qepy_common.embed_base()
 

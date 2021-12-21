@@ -35,3 +35,4 @@ tddft_routines.o : tddft_module.o
 tddft_setup.o : tddft_module.o
 update_ham.o : tddft_module.o
 wavepacket.o : tddft_module.o
+qepy_read_file_new.o : qepy_pw_restart_new.o

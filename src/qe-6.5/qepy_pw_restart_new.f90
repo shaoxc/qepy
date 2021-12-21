@@ -961,6 +961,14 @@ MODULE qepy_pw_restart_new
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
       !
+      !qepy --> other parameters
+      USE tsvdw_module,         ONLY : vdw_econv_thr
+      USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
+                                       vdw_corr, london, k_points, assume_isolated, &  
+                                       input_parameters_occupations => occupations, dftd3_threebody, &
+                                       dftd3_version
+      !qepy <-- other parameters
+      !
       IMPLICIT NONE
       LOGICAL, INTENT(OUT) :: wfc_is_collected
       !
@@ -969,7 +977,10 @@ MODULE qepy_pw_restart_new
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+      !qepy --> 
+      !CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+      CHARACTER(LEN=20) :: dft_name, occupations
+      !qepy <-- 
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
       TYPE (output_type)        :: output_obj 
@@ -1121,6 +1132,13 @@ MODULE qepy_pw_restart_new
       do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
+      !qepy --> additional parameters
+      dftd3_version   = output_obj%dft%vdW%dftd3_version
+      dftd3_threebody = output_obj%dft%vdW%dftd3_threebody
+      !vdw_econv_thr   = output_obj%dft%vdW%ts_vdw_econv_thr
+      !!ts_vdw_econv_thr not in output but in input
+      vdw_econv_thr   = input_obj%dft%vdW%ts_vdw_econv_thr
+      !qepy <-- additional parameters
       !
       ! ... xml data no longer needed, can be discarded
       !

@@ -34,7 +34,7 @@ class Test(unittest.TestCase):
 
         qepy.qepy_initial(inputobj)
 
-        qepy.read_file()
+        qepy.qepy_read_file()
 
         embed = qepy.qepy_common.embed_base()
         qepy.qepy_calc_energies(embed)

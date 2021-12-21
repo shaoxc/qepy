@@ -19,7 +19,7 @@ qepy.qepy_initial(inputobj)
 if oldxml :
     qepy.oldxml_read_file()
 else :
-    qepy.read_file()
+    qepy.qepy_read_file()
 
 embed = qepy.qepy_common.embed_base()
 energy = qepy.qepy_calc_energies(embed)

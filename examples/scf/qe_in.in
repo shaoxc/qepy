@@ -17,6 +17,8 @@
     smearing = 'gaussian'
     degauss = 0.001
     nosym = .true.
+    vdw_corr         = 'ts'
+    ts_vdw_econv_thr = 1E-5
 /
 &electrons
     conv_thr = 1e-8
