@@ -1,7 +1,7 @@
 MODULE qepy_mod
-   USE kinds,                ONLY : DP
-   USE qepy_scatter_mod, ONLY : gather_grid, scatter_grid
-   USE qepy_common, ONLY : embed_base, input_base
+   USE kinds,                   ONLY : DP
+   USE qepy_scatter_mod,        ONLY : gather_grid, scatter_grid
+   USE qepy_common,             ONLY : embed_base, input_base
    !
    IMPLICIT NONE
    PUBLIC
@@ -18,7 +18,7 @@ CONTAINS
 
    SUBROUTINE mp_gather_real(fin, fout)
       USE kinds,                ONLY : DP
-      USE fft_base,         ONLY : dfftp
+      USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: fin(:)
@@ -33,7 +33,7 @@ CONTAINS
 
    SUBROUTINE mp_scatter_real(fin, fout)
       USE kinds,                ONLY : DP
-      USE fft_base,         ONLY : dfftp
+      USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: fin(:)
@@ -48,7 +48,7 @@ CONTAINS
 
    SUBROUTINE mp_gather_complex(fin, fout)
       USE kinds,                ONLY : DP
-      USE fft_base,         ONLY : dfftp
+      USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: fin(:)
@@ -63,7 +63,7 @@ CONTAINS
 
    SUBROUTINE mp_scatter_complex(fin, fout)
       USE kinds,                ONLY : DP
-      USE fft_base,         ONLY : dfftp
+      USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: fin(:)
@@ -78,9 +78,9 @@ CONTAINS
 
    SUBROUTINE qepy_get_rho(rhor, inone)
       USE kinds,                ONLY : DP
-      use scf, only: rho !! the charge density and its other components
-      USE fft_base,         ONLY : dfftp, dffts
-      USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
+      use scf,                  ONLY : rho, rhoz_or_updw
+      USE fft_base,             ONLY : dfftp, dffts
+      USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
       !
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhor(:,:)
@@ -94,6 +94,8 @@ CONTAINS
       ELSE
          mflag=.true.
       ENDIF
+      !
+      IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->updw' )
       DO ispin = 1, nspin
          IF ( mflag ) THEN
             CALL mp_gather(rho%of_r(:,ispin), rhor(:,ispin))
@@ -102,14 +104,15 @@ CONTAINS
             rhor(1:nnr,ispin) = rho%of_r(1:nnr,ispin)
          ENDIF
       END DO
+      IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
    END SUBROUTINE
 
    SUBROUTINE qepy_set_rho(rhor, inone)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
-      USE fft_base,         ONLY : dfftp, dffts
-      use scf, only: rho !! the charge density and its other components
-      USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
+      USE fft_base,             ONLY : dfftp, dffts
+      use scf,                  ONLY : rho, rhoz_or_updw
+      USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
       !
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhor(:,:)
@@ -123,6 +126,8 @@ CONTAINS
       ELSE
          mflag=.true.
       ENDIF
+      !
+      IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->updw' )
       DO ispin = 1, nspin
          IF ( mflag ) THEN
             CALL mp_scatter(rhor(:,ispin), rho%of_r(:,ispin))
@@ -132,13 +137,14 @@ CONTAINS
             rho%of_r(nnr:dfftp%nnr,ispin) = 0.0_DP
          ENDIF
       END DO
+      IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
    END SUBROUTINE
 
    SUBROUTINE qepy_get_rho_core(rhoc, inone)
       USE kinds,                ONLY : DP
-      use scf, only: rho_core !! the core charge in real space
-      USE fft_base,         ONLY : dfftp, dffts
+      use scf,                  ONLY : rho_core !! the core charge in real space
+      USE fft_base,             ONLY : dfftp, dffts
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
@@ -159,8 +165,8 @@ CONTAINS
 
    SUBROUTINE qepy_set_rho_core(rhoc, inone)
       USE kinds,                ONLY : DP
-      use scf, only: rho_core !! the core charge in real space
-      USE fft_base,         ONLY : dfftp, dffts
+      use scf,                  ONLY : rho_core !! the core charge in real space
+      USE fft_base,             ONLY : dfftp, dffts
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: inone
@@ -185,6 +191,7 @@ CONTAINS
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,             ONLY : dfftp, dffts
       USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+      USE mp,                   ONLY : mp_bcast
       !
       IMPLICIT NONE
       TYPE(embed_base), INTENT(INOUT) :: embed
@@ -203,6 +210,7 @@ CONTAINS
       call embed%allocate_extpot()
       !
       ns = size(vin,2)
+      CALL mp_bcast(ns, dfftp%root, dfftp%comm)
       !
       DO ispin = 1, ns
          IF ( mflag ) THEN
@@ -240,7 +248,7 @@ CONTAINS
 
    FUNCTION qepy_get_grid_shape(dfft, inone) RESULT( nrw )
       USE kinds,                ONLY : DP
-      USE fft_types,           ONLY : fft_type_descriptor
+      USE fft_types,            ONLY : fft_type_descriptor
       !
       IMPLICIT NONE
       TYPE(fft_type_descriptor),INTENT(IN) :: dfft
@@ -283,7 +291,7 @@ CONTAINS
    END FUNCTION
 
    SUBROUTINE qepy_set_stdout(fname, uni, append)
-      USE io_global,     ONLY : stdout, ionode
+      USE io_global,            ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
       CHARACTER(LEN=*),INTENT(IN),OPTIONAL  :: fname
@@ -313,7 +321,7 @@ CONTAINS
    END SUBROUTINE
 
    SUBROUTINE qepy_write_stdout(fstr)
-      USE io_global,     ONLY : stdout, ionode
+      USE io_global,            ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
       CHARACTER(LEN=*),INTENT(IN)  :: fstr
@@ -322,7 +330,7 @@ CONTAINS
    END SUBROUTINE
 
    SUBROUTINE qepy_close_stdout(fname)
-      USE io_global,     ONLY : stdout, ionode
+      USE io_global,            ONLY : stdout, ionode
       !
       INTEGER                  :: ierr
       CHARACTER(LEN=*),INTENT(IN)  :: fname
