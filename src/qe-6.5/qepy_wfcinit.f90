@@ -162,6 +162,10 @@ SUBROUTINE qepy_wfcinit(starting)
      ! ... calculate starting wavefunctions (calls Hpsi)
      !
      CALL init_wfc ( ik )
+     !qepy --> lsda up==down
+     IF ( lsda .and. ik > nks/2) &
+         CALL get_buffer ( evc, nwordwfc, iunwfc, ik-nks/2 )
+     !qepy <-- lsda up==down
      !
      ! ... write  starting wavefunctions to file
      !
