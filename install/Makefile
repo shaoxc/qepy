@@ -88,6 +88,9 @@ else
    FCOMPILER=gnu95
 endif
 
+ifneq ($(findstring -std, ${CFLAGS}), -std)
+   CFLAGS := $(CFLAGS) -std=c99
+endif
 
 FPP = ${F90} -E -cpp $(F2FLAGS)
 
@@ -119,6 +122,7 @@ serial: ${F90WRAP_FILES}
 		${QEMODS} ${QELIBS} -liomp5
 
 mpi: ${F90WRAP_FILES}
+	CFLAGS='$(CFLAGS)' \
 	f2py-f90wrap \
 		--fcompiler=$(FCOMPILER) --build-dir . \
 		-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
