@@ -480,7 +480,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   !
   add_descf = .FALSE.
-  if ( embed%ldescf .and. embed%iterative .and. iter>1 ) add_descf = .TRUE.
+  if ( embed%ldescf .and. embed%iterative .and. (.not. embed%initial) ) add_descf = .TRUE.
   if (embed%finish) goto 10
   if (embed%mix_coef>0.0_DP) goto 100
   !!! If we change some parts to functions will make the code clean.
@@ -541,14 +541,17 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   !
   CALL create_scf_type( rhoin )
-  if (embed%ldescf) then
+  !if (embed%ldescf) then
      CALL create_scf_type( rho_prev )
-  endif
+     CALL scf_type_COPY( rho, rho_prev )
+  !endif
   !
   WRITE( stdout, 9002 )
   FLUSH( stdout )
   !
   CALL open_mix_file( iunmix, 'mix', exst )
+  else
+  dr2 = embed%dnorm
   end if ! if (embed%initial)
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -688,22 +691,11 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         !
         deband = delta_e()
         !
-        if (embed%ldescf) then
-           CALL scf_type_COPY( rho, rho_prev )
-        endif
 100     if ( embed%iterative ) then
            if (iter > 1 .and. (embed%mix_coef<0.0_DP)) then
               ! from second step directly return new density without mixing
               goto 111
-           else if ( iter==1 .and. (embed%mix_coef>0.0_DP)) then
-              if (conv_elec) then
-                 ! converged at first step
-                 return
-              else
-                 ! the first step already mixing, so do nothing
-                 goto 111
-              endif
-           end if
+           endif
         end if
         !
         !
@@ -720,6 +712,19 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
         else
            mixing_beta_new = mixing_beta
         endif
+        if ( iter==1 .and. (embed%mix_coef>0.0_DP)) then
+           if ( abs(mixing_beta_new-mixing_beta)>1E-6) then
+              ! the mixing difference, so restart the mixing
+              CALL close_mix_file( iunmix, 'delete' )
+              CALL open_mix_file( iunmix, 'mix', exst )
+              CALL scf_type_COPY( rho_prev, rhoin)
+           else
+              ! the first step already mixing, so do nothing
+              if (embed%ldescf) CALL scf_type_COPY( rho, rho_prev )
+              CALL scf_type_COPY( rhoin, rho )
+              goto 111
+           endif
+        end if
         !
         CALL mix_rho( rho, rhoin, mixing_beta_new, dr2, tr2_min, iter, nmix, &
                       iunmix, conv_elec )
@@ -769,6 +774,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
               !
               !qepy <--
               ethr = MAX( ethr, 1.D-13 )
+              CALL scf_type_COPY( rho_prev, rhoin)
+              CALL close_mix_file( iunmix, 'delete' )
+              CALL open_mix_file( iunmix, 'mix', exst )
               !qepy -->
               CYCLE scf_step
               !
@@ -776,10 +784,14 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            !
         ENDIF
         !-----------------------------------------------------------------------
-        if (embed%exttype>0 .or. embed%mix_coef>0.0_DP) then
+        if ( embed%iterative ) then
            IF ( embed%exttype==0 .and. conv_elec ) THEN
               embed%finish = .TRUE.
+           ELSEIF ( iter==1 .and. (embed%mix_coef<0.0_DP)) then
+              ! first step directly return without mixing
+              goto 111
            ELSE
+              if (embed%ldescf) CALL scf_type_COPY( rho, rho_prev )
               CALL scf_type_COPY( rhoin, rho )
               goto 111
            ENDIF
@@ -1052,9 +1064,9 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )
-  if (embed%ldescf) then
+  !if (embed%ldescf) then
      CALL destroy_scf_type( rho_prev )
-  endif
+  !endif
   CALL stop_clock( 'electrons' )
   !
   !qepy <-- reset embed
