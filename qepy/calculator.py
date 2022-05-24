@@ -14,7 +14,7 @@ class QEpyCalculator(Calculator):
     implemented_properties=['energy', 'forces', 'stress']
 
     def __init__(self, atoms = None, comm = None, task = 'scf', embed = None, inputfile = None,
-            input_data = None, wrap = False, lmovecell = False, **kwargs):
+            input_data = None, wrap = False, lmovecell = False, from_file = False, **kwargs):
         Calculator.__init__(self, atoms = atoms, input_data = input_data, **kwargs)
         self.optimizer = None
         self.restart()
@@ -32,8 +32,17 @@ class QEpyCalculator(Calculator):
         self.inputfile = inputfile
         self.wrap = wrap
         self.embed.lmovecell = lmovecell
-        if self.inputfile is not None :
+        if self.inputfile is not None and self.atoms is None :
             self.atoms = ase.io.read(self.inputfile, format='espresso-in')
+        if self.atoms is not None :
+            self.atoms.calc = self
+        self.from_file = from_file
+        self.atoms_save = None
+        if self.from_file :
+            self.basefile = None
+        else :
+            self.basefile = self.inputfile
+            self.inputfile = 'qepy_input_tmp.in'
 
     def restart(self):
         self._energy = None
@@ -47,11 +56,11 @@ class QEpyCalculator(Calculator):
         else :
             return self.comm.rank
 
-    def driver_initialise(self, **kwargs):
-        if self.inputfile is None :
-            self.inputfile = 'qepy_input.in'
+    def driver_initialise(self, atoms = None, **kwargs):
+        atoms = atoms or self.atoms
+        if self.basefile :
             if self.wrap : self.atoms.wrap()
-            ase.io.write(self.inputfile, self.atoms, format = 'espresso-in', **self.parameters)
+            write2qe(self.inputfile, atoms, basefile = self.basefile, **self.parameters)
         if self.comm is None :
             comm = None
         else :
@@ -86,18 +95,25 @@ class QEpyCalculator(Calculator):
     def check_restart(self, atoms = None):
         restart = True
 
-        if self.atoms :
-            if atoms is None or atoms == self.atoms :
-                restart = False
-
-        if restart :
-            if atoms is not None : self.atoms = atoms.copy()
-            self.restart()
-            if self.iter > 0 : self.update_atoms(self.atoms)
+        if atoms is None or (self.atoms_save and atoms == self.atoms_save):
+            restart = False
 
         if self.iter == 0 :
             restart = True
-            self.driver_initialise()
+
+        if restart :
+            if self.atoms is None :
+                self.atoms = atoms
+                self.atoms.calc = self
+            if atoms is not None :
+                self.atoms_save = atoms.copy()
+            else :
+                atoms = self.atoms
+            self.restart()
+            if self.iter > 0 :
+                self.update_atoms(atoms)
+            else :
+                self.driver_initialise(atoms = atoms)
 
         return restart
 
@@ -282,3 +298,31 @@ class QEpyCalculator(Calculator):
 
     def stop(self, what = 'all', **kwargs):
         qepy.qepy_stop_run(0, what = what)
+
+def write2qe(outf, atoms, basefile = None, **kwargs):
+    if basefile is None :
+        ase.io.write(outf, atoms, format = 'espresso-in', **kwargs)
+    else :
+        ntyp = len(set(atoms.symbols))
+        nat = atoms.get_global_number_of_atoms()
+        with open(basefile, 'r') as fr :
+            with open(outf, 'w') as fw :
+                for line in fr :
+                    if 'ntyp' in line :
+                        x = line.index("=") + 1
+                        line = line[:x] + ' ' + str(ntyp) + '\n'
+                    elif 'nat' in line :
+                        nat_old = int(line.split('=')[1])
+                        x = line.index("=") + 1
+                        line = line[:x] + ' ' + str(nat) + '\n'
+                    elif 'cell_parameters' in line.lower() :
+                        for i in range(3):
+                            fr.readline()
+                            line += '{0[0]:.14f} {0[1]:.14f} {0[2]:.14f}\n'.format(atoms.cell[i])
+                    elif 'atomic_positions' in line.lower():
+                        line = 'ATOMIC_POSITIONS angstrom\n'
+                        for i in range(nat_old):
+                            fr.readline()
+                        for s, p in zip(atoms.symbols, atoms.positions):
+                            line += '{0:4s} {1[0]:.14f} {1[1]:.14f} {1[2]:.14f}\n'.format(s, p)
+                    fw.write(line)
