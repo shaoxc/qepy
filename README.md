@@ -1,11 +1,11 @@
 # QEpy - Quantum ESPRESSO in Python
-   `QEpy` turns Quantum ESPRESSO (QE) into a Python DFT engine for nonstandard workflows. 
+   `QEpy` turns Quantum ESPRESSO (QE) into a Python DFT engine for nonstandard workflows.
 
    Check out a [YouTube video](https://www.youtube.com/watch?v=cWt0BVQs-_U) with additional information (installation and examples).
-   
+
 # Contributors and funding
  - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
- - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers) 
+ - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers)
  - Oliviero Andreussi (UNT), Davide Ceresoli (CNR, Italy), Matthew Truscott (UNT), Andrew Baczewski (Sandia), Quinn Campbell (Sandia), Michele Pavanello (Rutgers)
 
 
@@ -32,18 +32,14 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 	All static libraries should be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
 
      ```shell
-	 ./configure F77=ifort F90=ifort CC=icc \
-	   --with-scalapack=no -enable-openmp=yes -enable-parallel=no \
-	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
+	 ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90
      ```
 
-	Parallel version:
+	Intel compiler:
 
 
      ```shell
-	 ./configure F77=ifort F90=ifort CC=icc MPIF90=mpiifort \
-	   --with-scalapack=no -enable-openmp=no -enable-parallel=yes \
-	   CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
+	 ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpiifort
 	 ```
 
    + `make pw` or `make pwlibs`.
@@ -54,7 +50,7 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
    + `qedir=${QE} python -m pip install -U ./qepy`
 
 ## Tips
- - `qedir` should be the folder of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
+ - `qedir` should be the absolute path of `QE`, which contains the *make.inc* file. This can be omitted only when the *qepy* is under the `${QE}`.
  - If not clone the submodules in the beginning, can update through `git submodule update --init --recursive`.
  - Set the *variables* can help you customize your build.
 
@@ -90,13 +86,13 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 
 		```
 		@misc{qepy,
-		  author={Xuecheng Shao and Oliviero Andreussi and Davide Ceresoli and Matthew Truscott 
+		  author={Xuecheng Shao and Oliviero Andreussi and Davide Ceresoli and Matthew Truscott
 			and Andrew Baczewski and Quinn Campbell and Michele Pavanello},
 		  title={{QEpy: Quantum ESPRESSO in Python}},
 		  note={{https://gitlab.com/shaoxc/qepy}},
 		  url={https://gitlab.com/shaoxc/qepy}
 		}
-	
+
 		@article{QE-2017,
 		  author={P Giannozzi and O Andreussi and T Brumme and O Bunau and M Buongiorno Nardelli
 			and M Calandra and R Car and C Cavazzoni and D Ceresoli and M Cococcioni and N Colonna
@@ -120,6 +116,18 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
  - Support hybrid functionals in embedding/iterative way.
 
 ## Bugs
+ - GCC
+
+	Due to clib of the qe-6.5, the version of gcc should <10.0.
+
+ - Gfortran
+
+	For mpif90 still can work with gfortran>=10.0, but will has error:
+
+	+ *Type mismatch between actual argument...*
+
+	Try to add `-fallow-argument-mismatch` to the variable `FFLAGS`. For some versions of the MacOS, maybe also need add `-mmacosx-version-min=10.14` to the `FFLAGS`.
+
  - Intel Compiler
 
 	If you met any problems like the following, please try latest Intel compiler or GNU compiler.
