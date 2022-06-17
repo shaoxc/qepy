@@ -23,7 +23,7 @@ fi
 
 if [ $serial ]; then
 	echo "####################Test serial version####################"
-	for f in *py ./qe-6.5/*py
+	for f in *py
 	do
 		python3 -m pytest --cov-report term-missing --cov=./ $f
 		check_exit $?

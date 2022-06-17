@@ -14,30 +14,30 @@ path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 class Test(unittest.TestCase):
-    def test_0_scf(self):
-        driver = QEpyDriver(inputfile, comm)
-        driver.scf()
+    def test_scf_iter(self):
+        path = pathlib.Path(__file__).resolve().parent / 'DATA'
+        inputfile = path / 'qe_in.in'
+
+        driver = QEpyDriver(inputfile, comm, iterative = True)
+
+        for i in range(60):
+            driver.diagonalize()
+            driver.mix()
+            if driver.check_convergence(): break
+
         converged = driver.check_convergence()
         self.assertTrue(converged)
-        #
+
         energy = driver.get_energy()
         self.assertTrue(np.isclose(energy, -552.93477389, rtol = 1E-6))
+
+        forces = driver.get_forces()
+        self.assertTrue(np.isclose(forces[0, 0], -0.00835135, rtol = 1E-3))
+
+        stress = driver.get_stress()
+        self.assertTrue(np.isclose(stress[1, 1], -0.00256059, rtol = 1E-3))
+
         driver.stop()
-
-    def test_1_read(self):
-        driver = QEpyDriver(comm = comm, prefix = 'al', task = 'nscf')
-        #
-        energy = driver.get_energy()
-        self.assertTrue(np.isclose(energy, -552.93477389, rtol = 1E-6))
-        driver.stop(what = 'no')
-
-    def test_2_read_pw(self):
-        driver = QEpyDriver(inputfile, comm)
-        driver.pwscf_restart()
-        #
-        energy = driver.get_energy()
-        self.assertTrue(np.isclose(energy, -552.93477389, rtol = 1E-6))
-        driver.stop(what = 'no')
 
     @classmethod
     def tearDownClass(cls):

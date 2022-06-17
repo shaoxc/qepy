@@ -76,7 +76,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_rho(rhor, inone)
+   SUBROUTINE qepy_get_rho(rhor, gather)
       USE kinds,                ONLY : DP
       use scf,                  ONLY : rho, rhoz_or_updw
       USE fft_base,             ONLY : dfftp, dffts
@@ -84,13 +84,13 @@ CONTAINS
       !
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhor(:,:)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: ispin, nnr
       LOGICAL :: mflag
       !
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF
@@ -107,7 +107,7 @@ CONTAINS
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_rho(rhor, inone)
+   SUBROUTINE qepy_set_rho(rhor, gather)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,             ONLY : dfftp, dffts
@@ -116,13 +116,13 @@ CONTAINS
       !
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhor(:,:)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: ispin, nnr
       LOGICAL :: mflag
       !
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF
@@ -141,18 +141,18 @@ CONTAINS
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_rho_core(rhoc, inone)
+   SUBROUTINE qepy_get_rho_core(rhoc, gather)
       USE kinds,                ONLY : DP
       use scf,                  ONLY : rho_core !! the core charge in real space
       USE fft_base,             ONLY : dfftp, dffts
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: rhoc(:)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       LOGICAL :: mflag
       !
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF
@@ -163,18 +163,18 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_rho_core(rhoc, inone)
+   SUBROUTINE qepy_set_rho_core(rhoc, gather)
       USE kinds,                ONLY : DP
       use scf,                  ONLY : rho_core !! the core charge in real space
       USE fft_base,             ONLY : dfftp, dffts
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhoc(:)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       LOGICAL :: mflag
       !
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF
@@ -186,7 +186,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_extpot(embed, vin, inone)
+   SUBROUTINE qepy_set_extpot(embed, vin, gather)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,             ONLY : dfftp, dffts
@@ -196,13 +196,13 @@ CONTAINS
       IMPLICIT NONE
       TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: vin(:,:)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: ispin, ns
       LOGICAL :: mflag
       !
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF
@@ -226,19 +226,19 @@ CONTAINS
       !
    END SUBROUTINE
 
-   FUNCTION qepy_get_grid(nr, inone) RESULT( nrw )
+   FUNCTION qepy_get_grid(nr, gather) RESULT( nrw )
       USE kinds,                ONLY : DP
       USE fft_base,             ONLY : dfftp
       !
       IMPLICIT NONE
       INTEGER,INTENT(OUT),OPTIONAL :: nr(3)
-      LOGICAL,INTENT(in),OPTIONAL  :: inone
+      LOGICAL,INTENT(in),OPTIONAL  :: gather
       !
       LOGICAL                      :: mflag
       INTEGER                      :: nrw(3)
       !
-      IF ( present(inone) ) THEN
-         nrw = qepy_get_grid_shape(dfftp, inone)
+      IF ( present(gather) ) THEN
+         nrw = qepy_get_grid_shape(dfftp, gather)
       ELSE
          nrw = qepy_get_grid_shape(dfftp)
       ENDIF
@@ -246,19 +246,19 @@ CONTAINS
       IF ( present(nr) ) nr = nrw
    END FUNCTION
 
-   FUNCTION qepy_get_grid_shape(dfft, inone) RESULT( nrw )
+   FUNCTION qepy_get_grid_shape(dfft, gather) RESULT( nrw )
       USE kinds,                ONLY : DP
       USE fft_types,            ONLY : fft_type_descriptor
       !
       IMPLICIT NONE
       TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-      LOGICAL,INTENT(in),OPTIONAL          :: inone
+      LOGICAL,INTENT(in),OPTIONAL          :: gather
       !
       LOGICAL                              :: mflag
       INTEGER                              :: nrw(3)
       !
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF
@@ -270,19 +270,19 @@ CONTAINS
       !
    END FUNCTION
 
-   FUNCTION qepy_get_grid_smooth(nr, inone) RESULT(nrw)
+   FUNCTION qepy_get_grid_smooth(nr, gather) RESULT(nrw)
       USE kinds,                ONLY : DP
       USE fft_base,             ONLY : dffts
       !
       IMPLICIT NONE
       INTEGER,INTENT(OUT),OPTIONAL :: nr(3)
-      LOGICAL,INTENT(in),OPTIONAL  :: inone
+      LOGICAL,INTENT(in),OPTIONAL  :: gather
       !
       LOGICAL                      :: mflag
       INTEGER                      :: nrw(3)
       !
-      IF ( present(inone) ) THEN
-         nrw = qepy_get_grid_shape(dffts, inone)
+      IF ( present(gather) ) THEN
+         nrw = qepy_get_grid_shape(dffts, gather)
       ELSE
          nrw = qepy_get_grid_shape(dffts)
       ENDIF
@@ -355,7 +355,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
-   SUBROUTINE qepy_get_wf(ik, ibnd, wf, inone)
+   SUBROUTINE qepy_get_wf(ik, ibnd, wf, gather)
       USE kinds,                ONLY : DP
       USE io_files,             ONLY : iunwfc, nwordwfc
       USE buffers,              ONLY : get_buffer
@@ -368,7 +368,7 @@ CONTAINS
       IMPLICIT NONE
       INTEGER,INTENT(IN) :: ik, ibnd
       COMPLEX(DP), INTENT(OUT) :: wf(:)
-      LOGICAL,INTENT(in),OPTIONAL :: inone
+      LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: j, nnr, npw
       LOGICAL :: mflag
@@ -393,8 +393,8 @@ CONTAINS
 !$omp end parallel
       CALL invfft ('Wave', psic, dffts)
 
-      IF ( present(inone) ) THEN
-         mflag=inone
+      IF ( present(gather) ) THEN
+         mflag=gather
       ELSE
          mflag=.true.
       ENDIF

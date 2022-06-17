@@ -986,9 +986,21 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      etot = etot + plugin_etot 
      !
      !qepy --> add extene
-     etot = etot + embed%extene
      hwf_energy = hwf_energy + plugin_etot
-     hwf_energy = hwf_energy + embed%extene
+     IF (abs(embed%extene)<1.D-15) THEN
+        IF (ALLOCATED(embed%extpot)) THEN
+           embed%extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+        ENDIF
+#if defined(__MPI)
+        CALL mp_sum( embed%extene,  intra_bgrp_comm )
+#endif
+        etot = etot + embed%extene
+        hwf_energy = hwf_energy + embed%extene
+        embed%extene = 0.d0
+     ELSE
+        etot = etot + embed%extene
+        hwf_energy = hwf_energy + embed%extene
+     ENDIF
      !qepy <-- add extene
      !
      CALL print_energies ( printout )

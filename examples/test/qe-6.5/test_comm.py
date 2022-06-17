@@ -10,13 +10,15 @@ except Exception:
     comm = None
     commf = None
 
+path = pathlib.Path(__file__).resolve().parent / 'DATA'
+inputfile = path / 'qe_fake.in'
+
+
 class Test(unittest.TestCase):
     def test_pw_comm(self):
         # return # Take some time to finish
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_fake.in'
         for i in range(1000): # Error happened ~450
-            qepy.qepy_pwscf(fname, commf)
+            qepy.qepy_pwscf(inputfile, commf)
             # qepy.qepy_mod.qepy_set_stdout('/dev/null')
             qepy.qepy_mod.qepy_set_stdout('al.out')
             qepy.qepy_stop_run(0, what = 'no')

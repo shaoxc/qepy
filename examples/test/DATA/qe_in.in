@@ -48,6 +48,6 @@ K_POINTS (automatic)
     prefix         = 'al'
     tmp_dir        = './'
     dt             = 1.0
-    nstep          = 5
+    nstep          = 10
     conv_threshold = 1e-14
 /

@@ -1,6 +1,5 @@
 import numpy as np
 import qepy
-from qepy.driver import QEpyDriver
 import unittest
 import pathlib
 import shutil
@@ -12,28 +11,31 @@ except Exception:
     comm = None
     commf = None
 
+path = pathlib.Path(__file__).resolve().parent / 'DATA'
+inputfile = path / 'qe_in.in'
+
+
 class Test(unittest.TestCase):
-    def test_driver(self):
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
+    def test_scf(self):
+        qepy.qepy_pwscf(inputfile, commf)
+        embed = qepy.qepy_common.embed_base()
+        qepy.qepy_electrons_scf(2, 0, embed)
 
-        driver = QEpyDriver(fname, commf)
+        conv_flag = bool(qepy.control_flags.get_conv_elec())
+        self.assertTrue(conv_flag)
 
-        for i in range(60):
-            driver.diagonalize()
-            driver.mix(mix_coef = 0.7)
-            if driver.check_convergence(): break
+        etotal = embed.etotal
+        self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
 
-        energy = driver.get_energy()
-        self.assertTrue(np.isclose(energy, -552.93477389, rtol = 1E-6))
-
-        forces = driver.get_forces()
+        qepy.qepy_forces(0)
+        forces = qepy.force_mod.get_array_force().T
         self.assertTrue(np.isclose(forces[0, 0], -0.00835135, rtol = 1E-3))
 
-        stress = driver.get_stress()
+        stress = np.ones((3, 3), order='F')
+        qepy.qepy_stress(stress)
         self.assertTrue(np.isclose(stress[1, 1], -0.00256059, rtol = 1E-3))
 
-        driver.stop()
+        qepy.qepy_stop_run(0, what = 'no')
 
     def tearDown(self):
         if comm and comm.rank == 0 :

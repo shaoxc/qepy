@@ -1,41 +1,43 @@
 import numpy as np
-import qepy
+from qepy.driver import QEpyDriver
 import unittest
 import pathlib
 import shutil
+
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
-    commf = comm.py2f()
 except Exception:
     comm = None
-    commf = None
+
+path = pathlib.Path(__file__).resolve().parent / 'DATA'
+inputfile = path / 'qe_in.in'
 
 class Test(unittest.TestCase):
     def test_scf(self):
         path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-        qepy.qepy_pwscf(fname, commf)
-        embed = qepy.qepy_common.embed_base()
-        qepy.qepy_electrons_scf(2, 0, embed)
+        inputfile = path / 'qe_in.in'
 
-        conv_flag = bool(qepy.control_flags.get_conv_elec())
-        self.assertTrue(conv_flag)
+        driver = QEpyDriver(inputfile, comm)
 
-        etotal = embed.etotal
-        self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
+        driver.scf()
 
-        qepy.qepy_forces(0)
-        forces = qepy.force_mod.get_array_force().T
+        converged = driver.check_convergence()
+        self.assertTrue(converged)
+
+        energy = driver.get_energy()
+        self.assertTrue(np.isclose(energy, -552.93477389, rtol = 1E-6))
+
+        forces = driver.get_forces()
         self.assertTrue(np.isclose(forces[0, 0], -0.00835135, rtol = 1E-3))
 
-        stress = np.ones((3, 3), order='F')
-        qepy.qepy_stress(stress)
+        stress = driver.get_stress()
         self.assertTrue(np.isclose(stress[1, 1], -0.00256059, rtol = 1E-3))
 
-        qepy.qepy_stop_run(0, what = 'no')
+        driver.stop()
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         if comm and comm.rank == 0 :
             path = pathlib.Path('.')
             for f in path.glob('al.*'):

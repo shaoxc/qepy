@@ -1,5 +1,5 @@
 import numpy as np
-import qepy
+from qepy.driver import QEpyDriver
 import unittest
 import pathlib
 import shutil
@@ -7,61 +7,52 @@ import shutil
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
-    commf = comm.py2f()
 except Exception:
     comm = None
-    commf = None
+
+path = pathlib.Path(__file__).resolve().parent / 'DATA'
+inputfile = path / 'qe_in.in'
+
 
 class Test(unittest.TestCase):
-    def test_0_scf(self):
-        global commf
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-
-        qepy.qepy_pwscf(fname, commf)
-        qepy.electrons()
-
-        conv_flag = bool(qepy.control_flags.get_conv_elec())
-        self.assertTrue(conv_flag)
-
-        etotal = qepy.ener.get_etot()
-        self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
-
-        qepy.punch('all')
+    @classmethod
+    def setUpClass(cls):
+        driver = QEpyDriver(inputfile, comm)
+        driver.scf()
+        converged = driver.check_convergence()
+        cls.assertTrue(cls, converged)
+        #
+        energy = driver.get_energy()
+        cls.assertTrue(cls, np.isclose(energy, -552.93477389, rtol = 1E-6))
+        driver.save()
 
     def test_1_tddft_continue(self):
-        global commf
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-
-        embed = qepy.qepy_common.embed_base()
-        qepy.qepy_tddft_readin(fname)
-        qepy.qepy_tddft_main_setup(embed)
-        qepy.qepy_molecule_optical_absorption(embed)
-        qepy.qepy_stop_run(0, what = 'no')
-        qepy.qepy_stop_tddft(0)
+        driver = QEpyDriver(inputfile, comm, task = 'optical')
+        driver.scf()
+        dip = driver.get_dipole_tddft()
+        driver.stop()
+        assert(abs(dip[0, 0] - 0.56199)<1E-3)
 
     def test_2_tddft_iterative(self):
-        global commf
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-
-        qepy.qepy_tddft_main_initial(fname, commf)
-        qepy.read_file()
-        embed = qepy.qepy_common.embed_base()
-        embed.tddft.iterative = True
-        qepy.qepy_tddft_main_setup(embed)
-
+        driver = QEpyDriver(inputfile, comm, task = 'optical', iterative = True)
         for i in range(5):
-            qepy.qepy_molecule_optical_absorption(embed)
-        dip = qepy.qepy_tddft_common.get_array_dipole().copy()
-        embed.tddft.finish = True
-        qepy.qepy_molecule_optical_absorption(embed)
-        qepy.qepy_stop_tddft(0)
+            driver.diagonalize()
+        dip = driver.get_dipole_tddft()
+        driver.stop()
+        assert(abs(dip[0, 0] - 0.54355)<1E-3)
 
-        assert(abs(dip[0, 0] - 0.5435)<1E-3)
+    def test_3_tddft_restart(self):
+        driver = QEpyDriver(inputfile, comm, task = 'optical', iterative = True)
+        # restart from 5
+        driver.tddft_restart(istep=5)
+        for i in range(5):
+            driver.diagonalize()
+        dip = driver.get_dipole_tddft()
+        driver.stop()
+        assert(abs(dip[0, 0] - 0.56199)<1E-3)
 
-    def test_9_clean(self):
+    @classmethod
+    def tearDownClass(cls):
         if comm and comm.rank == 0 :
             path = pathlib.Path('.')
             for f in path.glob('al.*'):

@@ -415,6 +415,8 @@
       CHARACTER(LEN=256):: dft_
       REAL (DP), EXTERNAL :: get_clock
       !
+      REAL(DP) :: extene
+      !
 
       IF( lsda )THEN
          !nbndup = nbnd
@@ -539,9 +541,9 @@
       ENDDO
 
       DEALLOCATE ( g2kin )
-      eext=0.0_DP
+      extene=0.0_DP
       IF (ALLOCATED(embed%extpot)) THEN
-         eext = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+         extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
       ENDIF
 #if defined(__MPI)
       CALL mp_sum( eloc,  intra_bgrp_comm )
@@ -549,7 +551,7 @@
       CALL mp_sum( ek,    inter_pool_comm )
       CALL mp_sum( enl,   inter_pool_comm )
       CALL mp_sum( demet, inter_pool_comm )
-      CALL mp_sum( eext,  intra_bgrp_comm )
+      CALL mp_sum( extene,  intra_bgrp_comm )
 #endif
       eloc = eloc * omega
       !
@@ -672,7 +674,7 @@
       WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
       WRITE (stdout,*) '-------------------------------------'
       WRITE (stdout,*) 'Total energy0    ', etot_/e2, ' au  =  ', etot_, ' Ry'
-      WRITE (stdout,*) 'External energy0 ', eext/e2, ' au  =  ', eext, ' Ry'
+      WRITE (stdout,*) 'External energy0 ', extene/e2, ' au  =  ', extene, ' Ry'
       IF ( llondon    ) WRITE( stdout, 9074 ) elondon
       IF ( ldftd3     ) WRITE( stdout, 9078 ) edftd3
       IF ( lxdm       ) WRITE( stdout, 9075 ) exdm
