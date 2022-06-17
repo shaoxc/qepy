@@ -11,10 +11,14 @@ except Exception:
 path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
-def test_scf():
-    driver = Driver(inputfile, comm)
-    driver.scf()
-    converged = driver.check_convergence()
+def test_scf_iter():
+
+    driver = Driver(inputfile, comm, iterative = True)
+    for i in range(60):
+        driver.diagonalize()
+        driver.mix()
+        converged = driver.check_convergence()
+        if converged : break
     #
     energy = driver.get_energy()
     forces = driver.get_forces()

@@ -11,11 +11,13 @@ except Exception:
     comm = None
     commf = None
 
+path = pathlib.Path(__file__).resolve().parent / 'DATA'
+inputfile = path / 'qe_in.in'
+
+
 class Test(unittest.TestCase):
     def test_scf(self):
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-        qepy.qepy_pwscf(fname, commf)
+        qepy.qepy_pwscf(inputfile, commf)
         embed = qepy.qepy_common.embed_base()
         # embed.ldescf = True # add scf correction energy
         embed.iterative = True

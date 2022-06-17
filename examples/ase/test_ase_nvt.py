@@ -34,7 +34,7 @@ def printenergy(a=atoms):
     global step, interval
     epot = a.get_potential_energy() / len(a)
     ekin = a.get_kinetic_energy() / len(a)
-    if a.calc.rank == 0 :
+    if a.calc.is_root== 0 :
         print("Step={:<8d} Epot={:.5f} Ekin={:.5f} T={:.3f} Etot={:.5f}".format(
                 step, epot, ekin, ekin / (1.5 * units.kB), epot + ekin), flush = True)
     step += interval

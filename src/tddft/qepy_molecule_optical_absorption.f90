@@ -113,6 +113,8 @@ subroutine qepy_molecule_optical_absorption(embed)
      iunwfc = iuntemp
  
      if (iverbosity > 0) write(stdout,'(5X,''Done with restart'')')
+  else
+     embed%tddft%istep = 0
   endif
 
 
@@ -133,7 +135,6 @@ subroutine qepy_molecule_optical_absorption(embed)
   ! enter the main TDDFT loop
   wclock = get_clock('TDDFT')
   embed%tddft%initial = .FALSE.
-  embed%tddft%istep = 0
   endif ! end IF (embed%tddft%initial)
   do iter = 1, nstep
     embed%tddft%istep = embed%tddft%istep + 1
@@ -263,6 +264,12 @@ subroutine qepy_molecule_optical_absorption(embed)
      
     flush(stdout)
     !qepy -->
+    IF (.NOT.ALLOCATED(embed%tddft%dipole)) ALLOCATE(embed%tddft%dipole(3, nspin))
+    IF (size(embed%tddft%dipole,2) /= nspin) THEN
+       DEALLOCATE(embed%tddft%dipole)
+       ALLOCATE(embed%tddft%dipole(3, nspin))
+    ENDIF
+    embed%tddft%dipole = dipole
     if (embed%tddft%iterative) return
     !qepy <--
      

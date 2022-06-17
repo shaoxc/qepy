@@ -23,6 +23,7 @@ MODULE qepy_common
       integer                         :: istep = 0
       integer                         :: nstep = 1
       logical                         :: iterative = .false.
+      real(kind=dp), allocatable      :: dipole(:,:)
    end type tddft_base
    !
    type, public :: embed_base

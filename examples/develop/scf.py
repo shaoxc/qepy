@@ -1,5 +1,5 @@
 import qepy
-from qepy.driver import QEpyDriver
+from qepy.driver import Driver
 
 try:
     from mpi4py import MPI
@@ -10,7 +10,7 @@ except Exception:
 
 fname = 'qe_in.in'
 
-driver = QEpyDriver(fname, comm)
+driver = Driver(fname, comm)
 
 for i in range(60):
     driver.diagonalize()

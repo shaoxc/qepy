@@ -1,72 +1,44 @@
+from qepy.driver import Driver
 import numpy as np
-import qepy
-import unittest
 import pathlib
-import shutil
 
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
-    commf = comm.py2f()
 except Exception:
     comm = None
-    commf = None
 
-class Test(unittest.TestCase):
-    def test_0_scf(self):
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-        qepy.qepy_pwscf(fname, commf)
-        qepy.electrons()
+path = pathlib.Path(__file__).resolve().parent / 'DATA'
+inputfile = path / 'qe_in.in'
 
-        conv_flag = bool(qepy.control_flags.get_conv_elec())
-        self.assertTrue(conv_flag)
+def test_0_scf():
+    driver = Driver(inputfile, comm)
+    driver.scf()
+    converged = driver.check_convergence()
+    #
+    energy = driver.get_energy()
+    driver.stop()
+    #
+    assert converged
+    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
 
-        etotal = qepy.ener.get_etot()
-        self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
+def test_1_read():
+    driver = Driver(comm = comm, prefix = 'al', task = 'nscf')
+    #
+    energy = driver.get_energy()
+    if driver.is_root :
+        print('energy :\n', energy)
+    driver.stop(what = 'no')
+    #
+    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
 
-        qepy.qepy_stop_run(0, what = 'all')
-
-    def test_1_read(self):
-        inputobj = qepy.qepy_common.input_base()
-        inputobj.prefix = 'al'
-        if commf : inputobj.my_world_comm = commf
-
-        qepy.qepy_initial(inputobj)
-
-        qepy.qepy_read_file()
-
-        embed = qepy.qepy_common.embed_base()
-        qepy.qepy_calc_energies(embed)
-        self.assertTrue(np.isclose(embed.etotal, -552.93477389, rtol = 1E-6))
-        qepy.qepy_stop_run(0, what = 'no')
-
-    def test_2_read_pw(self):
-        path = pathlib.Path(__file__).resolve().parent / 'DATA'
-        fname = path / 'qe_in.in'
-
-        qepy.qepy_pwscf(fname, commf)
-        embed = qepy.qepy_common.embed_base()
-
-        qepy.qepy_pw_restart_new.qepy_read_xml_file(alloc=False)
-        if qepy.basis.get_starting_pot().strip() != 'file' :
-            qepy.qepy_potinit(starting = 'file')
-        if qepy.basis.get_starting_wfc().strip() != 'file' :
-            qepy.qepy_wfcinit(starting = 'file')
-
-        qepy.qepy_calc_energies(embed)
-        self.assertTrue(np.isclose(embed.etotal, -552.93477389, rtol = 1E-6))
-        qepy.qepy_stop_run(0, what = 'no')
-
-    def test_9_clean(self):
-        if comm and comm.rank == 0 :
-            path = pathlib.Path('.')
-            for f in path.glob('al.*'):
-                if f.is_file():
-                    f.unlink()
-                else :
-                    shutil.rmtree(f)
-
-
-if __name__ == "__main__":
-    unittest.main()
+def test_2_read_pw():
+    driver = Driver(inputfile, comm)
+    driver.pwscf_restart()
+    #
+    energy = driver.get_energy()
+    if driver.is_root :
+        print('energy :\n', energy)
+    driver.stop(what = 'no')
+    #
+    assert np.isclose(energy, -552.93477389, rtol = 1E-6)

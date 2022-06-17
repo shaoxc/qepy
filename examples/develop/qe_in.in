@@ -6,7 +6,7 @@
     tstress = .true.
 !   verbosity = 'high'
 !   iprint = 1
-    pseudo_dir = './DATA/'
+    pseudo_dir = './'
 /
 &system
     ibrav = 0
@@ -17,6 +17,8 @@
     smearing = 'gaussian'
     degauss = 0.001
     nosym = .true.
+    vdw_corr         = 'ts'
+    ts_vdw_econv_thr = 1E-5
 /
 &electrons
     conv_thr = 1e-8
@@ -42,12 +44,3 @@ ATOMIC_POSITIONS (angstrom)
 
 K_POINTS (automatic)
 1 1 1 0 0 0
-
-&inputtddft
-    job            = 'optical'
-    prefix         = 'al'
-    tmp_dir        = './'
-    dt             = 1.0
-    nstep          = 10
-    conv_threshold = 1e-14
-/

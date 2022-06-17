@@ -1,6 +1,4 @@
 from qepy.driver import Driver
-import numpy as np
-import pathlib
 
 try:
     from mpi4py import MPI
@@ -8,10 +6,8 @@ try:
 except Exception:
     comm = None
 
-path = pathlib.Path(__file__).resolve().parent / 'DATA'
-inputfile = path / 'qe_in.in'
-
-def test_scf():
+def main():
+    inputfile = './qe_in.in'
     driver = Driver(inputfile, comm)
     driver.scf()
     converged = driver.check_convergence()
@@ -26,7 +22,6 @@ def test_scf():
         print('stress :\n', stress)
     driver.stop()
 
-    assert converged
-    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
-    assert np.isclose(forces[0, 0], -0.00835135, rtol = 1E-3)
-    assert np.isclose(stress[1, 1], -0.00256059, rtol = 1E-3)
+
+if __name__ == "__main__":
+    main()

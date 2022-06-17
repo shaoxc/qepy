@@ -104,10 +104,10 @@ $(filter %.o,${QEPY_OBJS}):%.o : %.f90
 	$(LD) -c $(F2FLAGS) $< -o $@
 
 ${WRAP_FPP_FILES}: ${WRAP_FILES}
-	for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
+	@for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
 
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json \
+	@f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json \
 		--init-file $(PY_SRC_DIR)/__init__.py -P
 
 .PHONY: serial mpi clean install help
@@ -120,6 +120,9 @@ serial: ${F90WRAP_FILES}
 		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
 		${QEMODS} ${QELIBS} -liomp5
+	@if [ `grep -c 'mpi4py' qepy/__init__.py` -eq '0' ]; then \
+		sed -i '1r __init_header__.py' qepy/__init__.py; \
+	fi
 
 mpi: ${F90WRAP_FILES}
 	CFLAGS='$(CFLAGS)' \
@@ -129,6 +132,10 @@ mpi: ${F90WRAP_FILES}
 		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
 		${QEMODS} ${QELIBS}
+	@if [ `grep -c 'mpi4py' qepy/__init__.py` -eq '0' ]; then \
+		sed -i '1r __init_header__.py' qepy/__init__.py; \
+	fi
+
 install:
 	cp -r qepy _qepy*.so ${PY3_DIR}
 

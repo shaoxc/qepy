@@ -6,7 +6,7 @@
     tstress = .true.
 !   verbosity = 'high'
 !   iprint = 1
-    pseudo_dir = './DATA/'
+    pseudo_dir = './'
 /
 &system
     ibrav = 0

@@ -36,7 +36,7 @@ get_xc_functional         = calc.get_xc_functional()
 
 time.sleep(0.1)
 
-if calc.rank == 0 :
+if calc.is_root :
     print('ncharge:', get_density.sum()*calc.atoms.get_volume()/get_density.shape[0] , flush = True)
     print("calc.get_potential_energy()           =" , get_potential_energy           , flush = True)
     print("calc.get_forces()[0]                  =" , get_forces[0]                  , flush = True)
@@ -59,4 +59,3 @@ if calc.rank == 0 :
     print("calc.get_xc_functional()              =" , get_xc_functional              , flush = True)
 
 time.sleep(0.1)
-print('ncharge - > rank {} : {}'.format(calc.rank, get_pseudo_density.sum()*calc.atoms.get_volume()/get_number_of_grid_points.prod()), flush=True)
