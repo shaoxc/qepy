@@ -23,7 +23,6 @@ def test_0_scf():
     if driver.is_root :
         print('converged :\n', converged)
         print('energy :\n', energy)
-    #
     assert converged
     assert np.isclose(energy, -552.93477389, rtol = 1E-6)
 
@@ -34,9 +33,8 @@ def test_1_tddft_continue():
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
         print('dipople:\n', dipole)
-    driver.stop()
-    #
     assert(abs(dipole[0, 0] - 0.56199)<1E-3)
+    driver.stop()
 
 def test_2_tddft_iterative():
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
@@ -45,9 +43,8 @@ def test_2_tddft_iterative():
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
         print('dipople:\n', dipole)
-    driver.stop()
-    #
     assert(abs(dipole[0, 0] - 0.54355)<1E-3)
+    driver.stop()
 
 def test_3_tddft_restart():
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
@@ -58,6 +55,5 @@ def test_3_tddft_restart():
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
         print('dipople:\n', dipole)
-    driver.stop()
-    #
     assert(abs(dipole[0, 0] - 0.56199)<1E-3)
+    driver.stop()

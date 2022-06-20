@@ -12,7 +12,6 @@ path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_scf_iter():
-
     driver = Driver(inputfile, comm, iterative = True)
     for i in range(60):
         driver.diagonalize()
@@ -28,9 +27,8 @@ def test_scf_iter():
         print('energy :\n', energy)
         print('forces :\n', forces)
         print('stress :\n', stress)
-    driver.stop()
-
     assert converged
     assert np.isclose(energy, -552.93477389, rtol = 1E-6)
     assert np.isclose(forces[0, 0], -0.00835135, rtol = 1E-3)
     assert np.isclose(stress[1, 1], -0.00256059, rtol = 1E-3)
+    driver.stop()
