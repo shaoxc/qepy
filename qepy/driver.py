@@ -30,12 +30,12 @@ class Driver(metaclass = Logger) :
         prefix of QE input/output
     outdir : str
         The output directory of QE
-    logfile : str or bool
-        The screen output of QE
+    logfile : str, file or bool
+        The screen output of QE. If it is a file descriptor, it should open with 'w+'.
 
           - None : Show on the screen.
           - str  : Save to the given file.
-          - True : Save to the temporary file, see also :func:`qepy.Driver.get_output`.
+          - True : Save to the temporary file, see also :func:`qepy.driver.Driver.get_output`.
 
     kwargs : dict
         Other options
@@ -91,6 +91,8 @@ class Driver(metaclass = Logger) :
             if isinstance(self.logfile, bool) and self.logfile :
                 self.fileobj_interact = True
                 self.fileobj = tempfile.NamedTemporaryFile('w+')
+            elif hasattr(self.logfile, 'write'):
+                self.fileobj = self.logfile
             else :
                 self.fileobj = open(self.logfile, 'w+')
         else :
@@ -218,7 +220,7 @@ class Driver(metaclass = Logger) :
         Parameters
         ----------
         what : str
-             see :func:`qepy.Driver.save`.
+             see :func:`qepy.driver.Driver.save`.
         """
         if self.task == 'optical' :
             self.tddft_stop(**kwargs)
@@ -234,8 +236,6 @@ class Driver(metaclass = Logger) :
         ----------
         istep : int
             Start number of steps, just for output.
-        kwargs :
-            kwargs
         """
         qepy.qepy_tddft_mod.qepy_cetddft_wfc2rho()
         if istep is not None :
@@ -255,6 +255,7 @@ class Driver(metaclass = Logger) :
         Parameters
         ----------
         what : str
+
           * what = 'all' : write xml data file, charge density, wavefunctions
                            (for final data);
           * what = 'config' : write xml data file and charge density; also,
@@ -560,19 +561,19 @@ class Driver(metaclass = Logger) :
         """Return the Fermi level."""
         return qepy.ener.get_ef()
 
-    def initial_wannier(self, initialwannier, kpointgrid, fixedstates,
-                        edf, spin, nbands):
-        """Initial guess for the shape of wannier functions.
+    # def initial_wannier(self, initialwannier, kpointgrid, fixedstates,
+                        # edf, spin, nbands):
+        # """Initial guess for the shape of wannier functions.
 
-        Use initial guess for wannier orbitals to determine rotation
-        matrices U and C.
-        """
-        raise NotImplementedError
+        # Use initial guess for wannier orbitals to determine rotation
+        # matrices U and C.
+        # """
+        # raise NotImplementedError
 
-    def get_wannier_localization_matrix(self, nbands, dirG, kpoint,
-                                        nextkpoint, G_I, spin):
-        """Calculate integrals for maximally localized Wannier functions."""
-        raise NotImplementedError
+    # def get_wannier_localization_matrix(self, nbands, dirG, kpoint,
+                                        # nextkpoint, G_I, spin):
+        # """Calculate integrals for maximally localized Wannier functions."""
+        # raise NotImplementedError
 
     def get_magnetic_moment(self, **kwargs):
         """Return the total magnetic moment."""
