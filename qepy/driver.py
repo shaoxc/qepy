@@ -214,18 +214,22 @@ class Driver(metaclass = Logger) :
             self.embed.finish = True
             qepy.qepy_electrons_scf(0, 0, self.embed)
 
-    def stop(self, what = 'all', **kwargs):
-        """Stop the driver and clean the workspace.
+    def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
+        """stop.
 
         Parameters
         ----------
+        exit_status : int
+            0 : QE will remove it temporary files
+        print_flag : int
+            0 : Not print time informations
         what : str
              see :func:`qepy.driver.Driver.save`.
         """
         if self.task == 'optical' :
-            self.tddft_stop(**kwargs)
+            self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
-            qepy.qepy_stop_run(0, what = what)
+            qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
 
         if hasattr(self.fileobj, 'close'): self.fileobj.close()
 
@@ -241,12 +245,13 @@ class Driver(metaclass = Logger) :
         if istep is not None :
             self.embed.tddft.istep = istep
 
-    def tddft_stop(self, **kwargs):
+    def tddft_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
         if self.embed.tddft.iterative :
             self.embed.tddft.finish = True
             qepy.qepy_molecule_optical_absorption(self.embed)
-        qepy.qepy_stop_run(0, what = 'no')
-        qepy.qepy_stop_tddft(0)
+        #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
+        qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
+        qepy.qepy_stop_tddft(exit_status)
 
     def save(self, what = 'all', **kwargs):
         """
@@ -272,9 +277,15 @@ class Driver(metaclass = Logger) :
         qepy.punch(what)
 
     def get_energy(self, **kwargs):
-        """Return the total energy. In an unusual task, the pw2casino of QE will be used to calculate the energy."""
+        """Return the total energy."""
         if abs(self.embed.etotal) < 1E-16 or self.embed.exttype > 0 :
-            qepy.qepy_calc_energies(self.embed)
+            return self.calc_energy(**kwargs)
+        else :
+            return self.embed.etotal
+
+    def calc_energy(self, **kwargs):
+        """Calculate the energy with the pw2casino of QE."""
+        qepy.qepy_calc_energies(self.embed)
         return self.embed.etotal
 
     def update_ions(self, positions = None, lattice = None, update = 0, **kwargs):
@@ -474,7 +485,7 @@ class Driver(metaclass = Logger) :
             - 3 : no ewald and local               : 011
 
         """
-        qepy.qepy_forces(icalc)
+        qepy.qepy_forces(icalc, self.embed)
         forces = qepy.force_mod.get_array_force().T
         return forces
 
@@ -482,6 +493,7 @@ class Driver(metaclass = Logger) :
         """Return the stress (3, 3)."""
         stress = np.zeros((3, 3), order='F')
         qepy.stress(stress)
+        # qepy.qepy_stress(stress, 0, self.embed)
         return stress
 
     #ASE DFTCalculator

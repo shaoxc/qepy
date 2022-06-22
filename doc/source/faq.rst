@@ -41,15 +41,11 @@ Why can’t I read the wavefunctions? Why does it hang?
 Bugs
 ====
 
-GCC
----
-
-   Due to clib of the qe-6.5, the version of gcc should <10.0.
 
 Gfortran
 --------
 
-   For mpif90 still can work with gfortran>=10.0, but will has error:
+   For gfortran>=10.0 sometimes still works, but will has error:
 
    -  *Type mismatch between actual argument…*
 
@@ -57,15 +53,19 @@ Gfortran
    For some versions of the MacOS, maybe also need add
    ``-mmacosx-version-min=10.14`` to the ``FFLAGS``.
 
+   However, sometimes it still will raise *segmentation fault*, due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__.
+
 Intel Compiler
 --------------
 
-   If you met any problems like the following, please try a newer Intel
-   compiler or GNU compiler.
+   - If you met any problems like the following, please try a newer Intel compiler or GNU compiler.
 
-   -  *[MPID_nem_tmi_pending_ssend_dequeue]: ERROR: can not find
-      matching ssend…*
-   -  The initial density totally wrong with more than one nodes.
+       +  *[MPID_nem_tmi_pending_ssend_dequeue]: ERROR: can not find matching ssend...*
+       +  The initial density totally wrong with more than one nodes.
+
+   - The gcc version between 4.8-9.2 are supported by intel compiler, which upgraded until 2022.1 version. More details to `here <https://community.intel.com/t5/Intel-oneAPI-Data-Parallel-C/Compilation-issues-with-ICPC-2021-4-and-C-14/td-p/1318571>`__.
+
+      + *...error: attribute "__malloc__" does not take arguments...*
 
 OpenMPI
 -------
