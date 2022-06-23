@@ -129,7 +129,11 @@ SUBROUTINE qepy_forces(icalc, embed)
   !
   ! ... The NLCC contribution
   !
+  if (iand(calctype,4) == 0) then
   CALL force_cc( forcecc )
+  else
+     forcecc(:,:) = 0.D0
+  end if
   !
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
