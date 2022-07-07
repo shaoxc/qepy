@@ -87,7 +87,7 @@ Tips
    -  “``original=yes``” only wrap original QE files and a ``qepy_mod``,
       which also can support other version of QE
       (e.g. `6.5 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.5>`__,
-      `6.8 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.8>`__).
+      `6.8-7.1 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.8>`__).
 
 -  If you struggle with original f90wrap, try our own modified version
    of f90wrap:

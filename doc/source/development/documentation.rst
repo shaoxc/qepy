@@ -28,3 +28,10 @@ Extensions
 nbsphinx--Jupyter Notebook Tools for Sphinx::
 
     $ pip install nbsphinx --user
+
+Pandoc
+------
+
+`Installation (Ubuntu) <https://pandoc.org/installing.html>`_::
+
+    $ sudo apt install pandoc
