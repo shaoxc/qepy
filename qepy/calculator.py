@@ -15,9 +15,9 @@ class QEpyCalculator(Calculator):
 
     QEpy initialization depends on the input file. Here are three ways to generate input file :
 
-         - Give `inputfile` and `from_file = False` will generate `qepy_input_tmp.in` file which base on the `inputfile` only update atomic information part.
+         - Give `inputfile` and `from_file = False` will generate `input_tmp.in` file which base on the `inputfile` only update atomic information part.
          - Give `inputfile` and `from_file = True` will read the structures to atoms (ase.Atoms) from `inputfile` and initialize the QEpy with `inputfile`.
-         - `inputfile=None` and `from_file = False` will generate `qepy_input_tmp.in` with `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
+         - `inputfile=None` and `from_file = False` will generate `input_tmp.in` with `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
 
 
     Parameters
@@ -97,7 +97,7 @@ class QEpyCalculator(Calculator):
             self.basefile = None
         else :
             self.basefile = self.inputfile
-            self.inputfile = 'qepy_input_tmp.in'
+            self.inputfile = 'input_tmp.in'
         #
         self.atoms_save = None
         self.driver = None
