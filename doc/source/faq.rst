@@ -41,6 +41,14 @@ Why can’t I read the wavefunctions? Why does it hang?
 Bugs
 ====
 
+GCC
+---
+   For new version of gcc (eg. gcc=11.2) with LTO supported or under conda environment, if you met the problem when you install the QEpy_:
+
+   -  *lto1: fatal error:...*
+
+   Try disable link-time-optimization with ``-fno-lto``, which means add ``-fno-lto`` to the variable ``FFLAGS`` and ``CFLAGS``.
+
 
 Gfortran
 --------
@@ -86,3 +94,7 @@ OpenMPI
           patchelf --add-needed libmpi.so.20 $filename
           patchelf --set-rpath "\$ORIGIN/.." $filename
       done
+
+
+.. _QEpy: https://gitlab.com/shaoxc/qepy
+.. _DFTpy: http://dftpy.rutgers.edu

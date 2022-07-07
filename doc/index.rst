@@ -4,7 +4,7 @@
 QEpy - Quantum ESPRESSO in Python
 =================================
 
-`QEpy` turns `Quantum ESPRESSO (QE) <https://www.quantum-espresso.org/>`_ into a Python DFT engine for nonstandard workflows.
+QEpy_ turns `Quantum ESPRESSO (QE) <https://www.quantum-espresso.org/>`_ into a Python DFT engine for nonstandard workflows.
 
 Contributors and funding
 ========================
@@ -21,7 +21,7 @@ Thanks to ...
 
 What's in this code?
 ====================
-Small modifications to QE routines and a quick compilation with Python wrappers. `QEpy` is based on QE-6.5 and is kept up to date with the latest QE stable release.
+Small modifications to QE routines and a quick compilation with Python wrappers. QEpy_ is based on QE-6.5 and is kept up to date with the latest QE stable release.
 
 .. toctree::
    :maxdepth: 2
@@ -32,3 +32,8 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
    source/qepy/qepy
    source/development/development
    source/faq
+
+.. _QEpy: https://gitlab.com/shaoxc/qepy
+.. _Python: https://www.python.org
+.. _DFTpy: http://dftpy.rutgers.edu
+.. _PRG: https://sites.rutgers.edu/prg
