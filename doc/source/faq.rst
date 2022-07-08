@@ -11,12 +11,12 @@ Installation
 What is the `oldxml`?
 ---------------------
 
-  The old format (``-D__OLDXML``) has been deprecated since `version 6.4 <https://gitlab.com/QEF/q-e/-/releases/qe-6.4>`__. *oldxml* allows you to read the output (wavefunctions, etc) from an old XML file.
+  The old format (**-D__OLDXML**) has been deprecated since `version 6.4 <https://gitlab.com/QEF/q-e/-/releases/qe-6.4>`__. ``oldxml`` allows you to read the output (wavefunctions, etc) from an old XML file.
 
 How do I know when I need `oldxml`?
 -----------------------------------
 
-  For newer version QE (>6.3), the XML file name is *data-file-schema.xml*. In contrast, the XML file name is *data-file.xml* for older version QE (some with precompiler flag ``-D__OLDXML``)
+  For newer version QE (>6.3), the XML file name is **data-file-schema.xml**. In contrast, the XML file name is **data-file.xml** for older version QE (some with precompiler flag **-D__OLDXML**)
 
 Running
 =======
@@ -45,33 +45,42 @@ GCC
 ---
    For new version of gcc (eg. gcc=11.2) with LTO supported or under conda environment, if you met the problem when you install the QEpy_:
 
-   -  *lto1: fatal error:...*
+       +  *lto1: fatal error:...*
 
-   Try disable link-time-optimization with ``-fno-lto``, which means add ``-fno-lto`` to the variable ``FFLAGS`` and ``CFLAGS``.
+   Try disable link-time-optimization by add ``-fno-lto`` to the variable **FFLAGS** and **CFLAGS**.
 
 
 Gfortran
 --------
 
-   For gfortran>=10.0 sometimes still works, but will has error:
+   #. For gfortran>=10.0 sometimes still works, but will has error:
 
-   -  *Type mismatch between actual argument…*
+      -  *Type mismatch between actual argument...*
 
-   Try to add ``-fallow-argument-mismatch`` to the variable ``FFLAGS``.
-   For some versions of the MacOS, maybe also need add
-   ``-mmacosx-version-min=10.14`` to the ``FFLAGS``.
+      Try to add ``-fallow-argument-mismatch`` to the variable **FFLAGS**.
+      For some versions of the MacOS, maybe also need add
+      ``-mmacosx-version-min=10.14`` to the **FFLAGS**.
 
-   However, sometimes it still will raise *segmentation fault*, due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__.
+   #. For a few versions of BLAS library, will raise error:
+
+      -  *Segmentation fault - invalid memory reference...*
+
+      This is due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__. One solution is append ``-Dzdotc=zdotc_wrapper`` to **DFLAGS** or **MANUAL_DFLAGS**. You also can do it during make:
+
+     .. code:: shell
+
+        make pw MANUAL_DFLAGS='-Dzdotc=zdotc_wrapper'
+
 
 Intel Compiler
 --------------
 
-   - If you met any problems like the following, please try a newer Intel compiler or GNU compiler.
+   #. If you met any problems like the following, please try a newer Intel compiler or GNU compiler.
 
        +  *[MPID_nem_tmi_pending_ssend_dequeue]: ERROR: can not find matching ssend...*
        +  The initial density totally wrong with more than one nodes.
 
-   - The gcc version between 4.8-9.2 are supported by intel compiler, which upgraded until 2022.1 version. More details to `here <https://community.intel.com/t5/Intel-oneAPI-Data-Parallel-C/Compilation-issues-with-ICPC-2021-4-and-C-14/td-p/1318571>`__.
+   #. The gcc version between 4.8-9.2 are supported by intel compiler, which upgraded until 2022.1 version. More details to `here <https://community.intel.com/t5/Intel-oneAPI-Data-Parallel-C/Compilation-issues-with-ICPC-2021-4-and-C-14/td-p/1318571>`__.
 
       + *...error: attribute "__malloc__" does not take arguments...*
 
@@ -81,7 +90,7 @@ OpenMPI
    If you met some problems like the following:
 
    -  *mca_base_component_repository_open: unable to open
-      mca_patcher_overwrite…*
+      mca_patcher_overwrite...*
 
    Please update to latest version of OpenMPI, or fix with ``patchelf``
    (`openmpi=2.1.1 <https://github.com/open-mpi/ompi/issues/3705>`__):
