@@ -1,5 +1,6 @@
 import numpy as np
 from qepy.driver import Driver
+from qepy.io import QEInput
 from qepy import constants
 from ase.calculators.calculator import Calculator
 from ase.units import create_units
@@ -13,12 +14,11 @@ units['Ry'] = constants.RYTOEV
 class QEpyCalculator(Calculator):
     """QEpy Calculator for ASE.
 
-    QEpy initialization depends on the input file. Here are four ways to generate input file :
+    QEpy initialization depends on the input file. Here are some ways to generate input file :
 
-         - Give `inputfile` and `from_file = True` will read the structures to atoms (ase.Atoms) from `inputfile` and initialize the QEpy with `inputfile`.
-         - Give `inputfile` and `from_file = False` will generate a temporary input file which base on the `inputfile` only update atomic information part.
-         - `inputfile=None` and `from_file = False` will generate a temporary input file with `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
-         - Set `qe_options` will generate a temporary input file. If `inputfile` also given, the input keywords of `inputfile` also will be included.
+         - Give a file `inputfile` or/and a dict `qe_options` will generate a temporary input file with new atomic information.
+         - Give input file name `inputfile` and `from_file = True` will read the structures to atoms (ase.Atoms) from `inputfile` and initialize the QEpy with `inputfile`.
+         - Give dict `ase_espresso` will generate a temporary input file with `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__ (Only works for program PW).
 
 
     Parameters
@@ -75,7 +75,6 @@ class QEpyCalculator(Calculator):
 
             More details, see `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
 
-
     """
 
     implemented_properties=['energy', 'forces', 'stress']
@@ -106,6 +105,7 @@ class QEpyCalculator(Calculator):
         self.atoms_save = None
         self.driver = None
         self.iter = 0
+        self.qeinput = QEInput()
         #
         self.qepy_options = {
                 'comm' : comm,
@@ -122,11 +122,14 @@ class QEpyCalculator(Calculator):
         self._forces = None
         self._stress = None
 
-    def driver_initialise(self, atoms = None, **kwargs):
+    def driver_initialise(self, atoms = None, prog = 'pw', **kwargs):
         atoms = atoms or self.atoms
-        if self.basefile :
-            if self.wrap : self.atoms.wrap()
-            self.write2qe(self.inputfile, atoms, basefile = self.basefile, **self.ase_espresso)
+        if self.wrap : atoms.wrap()
+        if self.ase_espresso :
+            ase.io.write(self.inputfile, atoms, format = 'espresso-in', **self.ase_espresso)
+        elif self.basefile :
+            self.qeinput.write_qe_input(self.inputfile, atoms=atoms, basefile=self.basefile,
+                    qe_options=self.qe_options, prog=prog)
         self.driver = Driver(self.inputfile, **self.qepy_options)
 
     def update_atoms(self, atoms = None, **kwargs):
@@ -299,54 +302,3 @@ class QEpyCalculator(Calculator):
         lattice = Driver.get_ions_lattice() * units['Bohr']
         atoms = Atoms(symbols = symbols, positions = positions, cell = lattice)
         return atoms
-
-    @staticmethod
-    def write2qe(outf, atoms, basefile = None, **kwargs):
-        """Write the QE input file
-
-        Parameters
-        ----------
-        outf : str
-            The file name of output file
-        atoms : ase.Atoms
-            structure information with ase.Atoms
-        basefile : str
-            If set, will base on this file only update atomic information.
-        kwargs : dict
-            if not set `basefile`, will use ASE to write.
-            More details, see `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
-        """
-        if basefile is None :
-            ase.io.write(outf, atoms, format = 'espresso-in', **kwargs)
-        else :
-            with open(basefile, 'r') as fr :
-                inputlines =fr.read().splitlines()
-            ntyp = len(set(atoms.symbols))
-            nat = len(atoms)
-            fr = iter(inputlines)
-            l_cell_parameters = False
-            with open(outf, 'w') as fw :
-                for line in fr:
-                    keyw = line.strip().lower()
-                    if keyw.startswith('ibrav') :
-                        x = line.index("=") + 1
-                        line = line[:x] + ' ' + '0' + '\n'
-                    elif keyw.startswith('ntyp') :
-                        x = line.index("=") + 1
-                        line = line[:x] + ' ' + str(ntyp) + '\n'
-                    elif keyw.startswith('nat') :
-                        nat_old = int(line.split('=')[1])
-                        x = line.index("=") + 1
-                        line = line[:x] + ' ' + str(nat) + '\n'
-                    elif keyw.startswith('cell_parameters') :
-                        l_cell_parameters = True
-                        for i in range(3):
-                            next(fr)
-                            line += '{0[0]:.14f} {0[1]:.14f} {0[2]:.14f}\n'.format(atoms.cell[i])
-                    elif keyw.startswith('atomic_positions') :
-                        line = 'ATOMIC_POSITIONS angstrom\n'
-                        for i in range(nat_old):
-                            next(fr)
-                        for s, p in zip(atoms.symbols, atoms.positions):
-                            line += '{0:4s} {1[0]:.14f} {1[1]:.14f} {1[2]:.14f}\n'.format(s, p)
-                    fw.write(line)

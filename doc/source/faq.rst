@@ -65,7 +65,7 @@ Gfortran
 
       -  *Segmentation fault - invalid memory reference...*
 
-      This is due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__. One solution is append ``-Dzdotc=zdotc_wrapper`` to **DFLAGS** or **MANUAL_DFLAGS**. You also can do it during make:
+      This is due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__. One solution is manually append the ``-Dzdotc=zdotc_wrapper`` to **DFLAGS** or **MANUAL_DFLAGS** in **make.inc** of QE. You also can do it during make:
 
      .. code:: shell
 
