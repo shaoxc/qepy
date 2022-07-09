@@ -13,11 +13,12 @@ units['Ry'] = constants.RYTOEV
 class QEpyCalculator(Calculator):
     """QEpy Calculator for ASE.
 
-    QEpy initialization depends on the input file. Here are three ways to generate input file :
+    QEpy initialization depends on the input file. Here are four ways to generate input file :
 
-         - Give `inputfile` and `from_file = False` will generate `input_tmp.in` file which base on the `inputfile` only update atomic information part.
          - Give `inputfile` and `from_file = True` will read the structures to atoms (ase.Atoms) from `inputfile` and initialize the QEpy with `inputfile`.
-         - `inputfile=None` and `from_file = False` will generate `input_tmp.in` with `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
+         - Give `inputfile` and `from_file = False` will generate a temporary input file which base on the `inputfile` only update atomic information part.
+         - `inputfile=None` and `from_file = False` will generate a temporary input file with `ase.io.espresso.write_espresso_in <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#ase.io.espresso.write_espresso_in>`__.
+         - Set `qe_options` will generate a temporary input file. If `inputfile` also given, the input keywords of `inputfile` also will be included.
 
 
     Parameters
@@ -32,6 +33,8 @@ class QEpyCalculator(Calculator):
         If True, wrap the atoms back to cell before update the ions.
     ase_espresso : dict
         A dictionary with some parameters to generate PW input.
+    qe_options: dict
+        A dictionary with input parameters for QE to generate QE input file.
     comm : object
         Parallel communicator
     ldescf : bool
@@ -78,7 +81,7 @@ class QEpyCalculator(Calculator):
     implemented_properties=['energy', 'forces', 'stress']
 
     def __init__(self, atoms = None, inputfile = None, from_file = False, wrap = False,
-            ase_espresso = {}, comm = None, ldescf = False, iterative = False,
+            ase_espresso = {}, qe_options = {}, comm = None, ldescf = False, iterative = False,
             task = 'scf', embed = None, prefix = None, outdir = None, logfile = None, **kwargs):
         Calculator.__init__(self, atoms = atoms, **kwargs)
         self.optimizer = None
@@ -87,6 +90,7 @@ class QEpyCalculator(Calculator):
         self.wrap = wrap
         self.from_file = from_file
         self.ase_espresso = ase_espresso
+        self.qe_options = qe_options
         #
         if self.inputfile is not None and self.atoms is None :
             self.atoms = ase.io.read(self.inputfile, format='espresso-in')
@@ -315,26 +319,34 @@ class QEpyCalculator(Calculator):
         if basefile is None :
             ase.io.write(outf, atoms, format = 'espresso-in', **kwargs)
         else :
+            with open(basefile, 'r') as fr :
+                inputlines =fr.read().splitlines()
             ntyp = len(set(atoms.symbols))
             nat = len(atoms)
-            with open(basefile, 'r') as fr :
-                with open(outf, 'w') as fw :
-                    for line in fr :
-                        if 'ntyp' in line :
-                            x = line.index("=") + 1
-                            line = line[:x] + ' ' + str(ntyp) + '\n'
-                        elif 'nat' in line :
-                            nat_old = int(line.split('=')[1])
-                            x = line.index("=") + 1
-                            line = line[:x] + ' ' + str(nat) + '\n'
-                        elif 'cell_parameters' in line.lower() :
-                            for i in range(3):
-                                fr.readline()
-                                line += '{0[0]:.14f} {0[1]:.14f} {0[2]:.14f}\n'.format(atoms.cell[i])
-                        elif 'atomic_positions' in line.lower():
-                            line = 'ATOMIC_POSITIONS angstrom\n'
-                            for i in range(nat_old):
-                                fr.readline()
-                            for s, p in zip(atoms.symbols, atoms.positions):
-                                line += '{0:4s} {1[0]:.14f} {1[1]:.14f} {1[2]:.14f}\n'.format(s, p)
-                        fw.write(line)
+            fr = iter(inputlines)
+            l_cell_parameters = False
+            with open(outf, 'w') as fw :
+                for line in fr:
+                    keyw = line.strip().lower()
+                    if keyw.startswith('ibrav') :
+                        x = line.index("=") + 1
+                        line = line[:x] + ' ' + '0' + '\n'
+                    elif keyw.startswith('ntyp') :
+                        x = line.index("=") + 1
+                        line = line[:x] + ' ' + str(ntyp) + '\n'
+                    elif keyw.startswith('nat') :
+                        nat_old = int(line.split('=')[1])
+                        x = line.index("=") + 1
+                        line = line[:x] + ' ' + str(nat) + '\n'
+                    elif keyw.startswith('cell_parameters') :
+                        l_cell_parameters = True
+                        for i in range(3):
+                            next(fr)
+                            line += '{0[0]:.14f} {0[1]:.14f} {0[2]:.14f}\n'.format(atoms.cell[i])
+                    elif keyw.startswith('atomic_positions') :
+                        line = 'ATOMIC_POSITIONS angstrom\n'
+                        for i in range(nat_old):
+                            next(fr)
+                        for s, p in zip(atoms.symbols, atoms.positions):
+                            line += '{0:4s} {1[0]:.14f} {1[1]:.14f} {1[2]:.14f}\n'.format(s, p)
+                    fw.write(line)
