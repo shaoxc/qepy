@@ -2,6 +2,7 @@ import numpy as np
 import tempfile
 import qepy
 from qepy.core import Logger
+from qepy.io import QEInput
 
 class Driver(metaclass = Logger) :
     """
@@ -37,6 +38,11 @@ class Driver(metaclass = Logger) :
           - str  : Save to the given file.
           - True : Save to the temporary file, see also :func:`qepy.driver.Driver.get_output`.
 
+    outdir : str
+        The output directory of QE
+    qe_options: dict
+        A dictionary with input parameters for QE to generate QE input file.
+
     kwargs : dict
         Other options
 
@@ -57,7 +63,8 @@ class Driver(metaclass = Logger) :
     """
 
     def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
-             task = 'scf', embed = None, prefix = None, outdir = None, logfile = None, **kwargs):
+             task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
+             qe_options = None, prog = 'pw', **kwargs):
         if embed is None :
             embed = qepy.qepy_common.embed_base()
         self.task = task
@@ -68,20 +75,18 @@ class Driver(metaclass = Logger) :
         self.prefix = prefix
         self.outdir = outdir
         self.logfile = logfile
+        self.qe_options = qe_options
+        self.prog = prog
         #
         self.embed.ldescf = ldescf
         #
-        if comm is not None and hasattr(comm, 'py2f') :
-            commf = comm.py2f()
-        else :
-            commf = comm
+        self.comm = comm
+        self.qepy = qepy
+        self.qeinput = QEInput()
+        #
         self._init_log()
         #
-        self.driver_initialize(inputfile=self.inputfile, commf=commf, task=self.task, iterative = self.iterative)
-        #
-        self.density = np.zeros((1, 1))
-        self.iter = 0
-        self.qepy = qepy
+        self.driver_initialize()
 
     def _init_log(self):
         """_initialize the QE output."""
@@ -99,7 +104,24 @@ class Driver(metaclass = Logger) :
             self.fileobj = None
         return self.fileobj
 
-    def driver_initialize(self, inputfile= None, commf = None, task = 'scf', iterative = False, **kwargs):
+    @property
+    def comm(self):
+        return self._comm
+
+    @comm.setter
+    def comm(self, value):
+        self._comm = value
+        if self.comm is not None and hasattr(self.comm, 'py2f') :
+            self.commf = self.comm.py2f()
+        else :
+            self.commf = self.comm
+
+    def restart(self, prog=None, **kwargs):
+        prog = prog or self.prog
+        self._init_log()
+        self.driver_initialize()
+
+    def driver_initialize(self, **kwargs):
         """ Initialize the driver
 
         Parameters
@@ -117,7 +139,20 @@ class Driver(metaclass = Logger) :
               - 'optical' : Optical absorption spectrum (TDDFT)
               - 'nscf' : read file from scf
 
+        qe_options: dict
+            A dictionary with input parameters for QE to generate QE input file.
+
         """
+        inputfile=self.inputfile
+        commf=self.commf
+        task=self.task
+        qe_options = self.qe_options
+        prog = self.prog
+        #
+        if qe_options :
+            inputfile, basefile = 'input_tmp.in', inputfile
+            self.qeinput.write_qe_input(inputfile, basefile=basefile, qe_options=qe_options, prog=prog)
+        #
         if task == 'optical' :
             self.tddft_initialize(inputfile=inputfile, commf = commf, embed = self.embed, **kwargs)
         elif task == 'nscf' :
@@ -131,7 +166,10 @@ class Driver(metaclass = Logger) :
             qepy.qepy_pwscf(inputfile, commf, embed = self.embed)
             self.embed.iterative = self.iterative
             if self.embed.iterative :
-                    qepy.control_flags.set_niter(1)
+                qepy.control_flags.set_niter(1)
+        #
+        self.density = np.zeros((1, 1))
+        self.iter = 0
 
     def tddft_initialize(self, inputfile = None, commf = None, embed = None, **kwargs):
         """ Initialize the tddft
@@ -207,6 +245,11 @@ class Driver(metaclass = Logger) :
             qepy.qepy_molecule_optical_absorption(self.embed)
         else :
             qepy.qepy_electrons_scf(print_level, 0, self.embed)
+        return self.embed.etotal
+
+    def electrons(self, **kwargs):
+        qepy.electrons()
+        return qepy.ener.get_etot()
 
     def end_scf(self, **kwargs):
         """End the scf and clean the scf workspace. Only need run it in iterative mode"""
@@ -276,12 +319,18 @@ class Driver(metaclass = Logger) :
         """
         qepy.punch(what)
 
+    def update_run_options(self, qe_options = {}, **kwargs):
+        pass
+
     def get_energy(self, **kwargs):
         """Return the total energy."""
-        if abs(self.embed.etotal) < 1E-16 or self.embed.exttype > 0 :
-            return self.calc_energy(**kwargs)
+        if abs(qepy.ener.get_etot()) > 1E-16 :
+            energy = qepy.ener.get_etot()
+        elif abs(self.embed.etotal) > 1E-16 :
+            energy = self.embed.etotal
         else :
-            return self.embed.etotal
+            energy = self.calc_energy(**kwargs)
+        return energy
 
     def calc_energy(self, **kwargs):
         """Calculate the energy with the pw2casino of QE."""

@@ -57,7 +57,7 @@ class QEInput(object):
         if basefile :
             options = qe_options
             qe_options = self.read_qe_input(basefile)
-            qe_options = self.update_options(options=options, qe_options = qe_options)
+            qe_options = self.update_options(options=options, qe_options = qe_options, prog = prog)
         #
         if prog == 'pw' :
             if atoms is not None :
@@ -109,6 +109,7 @@ class QEInput(object):
         ntyp_old = len(qe_options.get('atomic_species', []))
         if ntyp > ntyp_old :
             raise ValueError("The number of 'ATOMIC_SPECIES' not fit the number of types of atoms.")
+        qe_options['&system']['ntyp'] = ntyp_old
         # keys = [k.split()[0] for k in qe_options]
         keys = list(qe_options.keys())
         for key in keys :
@@ -118,13 +119,13 @@ class QEInput(object):
         key = 'cell_parameters angstrom'
         qe_options[key] = []
         for i in range(3):
-            line = '{0[0]:.14f} {0[1]:.14f} {0[2]:.14f}\n'.format(atoms.cell[i])
+            line = '{0[0]:.14f} {0[1]:.14f} {0[2]:.14f}'.format(atoms.cell[i])
             qe_options[key].append(line)
         #
         key = 'atomic_positions angstrom'
         qe_options[key] = []
         for s, p in zip(atoms.symbols, atoms.positions):
-            line = '{0:4s} {1[0]:.14f} {1[1]:.14f} {1[2]:.14f}\n'.format(s, p)
+            line = '{0:4s} {1[0]:.14f} {1[1]:.14f} {1[2]:.14f}'.format(s, p)
             qe_options[key].append(line)
         #
         return qe_options
@@ -159,6 +160,17 @@ class QEInput(object):
                         qe_options.pop(item)
                         break
                 qe_options[k] = v
+        # correct the qe_options
+        for k, v in options.items():
+            if 'cell_parameters' in k:
+                qe_options['&system']['ibrav'] = 0
+            elif 'atomic_positions' in k:
+                qe_options['&system']['nat'] = len(v)
+                ntyp = len(set([x.split()[0] for x in v]))
+                ntyp_old = len(qe_options.get('atomic_species', []))
+                if ntyp > ntyp_old :
+                    raise ValueError("The number of 'ATOMIC_SPECIES' not fit the number of types of atoms.")
+                qe_options['&system']['ntyp'] = ntyp_old
         return qe_options
 
     def read_qe_input(self, filename, **kwargs):
@@ -199,7 +211,7 @@ class QEInput(object):
                 break
             else :
                 k, v = line.split('=')
-                options[k.strip()] = v.strip()
+                options[k.strip()] = v.strip(',').strip()
         else :
             raise ValueError("The namelist not closed with '/'.")
         return options
@@ -263,7 +275,7 @@ QEOPTIONS={
     "bgw2pw" : OrderedDict.fromkeys(
         ["&input_bgw2pw"], {}),
     "cp" : OrderedDict.fromkeys(
-        ["&control", "&system", "&electrons", "&ions", "&cell", "&press_ai", "&wannier"], {}),
+        ["&control", "&system", "&electrons", "&ions", "&cell", "&press_ai", "&wannier", "atomic_species"], {}),
     "cppp" : OrderedDict.fromkeys(
         ["&inputpp"], {}),
     "davidson" : OrderedDict.fromkeys(
@@ -301,7 +313,7 @@ QEOPTIONS={
     "projwfc" : OrderedDict.fromkeys(
         ["&projwfc"], {}),
     "pw" : OrderedDict.fromkeys(
-        ["&control", "&system", "&electrons", "&ions", "&cell", "&fcp", "&rism"], {}),
+        ["&control", "&system", "&electrons", "&ions", "&cell", "&fcp", "&rism", "atomic_species"], {}),
     "pw2bgw" : OrderedDict.fromkeys(
         ["&input_pw2bgw"], {}),
     "pwcond" : OrderedDict.fromkeys(

@@ -31,6 +31,8 @@ class QEpyCalculator(Calculator):
         Read the structure from inputfile, and use the inputfile for the QE Initialization.
     wrap : bool
         If True, wrap the atoms back to cell before update the ions.
+    extrapolation : str or bool
+        If False, every step will re-run the QE from file.
     ase_espresso : dict
         A dictionary with some parameters to generate PW input.
     qe_options: dict
@@ -79,14 +81,15 @@ class QEpyCalculator(Calculator):
 
     implemented_properties=['energy', 'forces', 'stress']
 
-    def __init__(self, atoms = None, inputfile = None, from_file = False, wrap = False,
-            ase_espresso = {}, qe_options = {}, comm = None, ldescf = False, iterative = False,
+    def __init__(self, atoms = None, inputfile = None, from_file = False, wrap = False, extrapolation = True,
+            ase_espresso = None, qe_options = None, comm = None, ldescf = False, iterative = False,
             task = 'scf', embed = None, prefix = None, outdir = None, logfile = None, **kwargs):
         Calculator.__init__(self, atoms = atoms, **kwargs)
         self.optimizer = None
         self.atoms = atoms
         self.inputfile = inputfile
         self.wrap = wrap
+        self.extrapolation = extrapolation
         self.from_file = from_file
         self.ase_espresso = ase_espresso
         self.qe_options = qe_options
@@ -113,6 +116,7 @@ class QEpyCalculator(Calculator):
                 'iterative' : iterative,
                 'task' : task,
                 'embed' : embed,
+                'logfile' : logfile,
                 }
         self.qepy_options.update(kwargs)
         self.restart()
@@ -125,15 +129,22 @@ class QEpyCalculator(Calculator):
     def driver_initialise(self, atoms = None, prog = 'pw', **kwargs):
         atoms = atoms or self.atoms
         if self.wrap : atoms.wrap()
-        if self.ase_espresso :
-            ase.io.write(self.inputfile, atoms, format = 'espresso-in', **self.ase_espresso)
-        elif self.basefile :
-            self.qeinput.write_qe_input(self.inputfile, atoms=atoms, basefile=self.basefile,
-                    qe_options=self.qe_options, prog=prog)
+        if not self.from_file :
+            if self.ase_espresso :
+                ase.io.write(self.inputfile, atoms, format = 'espresso-in', **self.ase_espresso)
+            else :
+                self.qeinput.write_qe_input(self.inputfile, atoms=atoms, basefile=self.basefile,
+                        qe_options=self.qe_options, prog=prog)
         self.driver = Driver(self.inputfile, **self.qepy_options)
 
     def update_atoms(self, atoms = None, **kwargs):
         atoms = atoms or self.atoms
+        #
+        if not self.extrapolation :
+            self.stop()
+            self.driver_initialise(atoms = atoms)
+            return
+        #
         if self.wrap :
             positions = wrap_positions(atoms.positions, atoms.cell)
         else :
