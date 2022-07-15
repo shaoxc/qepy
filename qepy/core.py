@@ -30,3 +30,23 @@ class Logger(type):
                 os.dup2(stdout, 1)
             return results
         return wrapper
+
+def stdout2file(fileobj = None):
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            if hasattr(args[0], 'fileobj'):
+                fobj = args[0].fileobj
+            else :
+                fobj = None
+            stdout = None
+            if fobj is not None :
+                if os.fstat(1).st_ino != os.fstat(fobj.fileno()).st_ino :
+                    stdout = os.dup(1)
+                    os.dup2(fobj.fileno(), 1)
+            results = function(*args, **kwargs)
+            if stdout is not None :
+                os.dup2(stdout, 1)
+            return results
+        return wrapper
+    return decorator
