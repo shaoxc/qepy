@@ -1,10 +1,10 @@
 import numpy as np
 import tempfile
 import qepy
-from qepy.core import Logger
+from qepy.core import stdout2file
 from qepy.io import QEInput
 
-class Driver(metaclass = Logger) :
+class Driver :
     """
     The driver of QEpy.
 
@@ -171,6 +171,7 @@ class Driver(metaclass = Logger) :
         self.density = np.zeros((1, 1))
         self.iter = 0
 
+    @stdout2file()
     def tddft_initialize(self, inputfile = None, commf = None, embed = None, **kwargs):
         """ Initialize the tddft
 
@@ -196,6 +197,7 @@ class Driver(metaclass = Logger) :
         qepy.qepy_tddft_main_setup(embed)
         self.embed.tddft.iterative = self.iterative
 
+    @stdout2file()
     def diagonalize(self, print_level = 2, **kwargs):
         """Diagonalize the hamiltonian
 
@@ -211,6 +213,7 @@ class Driver(metaclass = Logger) :
             self.embed.mix_coef = -1.0
             qepy.qepy_electrons_scf(print_level, 0, self.embed)
 
+    @stdout2file()
     def mix(self, mix_coef = 0.7, print_level = 2):
         """Mixing the density
 
@@ -237,6 +240,7 @@ class Driver(metaclass = Logger) :
         """Return the number of steps of scf"""
         return qepy.control_flags.get_n_scf_steps()
 
+    @stdout2file()
     def scf(self, print_level = 2, maxiter = None, **kwargs):
         """Run the scf/tddft until converged or maximum number of iterations"""
         if maxiter is not None and not self.embed.iterative :
@@ -247,16 +251,19 @@ class Driver(metaclass = Logger) :
             qepy.qepy_electrons_scf(print_level, 0, self.embed)
         return self.embed.etotal
 
+    @stdout2file()
     def electrons(self, **kwargs):
         qepy.electrons()
         return qepy.ener.get_etot()
 
+    @stdout2file()
     def end_scf(self, **kwargs):
         """End the scf and clean the scf workspace. Only need run it in iterative mode"""
         if self.embed.iterative :
             self.embed.finish = True
             qepy.qepy_electrons_scf(0, 0, self.embed)
 
+    @stdout2file()
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
         """stop.
 
@@ -276,6 +283,7 @@ class Driver(metaclass = Logger) :
 
         if hasattr(self.fileobj, 'close'): self.fileobj.close()
 
+    @stdout2file()
     def tddft_restart(self, istep=None, **kwargs):
         """Restart the tddft from previous interrupted run.
 
@@ -288,6 +296,7 @@ class Driver(metaclass = Logger) :
         if istep is not None :
             self.embed.tddft.istep = istep
 
+    @stdout2file()
     def tddft_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
         if self.embed.tddft.iterative :
             self.embed.tddft.finish = True
@@ -296,6 +305,7 @@ class Driver(metaclass = Logger) :
         qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
         qepy.qepy_stop_tddft(exit_status)
 
+    @stdout2file()
     def save(self, what = 'all', **kwargs):
         """
         Save the QE data to the disk
@@ -332,11 +342,13 @@ class Driver(metaclass = Logger) :
             energy = self.calc_energy(**kwargs)
         return energy
 
+    @stdout2file()
     def calc_energy(self, **kwargs):
         """Calculate the energy with the pw2casino of QE."""
         qepy.qepy_calc_energies(self.embed)
         return self.embed.etotal
 
+    @stdout2file()
     def update_ions(self, positions = None, lattice = None, update = 0, **kwargs):
         """update the ions of QE
 
@@ -358,6 +370,7 @@ class Driver(metaclass = Logger) :
         else :
             qepy.qepy_api.qepy_update_ions(self.embed, positions, update)
 
+    @stdout2file()
     def pwscf_restart(self, oldxml=False):
         """Read PW ouput/restart files.
 
