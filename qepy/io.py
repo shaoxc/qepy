@@ -67,7 +67,7 @@ class QEInput(object):
         else :
             fh = open(filename, 'w')
         #
-        options = QEOPTIONS.get(prog, {})
+        options = QEOPTIONS.get(prog, {}).copy()
         options.update(qe_options)
         #
         for key, value in options.items() :
