@@ -5,7 +5,7 @@
 # from the environment for the first two.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SOURCEDIR     = .
+SOURCEDIR     = source
 BUILDDIR      = build
 
 # Put it first so that "make" without argument is like "make help".
@@ -33,4 +33,4 @@ browse:
 	x-www-browser build/html/index.html
 
 upload: html
-	scp -r ./build/html/* web@dftpy.rutgers.edu:/home/web/qepy/html/
+	scp -r ./build/html/* web@qepy.rutgers.edu:/home/web/qepy/html/

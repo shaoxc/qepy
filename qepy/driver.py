@@ -486,14 +486,18 @@ class Driver(metaclass = Logger) :
         exttype : int
             The type of external potential
 
-                - 0 : external                     : 000
-                - 1 : only pseudo                  : 001
-                - 2 : only hartree                 : 010
-                - 3 : hartree + pseudo             : 011
-                - 4 : only xc                      : 100
-                - 5 : pseudo + xc                  : 101
-                - 6 : hartree + xc                 : 110
-                - 7 : pseudo + hartree + xc        : 111
+                 ==== ============================== ===
+                 type potential                      bin
+                 ==== ============================== ===
+                  0   external                       000
+                  1   pseudo                         001
+                  2   hartree                        010
+                  3   pseudo + hartree               011
+                  4   xc                             100
+                  5   pseudo + xc                    101
+                  6   hartree + xc                   110
+                  7   pseudo + hartree + xc          111
+                 ==== ============================== ===
 
         """
         if exttype is not None :
@@ -538,14 +542,18 @@ class Driver(metaclass = Logger) :
         ----------
         icalc : int
 
-            - 0 : all                              : 000
-            - 1 : no ewald                         : 001
-            - 2 : no local                         : 010
-            - 3 : no ewald + local                 : 011
-            - 4 : no nlcc                          : 100
-            - 5 : no ewald + nlcc                  : 101
-            - 6 : no local + nlcc                  : 110
-            - 7 : no ewald + local + nlcc          : 011
+            ===== ============================= ===
+            icalc without                       bin
+            ===== ============================= ===
+              0   all                           000
+              1   no ewald                      001
+              2   no local                      010
+              3   no ewald + local              011
+              4   no nlcc                       100
+              5   no ewald + nlcc               101
+              6   no local + nlcc               110
+              7   no ewald + local + nlcc       111
+            ===== ============================= ===
         """
         qepy.qepy_forces(icalc, self.embed)
         forces = qepy.force_mod.get_array_force().T

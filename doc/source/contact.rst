@@ -26,10 +26,10 @@ References
 
 QEpy
 ----
-.. literalinclude:: ../QEpy.bib
+.. literalinclude:: QEpy.bib
     :lines: 1-7
 
 Quantum ESPRESSO
 ================
-.. literalinclude:: ../QEpy.bib
+.. literalinclude:: QEpy.bib
     :lines: 9-25

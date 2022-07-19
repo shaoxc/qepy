@@ -26,12 +26,12 @@ Small modifications to QE routines and a quick compilation with Python wrappers.
 .. toctree::
    :maxdepth: 2
 
-   source/contact
-   source/install
-   source/tutorials/tutorials
-   source/qepy/qepy
-   source/development/development
-   source/faq
+   contact
+   install
+   tutorials/tutorials
+   qepy/qepy
+   development/development
+   faq
 
 .. _QEpy: https://gitlab.com/shaoxc/qepy
 .. _Python: https://www.python.org
