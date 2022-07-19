@@ -513,7 +513,7 @@
       !
       ! compute ewald contribution
       !
-      if (embed%exttype==0 .and. embed%lewald) then
+      if (embed%lewald) then
          IF ( do_comp_esm ) THEN
             ewld = esm_ewald()
          ELSE

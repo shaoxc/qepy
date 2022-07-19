@@ -507,14 +507,15 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   ! ... calculates the ewald contribution to total energy
   !
   !if (embed%initial) then
-  if (embed%exttype<1) then
+  if (embed%lewald) then
   IF ( do_comp_esm ) THEN
      ewld = esm_ewald()
   ELSE
      ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   ENDIF
-  else if (iand(embed%exttype,1) == 1) then
+  endif
+  if (iand(embed%exttype,1) == 1) then
      call qepy_setlocal(embed%exttype)
   endif
   !
