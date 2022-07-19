@@ -231,11 +231,17 @@ class Driver(metaclass = Logger) :
 
     def get_scf_error(self, **kwargs):
         """Return the error of the scf"""
-        return qepy.control_flags.get_scf_error()
+        if self.embed.iterative :
+            return self.embed.dnorm
+        else :
+            return qepy.control_flags.get_scf_error()
 
     def get_scf_steps(self, **kwargs):
         """Return the number of steps of scf"""
-        return qepy.control_flags.get_n_scf_steps()
+        if self.embed.iterative :
+            return self.iter
+        else :
+            return qepy.control_flags.get_n_scf_steps()
 
     def scf(self, print_level = 2, maxiter = None, **kwargs):
         """Run the scf/tddft until converged or maximum number of iterations"""
@@ -470,7 +476,7 @@ class Driver(metaclass = Logger) :
         dipole = self.embed.tddft.dipole
         return dipole
 
-    def set_external_potential(self, potential, exttype = None, gather = True, **kwargs):
+    def set_external_potential(self, potential, exttype = None, gather = True, extene  = None, **kwargs):
         """Set the external potential.
 
         Parameters
@@ -492,6 +498,10 @@ class Driver(metaclass = Logger) :
         """
         if exttype is not None :
             self.embed.exttype = exttype
+        if extene is not None :
+            self.embed.extene = extene
+        else :
+            self.embed.extene = 0.0
         qepy.qepy_mod.qepy_set_extpot(self.embed, potential, gather = gather)
 
     def get_output(self):

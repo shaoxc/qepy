@@ -1058,6 +1058,8 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !qepy <--
   n_scf_steps = iter
   scf_error = dr2
+  embed%etotal= etot
+  embed%dnorm = dr2
   !qepy -->
   !
   ! ... exiting: write (unless disabled) the charge density to file
