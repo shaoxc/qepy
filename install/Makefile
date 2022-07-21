@@ -2,6 +2,7 @@ include make.qe.inc
 
 SRC_DIRS := ./
 PY_SRC_DIR := ./
+PYTHON := $(or ${PYTHON}, python)
 
 QEMODS := $(wildcard ${QEDIR}/*/*.a) $(wildcard ${QEDIR}/*/*/*.a)
 QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${QEDIR}/Modules/libqemod.a, $(QEMODS))
@@ -107,13 +108,13 @@ ${WRAP_FPP_FILES}: ${WRAP_FILES}
 	@for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
 
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	@f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json \
+	@${PYTHON} -m f90wrap --f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json \
 		--init-file $(PY_SRC_DIR)/__init__.py -P
 
 .PHONY: serial mpi clean install help
 
 serial: ${F90WRAP_FILES}
-	f2py-f90wrap \
+	${PYTHON} -m f90wrap --f2py-f90wrap \
 		--fcompiler=$(FCOMPILER) --build-dir . \
 		-c --f90exec=$(F90) --f77exec=$(F90) \
 		--opt=-O2 \
@@ -126,7 +127,7 @@ serial: ${F90WRAP_FILES}
 
 mpi: ${F90WRAP_FILES}
 	CFLAGS='$(CFLAGS)' \
-	f2py-f90wrap \
+	${PYTHON} -m f90wrap --f2py-f90wrap \
 		--fcompiler=$(FCOMPILER) --build-dir . \
 		-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
 		--f90flags='${F2FLAGS}' \

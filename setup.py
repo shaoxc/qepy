@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import subprocess
 import pathlib
@@ -67,6 +68,8 @@ class MakeBuild(build_ext):
             ini2files('ldau/qepy_econf.ini')
         os.chdir(cwd)
 
+        env['PYTHON'] = sys.executable
+
         if env.get('tddft', 'no').lower() == 'yes' :
             subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
 
@@ -102,7 +105,7 @@ if __name__ == "__main__":
             python_requires = '>=3.6',
             install_requires=[
                 'numpy>=1.18.0',
-                'f90wrap>=0.2.5',
+                'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master',
                 'importlib-metadata>=0.12;python_version<"3.8"'
                 ],
             extras_require={
