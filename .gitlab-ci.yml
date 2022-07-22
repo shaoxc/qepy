@@ -1,5 +1,7 @@
 stages:
   - build
+  - test
+  - qe65
   - deploy
 
 variables:
@@ -11,13 +13,17 @@ variables:
   PUBLIC: 'package'
 
 
-test:
+build:
   stage: build
   image: $CONTAINER_IMAGE:$QTAG
-  before_script:
+  script:
    - git clone https://github.com/dceresoli/ce-tddft.git src/ce-tddft
    - qedir=$QEDIR tddft=yes python -m pip install .
 
+
+test:
+  stage: test
+  image: $CONTAINER_IMAGE:$QTAG
   script:
    - cd examples/test
    - bash test.sh
@@ -33,6 +39,15 @@ test:
     paths:
       - $PUBLIC
 
+
+qe65:
+  stage: qe65
+  image: $CONTAINER_IMAGE:$QTAG
+  script:
+   - cd examples/test/qe-6.5
+   - bash test.sh
+
+
 docker_image:
   stage: deploy
   only:
@@ -41,13 +56,13 @@ docker_image:
   image: docker:stable
   services:
     - docker:dind
-  
+
   variables:
     DOCKER_HOST: tcp://docker:2375
-  
+
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-  
+
   script:
     - docker pull $CONTAINER_IMAGE:$QTAG || true
     - docker run -t -d --name qepy_con $CONTAINER_IMAGE:$QTAG

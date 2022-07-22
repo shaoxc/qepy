@@ -32,7 +32,7 @@ fi
 
 if [ $parallel ]; then
 	echo "####################Test MPI version#######################"
-	for f in *py ./qe-6.5/*py
+	for f in *py
 	do
 		mpirun -n 2 python3 -m pytest --with-mpi $f
 		check_exit $?
