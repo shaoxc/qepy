@@ -34,7 +34,7 @@ class Test(unittest.TestCase):
         qepy.qepy_tddft_readin(inputfile)
         qepy.qepy_tddft_main_setup(embed)
         qepy.qepy_molecule_optical_absorption(embed)
-        qepy.qepy_stop_run(0, what = 'no')
+        qepy.qepy_stop_run(0, print_flag=0, what='no', finalize=False)
         qepy.qepy_stop_tddft(0)
 
     def test_2_tddft_iterative(self):
