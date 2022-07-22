@@ -97,15 +97,17 @@ if __name__ == "__main__":
             description=description,
             version=__version__,
             use_scm_version={'version_scheme': 'post-release'},
-            setup_requires=['setuptools_scm'],
             author=__author__,
             author_email=__contact__,
             license=__license__,
             long_description=long_description,
             python_requires = '>=3.6',
-            install_requires=[
+            setup_requires=[
+                'setuptools_scm',
                 'numpy>=1.18.0',
-                'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master',
+                'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master'
+                ],
+            install_requires=[
                 'importlib-metadata>=0.12;python_version<"3.8"'
                 ],
             extras_require={

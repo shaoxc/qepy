@@ -19,20 +19,12 @@ build:
   script:
    - git clone https://github.com/dceresoli/ce-tddft.git src/ce-tddft
    - qedir=$QEDIR tddft=yes python -m pip install .
-
-
-test:
-  stage: test
-  image: $CONTAINER_IMAGE:$QTAG
-  script:
-   - cd examples/test
-   - bash test.sh
-   - PACKAGE=$(python -c 'import qepy, os; print(os.path.split(qepy.__path__[0])[0])')
-   - cd -
    - mkdir $PUBLIC
-   - cp -r $PACKAGE/qepy* $PUBLIC
-   - cp $PACKAGE/_qepy* $PUBLIC
-   - ls $PUBLIC/*
+   - cd $PUBLIC
+   - PACKAGE=$(python -c 'import qepy, os; print(os.path.split(qepy.__path__[0])[0])')
+   - cp -r $PACKAGE/qepy* .
+   - cp $PACKAGE/_qepy* .
+   - ls *
 
   artifacts:
     name: "QEpy-$CI_COMMIT_REF_SLUG-${CI_COMMIT_SHA::9}"
@@ -40,10 +32,19 @@ test:
       - $PUBLIC
 
 
+test:
+  stage: test
+  image: $CONTAINER_IMAGE:$QTAG
+  script:
+   - cp -r $PUBLIC/* $PACKAGE
+   - cd examples/test
+   - bash test.sh
+
 qe65:
   stage: qe65
   image: $CONTAINER_IMAGE:$QTAG
   script:
+   - cp -r $PUBLIC/* $PACKAGE
    - cd examples/test/qe-6.5
    - bash test.sh
 
