@@ -102,12 +102,9 @@ if __name__ == "__main__":
             license=__license__,
             long_description=long_description,
             python_requires = '>=3.6',
-            setup_requires=[
-                'setuptools_scm',
-                'numpy>=1.18.0',
-                'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master'
-                ],
             install_requires=[
+                'numpy>=1.18.0',
+                'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master',
                 'importlib-metadata>=0.12;python_version<"3.8"'
                 ],
             extras_require={
