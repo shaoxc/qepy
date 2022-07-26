@@ -309,8 +309,8 @@ CONTAINS
 
       !IF(ionode)
       exst=.false.
-      IF ( present(append) .and. append) THEN
-         INQUIRE (file = TRIM(fname), exist = exst)
+      IF ( present(append)) THEN
+         IF (append) INQUIRE (file = TRIM(fname), exist = exst)
       ENDIF
 
       IF (exst) THEN

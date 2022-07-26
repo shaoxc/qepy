@@ -64,6 +64,7 @@ class MakeBuild(build_ext):
         cwd = os.getcwd()
         os.chdir(self.build_temp)
         if env.get('ldau', 'no').lower() == 'yes' :
+            sys.path.insert(0, './')
             from ldau.qepy_ldau_patch import ini2files
             ini2files('ldau/qepy_econf.ini')
         os.chdir(cwd)
@@ -102,7 +103,12 @@ if __name__ == "__main__":
             license=__license__,
             long_description=long_description,
             python_requires = '>=3.6',
+            setup_requires=[
+                'setuptools_scm',
+                'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master',
+                ],
             install_requires=[
+                'setuptools_scm',
                 'numpy>=1.18.0',
                 'f90wrap @ git+https://github.com/jameskermode/f90wrap.git@master',
                 'importlib-metadata>=0.12;python_version<"3.8"'

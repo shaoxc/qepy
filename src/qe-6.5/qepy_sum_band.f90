@@ -58,6 +58,7 @@ SUBROUTINE qepy_sum_band(update_occupations)
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL (DP), ALLOCATABLE :: kplusg (:)
   logical, optional      :: update_occupations
+  logical                :: update_occupations_
   !
   !
   CALL start_clock( 'sum_band' )
@@ -74,9 +75,11 @@ SUBROUTINE qepy_sum_band(update_occupations)
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
   !qepy --> update occupations
-  if (present(update_occupations) .and. (.not. update_occupations)) then
-     continue
-  else
+  update_occupations_ = .true.
+  if (present(update_occupations)) then
+     if (.not. update_occupations) update_occupations_ = .false.
+  endif
+  if (update_occupations_) then
   CALL weights ( )
   endif
   !qepy <-- update occupations

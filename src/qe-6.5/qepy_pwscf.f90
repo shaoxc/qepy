@@ -167,8 +167,12 @@ SUBROUTINE qepy_initial(input)
      start_images = input%start_images
   ENDIF
   !
-  IF ( PRESENT(input) .and. input%my_world_comm /= 0 ) THEN
-     CALL mp_startup(my_world_comm=input%my_world_comm, start_images=start_images )
+  IF ( PRESENT(input)) THEN
+     IF (input%my_world_comm /= 0 ) THEN
+        CALL mp_startup(my_world_comm=input%my_world_comm, start_images=start_images )
+     ELSE
+        CALL mp_startup(start_images=start_images )
+     ENDIF
   ELSE
      CALL mp_startup(start_images=start_images )
   ENDIF

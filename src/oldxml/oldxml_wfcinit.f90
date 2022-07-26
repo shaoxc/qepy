@@ -49,7 +49,9 @@ SUBROUTINE oldxml_wfcinit(starting)
   !
   CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: starting
   !
-  if (present(starting) .and. len_trim(starting)>1) starting_wfc= trim(starting)
+  IF (present(starting)) THEN
+     IF (len_trim(starting)>1) starting_wfc= trim(starting)
+  ENDIF
   !
   CALL start_clock( 'wfcinit' )
   !

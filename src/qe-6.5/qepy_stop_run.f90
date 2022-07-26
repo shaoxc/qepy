@@ -92,7 +92,7 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: what
   LOGICAL, OPTIONAL   :: finalize
   CHARACTER(LEN=256)  :: what_ ='config-nowf'
-  INTEGER             :: iprint
+  INTEGER             :: iprint = 0
   LOGICAL             :: exst, opnd, lflag
 #if defined(__MPI)
   INTEGER :: ierr
@@ -104,8 +104,8 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   if ( ortho_comm  /= 0 .and. ortho_comm  /= world_comm ) CALL laxlib_free_ortho_group()
   !qepy <-- pwscf and run_pwscf
   !
-  IF ( PRESENT(what) .and. len_trim(what)>1) THEN
-     what_= trim(what)
+  IF ( PRESENT(what)) THEN
+     IF (len_trim(what)>1) what_= trim(what)
   ENDIF
 
   IF (TRIM(what_) == 'no') THEN 
@@ -116,8 +116,6 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
 
   IF ( PRESENT(print_flag)) THEN
      iprint = print_flag
-  ELSE
-     iprint = 0
   ENDIF
 
 
@@ -165,9 +163,11 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   CALL mp_barrier( world_comm )
   CALL mp_end ( world_comm )
 #if defined(__MPI)
-  IF (present(finalize) .and. finalize) THEN
-     CALL mpi_finalize(ierr)
-     IF (ierr/=0) CALL mp_stop( 8002 )
+  IF (present(finalize)) THEN
+     IF (finalize) THEN
+        CALL mpi_finalize(ierr)
+        IF (ierr/=0) CALL mp_stop( 8002 )
+     ENDIF
   END IF
 #endif
   !qepy <-- add mp_global_end

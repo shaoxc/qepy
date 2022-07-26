@@ -78,7 +78,9 @@ SUBROUTINE qepy_potinit(starting)
   exst     =  check_file_exist( TRIM(filename) // '.dat' )
 #endif
   !
-  if (present(starting) .and. len_trim(starting)>1) starting_pot = trim(starting)
+  IF (present(starting)) THEN
+     IF (len_trim(starting)>1) starting_pot = trim(starting)
+  ENDIF
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !

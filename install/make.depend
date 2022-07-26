@@ -13,6 +13,9 @@ oldxml_read_file.o : oldxml_xml_io_base.o
 oldxml_wfcinit.o : oldxml_pw_restart.o
 qepy_api.o : qepy_common.o
 qepy_electrons.o : qepy_common.o
+qepy_electrons_nscf.o : qepy_common.o
+qepy_energy.o : qepy_common.o
+qepy_forces.o : qepy_common.o
 qepy_mod.o : qepy_common.o
 qepy_mod.o : qepy_scatter_mod.o
 qepy_molecule_optical_absorption.o : qepy_common.o
@@ -20,9 +23,12 @@ qepy_molecule_optical_absorption.o : qepy_tddft_common.o
 qepy_molecule_optical_absorption.o : tddft_module.o
 qepy_pw2casino_write.o : qepy_common.o
 qepy_pwscf.o : qepy_common.o
+qepy_read_file_new.o : qepy_pw_restart_new.o
+qepy_run_pwscf.o : qepy_common.o
 qepy_stress.o : qepy_common.o
 qepy_tddft_main.o : qepy_common.o
 qepy_tddft_main.o : tddft_module.o
+qepy_tddft_mod.o : tddft_module.o
 qepy_tddft_routines.o : tddft_module.o
 qepy_tddft_setup.o : qepy_common.o
 qepy_tddft_setup.o : tddft_module.o
@@ -36,4 +42,3 @@ tddft_routines.o : tddft_module.o
 tddft_setup.o : tddft_module.o
 update_ham.o : tddft_module.o
 wavepacket.o : tddft_module.o
-qepy_read_file_new.o : qepy_pw_restart_new.o
