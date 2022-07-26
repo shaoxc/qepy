@@ -19,6 +19,19 @@ name = 'qepy'
 description = "QEPY: Quantum ESPRESSO Python interface",
 long_description = """ QEPY turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose."""
 
+fix_mpi4py = """#Fix the MPI_IN_PLACE
+import sys
+if 'mpi4py' in sys.modules :
+    import os
+    import mpi4py
+    from ctypes.util import find_library
+    try:
+        mpi4py.profile(find_library('mpi'), path = os.environ.get('LD_LIBRARY_PATH', '').split(':'))
+    except Exception :
+        pass
+#End fix
+"""
+
 
 class MakeBuild(build_ext):
     def run(self):
@@ -75,6 +88,16 @@ class MakeBuild(build_ext):
             subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
 
         subprocess.check_call(['make', '-f', 'Makefile'] + build_args, cwd=self.build_temp, env = env)
+
+        with open(self.build_temp + '/qepy/__init__.py', 'r+') as fh :
+            lines = fh.readlines()
+            fh.seek(0)
+            first = True
+            for line in lines :
+                if first and '_qepy' in line :
+                    fh.write(fix_mpi4py)
+                    first = False
+                fh.write(line)
 
         if not os.path.exists(self.build_lib): os.makedirs(self.build_lib)
         # if os.path.exists(self.build_name): shutil.rmtree(self.build_name)
