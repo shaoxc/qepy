@@ -17,7 +17,7 @@ def test_0_scf():
     converged = driver.check_convergence()
     energy = driver.get_energy()
     assert converged
-    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
+    assert np.isclose(energy, -552.93477389, atol = 1E-6)
     driver.stop()
 
 def test_1_read():
@@ -25,7 +25,7 @@ def test_1_read():
     energy = driver.get_energy()
     if driver.is_root :
         print('energy :\n', energy)
-    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
+    assert np.isclose(energy, -552.93477389, atol = 1E-6)
     driver.stop(what = 'no')
 
 def test_2_read_pw():
@@ -34,5 +34,5 @@ def test_2_read_pw():
     energy = driver.get_energy()
     if driver.is_root :
         print('energy :\n', energy)
-    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
+    assert np.isclose(energy, -552.93477389, atol = 1E-6)
     driver.stop(what = 'no')

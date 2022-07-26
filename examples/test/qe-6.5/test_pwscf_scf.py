@@ -32,7 +32,7 @@ class Test(unittest.TestCase):
         self.assertTrue(conv_flag)
 
         etotal = embed.etotal
-        self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
+        self.assertTrue(np.isclose(etotal, -552.93477389, atol = 1E-6))
 
         qepy.qepy_stop_run(0, what = 'no')
 

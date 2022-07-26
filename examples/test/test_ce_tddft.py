@@ -24,7 +24,7 @@ def test_0_scf():
         print('converged :\n', converged)
         print('energy :\n', energy)
     assert converged
-    assert np.isclose(energy, -552.93477389, rtol = 1E-6)
+    assert np.isclose(energy, -552.93477389, atol = 1E-6)
 
 def test_1_tddft_continue():
     # Run TDDFT
@@ -33,7 +33,7 @@ def test_1_tddft_continue():
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
         print('dipople:\n', dipole)
-    assert(abs(dipole[0, 0] - 0.56199)<1E-3)
+    assert np.isclose(dipole[0, 0], 0.56199, atol = 1E-3)
     driver.stop()
 
 def test_2_tddft_iterative():
@@ -43,7 +43,7 @@ def test_2_tddft_iterative():
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
         print('dipople:\n', dipole)
-    assert(abs(dipole[0, 0] - 0.54355)<1E-3)
+    assert np.isclose(dipole[0, 0], 0.54355, atol = 1E-3)
     driver.stop()
 
 def test_3_tddft_restart():
@@ -55,5 +55,5 @@ def test_3_tddft_restart():
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
         print('dipople:\n', dipole)
-    assert(abs(dipole[0, 0] - 0.56199)<1E-3)
+    assert np.isclose(dipole[0, 0], 0.56199, atol = 1E-3)
     driver.stop()

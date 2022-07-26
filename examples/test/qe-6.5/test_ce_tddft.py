@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
         self.assertTrue(conv_flag)
 
         etotal = qepy.ener.get_etot()
-        self.assertTrue(np.isclose(etotal, -552.93477389, rtol = 1E-6))
+        self.assertTrue(np.isclose(etotal, -552.93477389, atol = 1E-6))
 
         qepy.punch('all')
 
