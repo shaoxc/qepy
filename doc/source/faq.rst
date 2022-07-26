@@ -37,6 +37,16 @@ Why can’t I read the wavefunctions? Why does it hang?
 
 -  There are two different ways to store wavefunctions in QE, which is controls by PW parameter `wf_collect <http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68>`__.  In doubt, simply use one processor to read.
 
+Some f90wrap errors occur. What do I do?
+----------------------------------------
+
+  + *No module named f90wrap.__main__...*
+
+  Please try install the latest `f90wrap <https://github.com/jameskermode/f90wrap>`__ . e.g.
+
+   .. code:: shell
+
+    python -m pip install git+https://github.com/jameskermode/f90wrap.git@master
 
 Bugs
 ====
