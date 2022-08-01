@@ -38,6 +38,7 @@ CONTAINS
       REAL(DP), INTENT(IN), OPTIONAL  :: lattice(3,3)
       !
       INTEGER   :: iflag
+      LOGICAL :: lmovecell_
       !
       IF ( present(ikind) ) THEN
          iflag = ikind
@@ -46,16 +47,19 @@ CONTAINS
       ENDIF
       !
       IF ( present(lattice) ) THEN
-         lmovecell = .TRUE.
+         IF (.not. lmovecell) THEN
+            call errore("qepy_update_ions","lattice update only works for calculation= 'vc-relax' and 'vc-md'.",1)
+         ENDIF
+         lmovecell_ = .TRUE.
       ELSE
-         lmovecell = .FALSE.
+         lmovecell_ = .FALSE.
       ENDIF
 
       CALL update_file()
 
       IF ( ionode ) THEN
          tau(:,:)=pos(:,:) / alat
-         IF ( lmovecell ) THEN
+         IF ( lmovecell_ ) THEN
             !
             IF (ALLOCATED(embed%extpot)) DEALLOCATE(embed%extpot)
             !
@@ -74,7 +78,7 @@ CONTAINS
       !
       CALL mp_bcast( tau, ionode_id, intra_image_comm )
       !
-      IF ( lmovecell ) THEN
+      IF ( lmovecell_ ) THEN
          !
          CALL mp_bcast( at,        ionode_id, intra_image_comm )
          CALL mp_bcast( at_old,    ionode_id, intra_image_comm )

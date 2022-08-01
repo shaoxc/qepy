@@ -360,6 +360,8 @@ class Driver(metaclass = Logger) :
         positions = positions.T
         if lattice is not None :
             lattice = lattice.T
+            if not qepy.cellmd.get_lmovecell():
+                raise ValueError(" Lattice update only works for variable-cell simulations.\n Please restart the QEpy with calculation= 'vc-relax' or 'vc-md'")
             qepy.qepy_api.qepy_update_ions(self.embed, positions, update, lattice)
         else :
             qepy.qepy_api.qepy_update_ions(self.embed, positions, update)

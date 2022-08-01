@@ -144,6 +144,8 @@ class QEInput(object):
             QE options
         """
 
+        options = options or {}
+        qe_options = qe_options or {}
         keys = list(qe_options.keys())
 
         for k, v in options.items():
