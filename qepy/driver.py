@@ -465,7 +465,7 @@ class Driver(metaclass = Logger) :
         wfs = []
         for ibnd in band :
             qepy.qepy_mod.qepy_get_wf(kpt + 1, ibnd, wf)
-            wfs.append(wf)
+            wfs.append(wf.copy())
         return wfs
 
     def get_number_of_k_points(self):
