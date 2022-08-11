@@ -307,9 +307,5 @@ class QEpyCalculator(Calculator):
     @staticmethod
     def get_atoms_from_qepy():
         """Return the atom.Atoms from QE."""
-        from ase.atoms import Atoms
-        symbols = Driver.get_ions_symbols()
-        positions = Driver.get_ions_positions() * units['Bohr']
-        lattice = Driver.get_ions_lattice() * units['Bohr']
-        atoms = Atoms(symbols = symbols, positions = positions, cell = lattice)
+        atoms = Driver.get_ase_atoms()
         return atoms

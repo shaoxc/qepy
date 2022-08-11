@@ -3,6 +3,7 @@ import tempfile
 import qepy
 from qepy.core import Logger
 from qepy.io import QEInput
+from qepy import constants
 
 class Driver(metaclass = Logger) :
     """
@@ -425,7 +426,7 @@ class Driver(metaclass = Logger) :
         ityp = qepy.ions_base.get_array_ityp() - 1
         nat = qepy.ions_base.get_nat()
         ntyp = qepy.ions_base.get_nsp()
-        label = qepy.ions_base.get_array_atm().view('S3').T[:,0].astype('U3')[:ntyp]
+        label = qepy.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')[:ntyp]
         label = [x.strip() for x in label]
         symbols = []
         for i in range(nat):
@@ -668,3 +669,32 @@ class Driver(metaclass = Logger) :
         nr = np.zeros(3, dtype = 'int32')
         qepy.qepy_mod.qepy_get_grid(nr, gather)
         return nr
+
+    def data2field(self, data, cell = None, grid = None):
+        """QE data to dftpy DirectField"""
+        from dftpy.field import DirectField
+        from dftpy.grid import DirectGrid
+        #
+        if cell is None : cell = self.get_ions_lattice()
+        if grid is None : grid = DirectGrid(lattice=cell, nr=self.get_number_of_grid_points())
+        field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=self.get_number_of_spins())
+        return field
+
+    @classmethod
+    def get_ase_atoms(cls):
+        """Return the atom.Atoms from QE."""
+        from ase.atoms import Atoms
+        units_Bohr = constants.BOHR_RADIUS_SI * 1E10
+        #
+        symbols = cls.get_ions_symbols()
+        positions = cls.get_ions_positions() * units_Bohr
+        lattice = cls.get_ions_lattice() * units_Bohr
+        atoms = Atoms(symbols = symbols, positions = positions, cell = lattice)
+        return atoms
+
+    @classmethod
+    def get_dftpy_ions(cls):
+        """Return the dftpy.Ions from QE."""
+        from dftpy.ions import Ions
+        atoms = cls.get_ase_atoms()
+        return Ions.from_ase(atoms)

@@ -57,7 +57,7 @@ class MakeBuild(build_ext):
 
         if not os.path.exists(self.build_temp): os.makedirs(self.build_temp)
 
-        makefiles = list(pathlib.Path(topdir + '/qepy/').glob('*')) + \
+        makefiles = list(pathlib.Path(topdir + '/qepy/').glob('__*__.py')) + \
             list(pathlib.Path(topdir + '/install/').glob('*')) + \
             list(pathlib.Path(topdir + '/src/').glob('*'))
 
