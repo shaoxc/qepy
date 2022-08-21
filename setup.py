@@ -26,7 +26,8 @@ if 'mpi4py' in sys.modules :
     import mpi4py
     from ctypes.util import find_library
     try:
-        mpi4py.profile(find_library('mpi'), path = os.environ.get('LD_LIBRARY_PATH', '').split(':'))
+        mpilib = find_library('mpi') or find_library('mpifort')
+        mpi4py.profile(mpilib, path = os.environ.get('LD_LIBRARY_PATH', '').split(':'))
     except Exception :
         pass
 #End fix
