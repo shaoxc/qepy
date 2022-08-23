@@ -671,7 +671,7 @@ class Driver(metaclass = Logger) :
         return nr
 
     def data2field(self, data, cell = None, grid = None):
-        """QE data to dftpy DirectField"""
+        """QE data to dftpy DirectField, please call it in serial."""
         from dftpy.field import DirectField
         from dftpy.grid import DirectGrid
         #
@@ -679,6 +679,19 @@ class Driver(metaclass = Logger) :
         if grid is None : grid = DirectGrid(lattice=cell, nr=self.get_number_of_grid_points())
         field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=self.get_number_of_spins())
         return field
+
+    def field2data(self, field, data = None):
+        """dftpy DirectField to QE data, please call it in serial."""
+        nspin = self.get_number_of_spins()
+        if data is None :
+            nnrR = np.prod(self.get_number_of_grid_points())
+            data = np.empty((nnrR, nspin))
+        #
+        ns = field.shape[0] if field.ndim == 4 else 1
+        if ns == 1 : field = [field]
+        for i in range(nspin):
+            data[:, i] = field[i].ravel(order = 'F')
+        return data
 
     @classmethod
     def get_ase_atoms(cls):
