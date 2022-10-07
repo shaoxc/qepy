@@ -19,18 +19,25 @@ name = 'qepy'
 description = "QEPY: Quantum ESPRESSO Python interface",
 long_description = """ QEPY turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose."""
 
-fix_mpi4py = """#Fix the MPI_IN_PLACE
+fix_mpi4py = """# Fix the MPI_IN_PLACE and MKL
 import sys
+from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
 if 'mpi4py' in sys.modules :
-    import os
-    import mpi4py
-    from ctypes.util import find_library
+    if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
+        mpilib = util._get_soname(util._findLib_ld('mpi'))
+    else :
+        mpilib = None
+    mpilib = mpilib or util.find_library('mpi') or util.find_library('mpifort')
     try:
-        mpilib = find_library('mpi') or find_library('mpifort')
-        mpi4py.profile(mpilib, path = os.environ.get('LD_LIBRARY_PATH', '').split(':'))
+        CDLL(mpilib, RTLD_LOCAL | RTLD_GLOBAL)
     except Exception :
         pass
-#End fix
+try:
+    mkllib = util.find_library('mkl_rt')
+    CDLL(mkllib, RTLD_LOCAL | RTLD_GLOBAL)
+except Exception :
+    pass
+# End fix
 """
 
 
@@ -84,6 +91,8 @@ class MakeBuild(build_ext):
         os.chdir(cwd)
 
         env['PYTHON'] = sys.executable
+        if env.get('qedir', '').startswith('.') :
+            env['qedir'] = os.path.abspath(env['qedir'])
 
         if env.get('tddft', 'no').lower() == 'yes' :
             subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
