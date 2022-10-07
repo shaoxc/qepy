@@ -48,6 +48,16 @@ Some f90wrap errors occur. What do I do?
 
     python -m pip install git+https://github.com/jameskermode/f90wrap.git@master
 
+Signal: Segmentation fault...
+-----------------------------
+
+-  `QEpy` and `mpi4py` should installed with same compiler. If not, try reinstall the `mpi4py` by:
+
+   .. code:: shell
+
+    python -m pip install mpi4py --no-cache-dir
+
+
 Bugs
 ====
 

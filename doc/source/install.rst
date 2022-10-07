@@ -63,6 +63,23 @@ Installation
       qedir=${QE} oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
 
 
+Install on Ubuntu 20.04
+-------------------
+.. code:: shell
+
+  sudo apt-get update
+  sudo apt-get install --upgrade make git python3-dev python3-pip
+  sudo apt-get install --upgrade gcc gfortran libblas-dev liblapack-dev libopenmpi-dev libfftw3-dev
+  wget https://gitlab.com/QEF/q-e/-/archive/qe-6.5/q-e-qe-6.5.tar.gz
+  tar -xzvf q-e-qe-6.5.tar.gz
+  cd q-e-qe-6.5
+  ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90 --with-scalapack=no BLAS_LIBS='-lblas' LAPACK_LIBS='-llapack'
+  make pw -j 4
+  cd ..
+  git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
+  qedir=`pwd`/q-e-qe-6.5/ python -m pip install -U ./qepy
+
+
 
 Tips
 ====
@@ -95,7 +112,6 @@ Tips
    .. code:: shell
 
       pip install git+https://github.com/shaoxc/f90wrap.git
-
 
 
 .. note::
