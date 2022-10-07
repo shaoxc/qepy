@@ -84,9 +84,8 @@ Install on Ubuntu 20.04
 Tips
 ====
 
--  ``qedir`` should be the absolute path of ``QE``, which contains the
-   *make.inc* file. This can be omitted only when the *qepy* is under
-   the ``${QE}``.
+-  ``${QE}`` should be the absolute path of ``QE``, which contains the
+   *make.inc* file. This can not be omitted.
 
 -  If not clone the submodules in the beginning, can update through:
 
