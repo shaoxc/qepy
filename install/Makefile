@@ -114,13 +114,13 @@ ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
 .PHONY: serial mpi clean install help
 
 serial: ${F90WRAP_FILES}
+	CFLAGS='$(CFLAGS)' \
 	${PYTHON} -m f90wrap --f2py-f90wrap \
 		--fcompiler=$(FCOMPILER) --build-dir . \
 		-c --f90exec=$(F90) --f77exec=$(F90) \
-		--opt=-O2 \
 		--f90flags='${F2FLAGS}' \
 		-m _qepy ${F90WRAP_FILES} $(QEPY_OBJS) \
-		${QEMODS} ${QELIBS} -liomp5
+		${QEMODS} ${QELIBS}
 
 mpi: ${F90WRAP_FILES}
 	CFLAGS='$(CFLAGS)' \
