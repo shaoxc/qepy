@@ -24,12 +24,18 @@ Make sure to let us know about your developments!
 References
 ==========
 
-QEpy
-----
-.. literalinclude:: QEpy.bib
-    :lines: 1-7
+.. dropdown:: QEpy
+    :open:
 
-Quantum ESPRESSO
-================
-.. literalinclude:: QEpy.bib
-    :lines: 9-25
+    .. literalinclude:: QEpy.bib
+        :lines: 1-7
+
+.. dropdown:: Quantum ESPRESSO
+
+    .. literalinclude:: QEpy.bib
+        :lines: 9-25
+
+.. dropdown:: f90wrap
+
+    .. literalinclude:: QEpy.bib
+        :lines: 27-39

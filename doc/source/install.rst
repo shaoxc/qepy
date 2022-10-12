@@ -64,7 +64,7 @@ Installation
 
 
 Install on Ubuntu 20.04
--------------------
+-----------------------
 .. code:: shell
 
   sudo apt-get update
@@ -104,13 +104,6 @@ Tips
       which also can support other version of QE
       (e.g. `6.5 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.5>`__,
       `6.8-7.1 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.8>`__).
-
--  If you struggle with original f90wrap, try our own modified version
-   of f90wrap:
-
-   .. code:: shell
-
-      pip install git+https://github.com/shaoxc/f90wrap.git
 
 
 .. note::

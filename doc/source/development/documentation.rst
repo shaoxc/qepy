@@ -25,9 +25,13 @@ Installation::
 Extensions
 ----------
 
-nbsphinx--Jupyter Notebook Tools for Sphinx::
+    * *nbsphinx* : Jupyter Notebook Tools for Sphinx::
 
-    $ pip install nbsphinx --user
+        $ pip install nbsphinx --user
+
+    * *sphinx-panels* : creating panels in a grid layout or as drop-downs::
+
+        $ pip install sphinx-panels --user
 
 Pandoc
 ------

@@ -46,7 +46,7 @@ Some f90wrap errors occur. What do I do?
 
    .. code:: shell
 
-    python -m pip install git+https://github.com/jameskermode/f90wrap.git@master
+    python -m pip install --upgrade f90wrap
 
 Signal: Segmentation fault...
 -----------------------------
