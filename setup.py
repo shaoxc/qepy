@@ -17,7 +17,8 @@ with open('qepy/__init__.py') as fd :
 
 name = 'qepy'
 description = "QEPY: Quantum ESPRESSO Python interface",
-long_description = """ QEPY turns Quantum ESPRESSO (QE) into a DFT engine for embedding or for any other purpose."""
+with open('README.md') as fh :
+    long_description = fh.read()
 
 fix_mpi4py = """# Fix the MPI_IN_PLACE and MKL
 import sys
@@ -59,9 +60,11 @@ class MakeBuild(build_ext):
             nprocs = 4
         build_args += ['-j', str(nprocs)]
 
-        if os.path.exists(self.build_temp): shutil.rmtree(self.build_temp)
-        #remove *.so files
-        # for f in pathlib.Path(self.build_temp).glob('*.so'): os.remove(f)
+        if env.get('qepydev', False):
+            print("only remove *.so files", flush = True)
+            for f in pathlib.Path(self.build_temp).glob('*.so'): os.remove(f)
+        else :
+            if os.path.exists(self.build_temp): shutil.rmtree(self.build_temp)
 
         if not os.path.exists(self.build_temp): os.makedirs(self.build_temp)
 
@@ -91,8 +94,25 @@ class MakeBuild(build_ext):
         os.chdir(cwd)
 
         env['PYTHON'] = sys.executable
-        if env.get('qedir', '').startswith('.') :
-            env['qedir'] = os.path.abspath(env['qedir'])
+
+        # install the QE
+        qedir = env.get('qedir', '')
+        if not qedir :
+            qedir = self.build_temp + '/q-e'
+            qe_download = ["git", "clone", "-b", "qe-6.5", "--depth=1", "https://gitlab.com/QEF/q-e.git", qedir]
+            subprocess.check_call(qe_download, env = env)
+            if '-fPIC' not in env.get('CFLAGS', ''):
+                env['CFLAGS'] = '-fPIC ' + env.get('CFLAGS', '')
+            if '-fPIC' not in env.get('FFLAGS', ''):
+                env['FFLAGS'] = '-fPIC ' + env.get('FFLAGS', '')
+            if '-fPIC' not in env.get('try_foxflags', ''):
+                env['try_foxflags'] = '-fPIC ' + env.get('try_foxflags', '')
+            # blas and lapack
+            if 'BLAS_LIBS' not in env : env['BLAS_LIBS'] = '-lblas'
+            if 'LAPACK_LIBS' not in env : env['LAPACK_LIBS'] = '-llapack'
+            subprocess.check_call(["./configure"], cwd=qedir, env = env)
+            subprocess.check_call(["make", "pw"] + build_args, cwd=qedir, env = env)
+            env['qedir'] = os.path.abspath(qedir)
 
         if env.get('tddft', 'no').lower() == 'yes' :
             subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)

@@ -21,7 +21,7 @@ __author__ = "Pavanello Research Group"
 __contact__ = "m.pavanello@rutgers.edu"
 __version__ = "0.0.1"
 __license__ = "GPL"
-__date__ = "2021-09-30"
+__date__ = "2022-10-18"
 
 try:
     from importlib.metadata import version # python >= 3.8
