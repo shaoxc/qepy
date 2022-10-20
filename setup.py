@@ -110,8 +110,16 @@ class MakeBuild(build_ext):
             # blas and lapack
             if 'BLAS_LIBS' not in env : env['BLAS_LIBS'] = '-lblas'
             if 'LAPACK_LIBS' not in env : env['LAPACK_LIBS'] = '-llapack'
-            subprocess.check_call(["./configure"], cwd=qedir, env = env)
-            subprocess.check_call(["make", "pw"] + build_args, cwd=qedir, env = env)
+            qe_install_flags = env.get('QE_INSTALL_FLAGS', '').split('|')
+            print('env', env)
+            res = subprocess.run(["./configure"] + qe_install_flags, cwd=qedir, env = env, check=False, capture_output=True)
+            stderr=res.stderr.decode()
+            if 'error' in stderr:
+                print('Some errors happened in configure...')
+                subprocess.run(["cat", "install/config.log"], cwd=qedir, env = env, check = False)
+                print(stderr)
+                exit()
+            subprocess.check_call(["make", "pwlibs"] + build_args, cwd=qedir, env = env)
             env['qedir'] = os.path.abspath(qedir)
 
         if env.get('tddft', 'no').lower() == 'yes' :
@@ -155,7 +163,7 @@ if __name__ == "__main__":
             author_email=__contact__,
             license=__license__,
             long_description=long_description,
-            python_requires = '>=3.6',
+            python_requires = '>=3.7',
             install_requires=[
                 'setuptools_scm',
                 'numpy>=1.18.0',
