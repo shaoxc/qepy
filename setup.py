@@ -158,7 +158,7 @@ if __name__ == "__main__":
             url='https://gitlab.com/shaoxc/qepy',
             description=description,
             version=__version__,
-            use_scm_version={'version_scheme': 'post-release'},
+            # use_scm_version={'version_scheme': 'post-release'},
             author=__author__,
             author_email=__contact__,
             license=__license__,
