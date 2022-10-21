@@ -1,7 +1,7 @@
 # QEpy - Quantum ESPRESSO in Python
    `QEpy` turns Quantum ESPRESSO (QE) into a Python DFT engine for nonstandard workflows.
 
-   Check out a [YouTube video](https://www.youtube.com/watch?v=cWt0BVQs-_U) with additional information (installation and examples).
+   <!--Check out a [YouTube video](https://www.youtube.com/watch?v=cWt0BVQs-_U) with additional information (installation and examples).-->
 
 ## Contributors and funding
  - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
@@ -14,9 +14,9 @@
  - NSF for funding the Quantum-Multiscale collaboration
 
 ## Requirements
- - [Python](https://www.python.org/) (>=3.6)
+ - [Python](https://www.python.org/) (>=3.7)
  - [NumPy](https://docs.scipy.org/doc/numpy/reference/) (>=1.18.0)
- - [f90wrap](https://github.com/jameskermode/f90wrap) (latest)
+ - [f90wrap](https://github.com/jameskermode/f90wrap) (>=0.2.8)
  - [Quantum ESPRESSO ](https://gitlab.com/QEF/q-e/-/releases/qe-6.5) (=6.5)
  - Compiler ([GNU](https://gcc.gnu.org/fortran/)(Recommended) or [Intel](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html))
 
