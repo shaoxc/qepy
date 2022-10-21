@@ -188,7 +188,7 @@ SUBROUTINE qepy_forces(icalc, embed)
   !
   ! ... The SCF contribution
   !
-  if (.not. present(icalc) .or. icalc<1) then
+  if (calctype == 0) then
   CALL force_corr( forcescc )
   endif
   !
@@ -260,7 +260,7 @@ SUBROUTINE qepy_forces(icalc, embed)
         !
      END DO
      !
-     if (.not. present(icalc) .or. icalc<1) then
+     if (calctype == 0) then
      !TB
      IF ((gate.AND.relaxz).AND.(ipol==3)) WRITE( stdout, '("Total force in z direction = 0 disabled")')
      !
@@ -288,7 +288,7 @@ SUBROUTINE qepy_forces(icalc, embed)
   !
   ! ... resymmetrize (should not be needed, but ...)
   !
-  if (.not. present(icalc) .or. icalc<1) then
+  if (calctype == 0) then
   CALL symvector( nat, force )
   !
   IF ( remove_rigid_rot ) &
