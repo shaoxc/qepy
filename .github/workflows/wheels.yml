@@ -4,6 +4,8 @@ on:
   push:
     branches:    
       - github
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - github
@@ -17,7 +19,7 @@ jobs:
       matrix:
         buildplat:
         - [ubuntu-20.04, manylinux_x86_64]
-        - [macos-10.15, macosx_x86_64]
+        - [macos-11, macosx_x86_64]
         - [macos-12, macosx_arm64]
         python: ["cp37", "cp38", "cp39", "cp310"]
         exclude:
@@ -46,7 +48,7 @@ jobs:
             yum install -y blas-devel lapack-devel fftw-devel
 
       - name: Build wheels on macos
-        if: ${{ matrix.buildplat[0] == 'macos-10.15' }}
+        if: ${{ matrix.buildplat[0] == 'macos-11' }}
         uses: pypa/cibuildwheel@v2.9.0
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
