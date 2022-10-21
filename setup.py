@@ -180,9 +180,13 @@ if __name__ == "__main__":
             # include_package_data=True,
             cmdclass = {"build_ext" : MakeBuild},
             classifiers=[
-                'Development Status :: 1 - Beta',
+                'Development Status :: 3 - Alpha',
                 'Intended Audience :: Science/Research',
                 'Programming Language :: Python :: 3',
+                'Programming Language :: Python :: 3.7',
+                'Programming Language :: Python :: 3.8',
+                'Programming Language :: Python :: 3.9',
+                'Programming Language :: Python :: 3.10',
                 'Topic :: Scientific/Engineering :: Chemistry',
                 'Topic :: Scientific/Engineering :: Physics'
                 ],
