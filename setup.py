@@ -16,7 +16,7 @@ with open('qepy/__init__.py') as fd :
     __license__ = re.search('__license__ = "(.*)"', lines).group(1)
 
 name = 'qepy'
-description = "QEPY: Quantum ESPRESSO Python interface",
+description = "QEpy: Quantum ESPRESSO Python interface"
 with open('README.md') as fh :
     long_description = fh.read()
 
@@ -163,6 +163,7 @@ if __name__ == "__main__":
             author_email=__contact__,
             license=__license__,
             long_description=long_description,
+            long_description_content_type='text/markdown',
             python_requires = '>=3.7',
             install_requires=[
                 'setuptools_scm',
