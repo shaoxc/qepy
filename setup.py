@@ -21,7 +21,7 @@ with open('README.md') as fh :
     long_description = fh.read()
 
 fix_mpi4py = """# Fix the MPI_IN_PLACE and MKL
-import sys
+import sys, os
 from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
 if 'mpi4py' in sys.modules :
     if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
@@ -34,7 +34,10 @@ if 'mpi4py' in sys.modules :
     except Exception :
         pass
 try:
-    mkllib = util.find_library('mkl_rt')
+    if hasattr(util, '_findLib_ld'):
+        mkllib = os.path.basename(util._findLib_ld('mkl_rt'))
+    else :
+        mkllib = util.find_library('mkl_rt')
     CDLL(mkllib, RTLD_LOCAL | RTLD_GLOBAL)
 except Exception :
     pass
