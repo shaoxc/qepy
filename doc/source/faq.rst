@@ -77,9 +77,15 @@ Gfortran
 
       -  *Type mismatch between actual argument...*
 
-      Try to add ``-fallow-argument-mismatch`` to the variable **FFLAGS**.
-      For some versions of the MacOS, maybe also need add
-      ``-mmacosx-version-min=10.14`` to the **FFLAGS**.
+      Try to add ``-fallow-argument-mismatch`` to the variable **FFLAGS** (e.g. ``FFLAGS='-fPIC -fallow-argument-mismatch'``).
+
+   #. For some versions of the MacOS, maybe you will has error:
+
+      - *Illegal Instruction: 4...*
+
+      Try to add ``-mmacosx-version-min=10.14`` to the **FFLAGS**. 
+
+     
 
    #. For a few versions of BLAS library, will raise error:
 

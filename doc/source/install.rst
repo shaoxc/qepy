@@ -24,47 +24,37 @@ Optional (highly recommended):
 Installation
 ============
 
-1. QE
------
+Pip
+---
 
-   All libraries should be compiled with the ``-fPIC`` (position-independent code) compuiler
-   option. Add ``-fPIC`` to the configuration options. E.g.,
+Using pip can easy install the release version (serial) of QEpy from `PyPI <https://pypi.org/project/qepy>`_::
 
-   .. code:: shell
+    $ python -m pip install qepy
 
-      ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90
+.. note::
 
-   or intel compiler:
+    Install the QEpy using ``pip`` only support serial version. If want to run parallel version or use some custom features, please install ``QEpy`` from source.
 
-   .. code:: shell
-
-      ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpiifort
-
-   Then,
-
-   .. code:: shell
-
-      make pw
-
-2. QEpy
--------
-
-   Installation:
+Source
+------
+    
+You can download the ``QEpy`` source file from `gitlab <https://gitlab.com/shaoxc/qepy>`__.
 
    .. code:: shell
 
       git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-      qedir=${QE} python -m pip install -U ./qepy
+      python -m pip install -U ./qepy
    
-   or with all features:
+or with all features:
 
    .. code:: shell
 
-      qedir=${QE} oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
+      oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
 
 
-Install on Ubuntu 20.04
------------------------
+Example on Ubuntu 20.04
++++++++++++++++++++++++
+
 .. code:: shell
 
   sudo apt-get update
@@ -84,8 +74,8 @@ Install on Ubuntu 20.04
 Tips
 ====
 
--  ``${QE}`` should be the absolute path of ``QE``, which contains the
-   *make.inc* file. This can not be omitted.
+-  Environment variable ``qedir`` should be the absolute path of ``QE``, which contains the *make.inc* file.
+   If not set ``qedir``, the installation will download the QE code from gitlab and automatically compile it.
 
 -  If not clone the submodules in the beginning, can update through:
 
@@ -104,6 +94,23 @@ Tips
       which also can support other version of QE
       (e.g. `6.5 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.5>`__,
       `6.8-7.1 <https://gitlab.com/shaoxc/qepy/-/tree/master/examples/original/6.8>`__).
+
+Install the QE
+--------------
+
+   The ``QE`` should be compiled before ``QEpy`` with the ``-fPIC`` (position-independent code) compiler
+   option. Add ``-fPIC`` to the configuration options. E.g.,
+
+   .. code:: shell
+
+      ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90
+
+   Then,
+
+   .. code:: shell
+
+      make pw
+      export qedir=`pwd`
 
 
 .. note::
