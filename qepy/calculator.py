@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from qepy.driver import Driver
 from qepy.io import QEInput
 from qepy import constants
@@ -65,9 +66,10 @@ class QEpyCalculator(Calculator):
 
 
     .. note::
+         - if `from_file` is True, the qe_options will not use.
 
          - The bool `gather` parameter in functions means the data is gathered in root or distributed in all cpus.
-         - if `inputfile` is not None. The ase_espresso should be set. Which contains :
+         - if `ase_espresso` is set, will use ase module to write QE input file. `ase_espresso` contains :
 
              + input_data: dict
              + pseudopotentials: dict
@@ -83,15 +85,19 @@ class QEpyCalculator(Calculator):
 
     def __init__(self, atoms = None, inputfile = None, from_file = False, wrap = False, extrapolation = True,
             ase_espresso = None, qe_options = None, comm = None, ldescf = False, iterative = False,
-            task = 'scf', embed = None, prefix = None, outdir = None, logfile = None, **kwargs):
+            task = 'scf', embed = None, prefix = None, outdir = None, logfile = None, prog = 'pw', **kwargs):
         Calculator.__init__(self, atoms = atoms, **kwargs)
+        #
+        self.lstart = False
         self.optimizer = None
+        #
         self.atoms = atoms
         self.inputfile = inputfile
         self.wrap = wrap
         self.extrapolation = extrapolation
         self.from_file = from_file
         self.ase_espresso = ase_espresso
+        self.prog = prog
         self.qe_options = qe_options
         #
         if self.inputfile is not None and self.atoms is None :
@@ -103,7 +109,7 @@ class QEpyCalculator(Calculator):
             self.basefile = None
         else :
             self.basefile = self.inputfile
-            self.inputfile = 'input_tmp.in'
+            self.inputfile = 'qepy_input_tmp.in'
         #
         self.atoms_save = None
         self.driver = None
@@ -119,14 +125,46 @@ class QEpyCalculator(Calculator):
                 'logfile' : logfile,
                 }
         self.qepy_options.update(kwargs)
+        #
+        self.parameters['qe_options'] = qe_options
+        self.parameters['prog'] = prog
+        self.parameters['kpts'] = None
+        #
         self.restart()
 
-    def restart(self):
-        self._energy = None
-        self._forces = None
-        self._stress = None
+    def set_atoms(self, atoms):
+        atoms.pbc = [True, True, True]
+        self.atoms = atoms
 
-    def driver_initialise(self, atoms = None, prog = 'pw', **kwargs):
+    @property
+    def qe_options(self):
+        return self._qe_options
+
+    @qe_options.setter
+    def qe_options(self, value):
+        if value is not None :
+            # avoid changing the input value
+            value = deepcopy(value)
+        self._qe_options = value
+
+    def restart_driver(self, qe_options=None, inputfile=None, atoms=None):
+        if qe_options is not None :
+            self.from_file = False
+            self.qe_options = qe_options
+        if inputfile is not None :
+            self.from_file = True
+            self.inputfile = inputfile
+        if atoms is not None :
+            self.atoms_save = atoms.copy()
+            self.atoms = atoms
+        if self.lstart :
+            self.stop()
+        self.driver_initialise()
+
+    def restart(self):
+        self.results = {}
+
+    def driver_initialise(self, atoms = None, **kwargs):
         atoms = atoms or self.atoms
         if self.wrap : atoms.wrap()
         if not self.from_file :
@@ -134,8 +172,9 @@ class QEpyCalculator(Calculator):
                 ase.io.write(self.inputfile, atoms, format = 'espresso-in', **self.ase_espresso)
             else :
                 self.qeinput.write_qe_input(self.inputfile, atoms=atoms, basefile=self.basefile,
-                        qe_options=self.qe_options, prog=prog)
+                        qe_options=self.qe_options, prog=self.prog)
         self.driver = Driver(self.inputfile, **self.qepy_options)
+        self.lstart = True
 
     def update_atoms(self, atoms = None, **kwargs):
         atoms = atoms or self.atoms
@@ -194,7 +233,11 @@ class QEpyCalculator(Calculator):
 
     def stop(self, what = 'all', **kwargs):
         """See :func:`qepy.driver.Driver.stop`"""
-        return self.driver.stop(what = 'all', **kwargs)
+        if not self.lstart :
+            pass
+        else :
+            self.lstart = False
+            return self.driver.stop(what = 'all', **kwargs)
 
     @property
     def is_root(self):
@@ -224,6 +267,80 @@ class QEpyCalculator(Calculator):
             self._forces = self.driver.get_forces(icalc=icalc)* units['Ry'] / units['Bohr']
         return self._forces
 
+    def get_dos(self, qe_options = None, spin = None, inputfile = None, **kwargs):
+        """ calculate density of states (DOS) and return the tuple (energies, dos)
+
+        Parameters
+        ----------
+        qe_options : dict
+            A dictionary with input parameters for QE to generate QE input file.
+        spin : int
+
+              - None : total DOS
+              - 0 : up
+              - 1 : down
+
+        inputfile : str
+            Directly use the inputfile to run the QE calculation.
+        """
+        if qe_options or inputfile :
+            if qe_options is not None :
+                qe_options = deepcopy(qe_options)
+                qe_options_dos = {
+                        '&control' : {'calculation': "'nscf'"},
+                        '&system' : {'occupations': "'tetrahedra'"},
+                        }
+                qe_options = QEInput.update_options(options=qe_options_dos, qe_options=qe_options)
+            self.restart_driver(qe_options=qe_options, inputfile=inputfile)
+            self.driver.non_scf()
+
+        from ase.dft.dos import DOS
+        dos = DOS(self, **kwargs)
+        energies = dos.get_energies()
+        dos = dos.get_dos(spin=spin)
+        return energies, dos
+
+    def get_band_structure(self, qe_options = None, kpts = None, reference = None, inputfile = None, **kwargs):
+        """ calculate band structure and return ase BandStructure.
+
+        Parameters
+        ----------
+        qe_options : dict
+            A dictionary with input parameters for QE to generate QE input file.
+        kpts : ase.dft.kpoints.bandpath
+            A band path
+        reference : float
+            Fermi level which should come from the SCF or DOS calculation.
+            If not set, will try to use previous calculation instead of band structure calculation.
+        inputfile : str
+            Directly use the inputfile to run the QE calculation.
+        """
+        from ase.calculators.calculator import kpts2ndarray
+        from ase.spectrum.band_structure import get_band_structure
+
+        if reference is None and self.lstart :
+            reference = self.get_fermi_level()
+
+        if qe_options is not None and kpts is not None :
+            qe_options = deepcopy(qe_options)
+            kpoints = []
+            kgrid = kpts2ndarray(kpts, atoms=self.atoms)
+            kpoints.append(len(kgrid))
+            w = 1.0/len(kgrid)
+            for k in kgrid:
+                kpoints.append(f'{k[0]:.10f} {k[1]:.10f} {k[2]:.10f} {w}')
+            qe_options_bands = {
+                    '&control' : {'calculation': "'bands'"},
+                    'k_points crystal_b' : kpoints
+                    }
+            qe_options = QEInput.update_options(options=qe_options_bands, qe_options=qe_options)
+
+        self.restart_driver(qe_options=qe_options, inputfile=inputfile)
+        self.driver.non_scf()
+
+        band = get_band_structure(calc = self, path = kpts, reference=reference)
+        return band
+
     def get_stress(self, atoms = None):
         """Return the stress tensor in the Voigt order (xx, yy, zz, yz, xz, xy)"""
         if self.update_optimizer(atoms) or self._stress is None:
@@ -244,6 +361,9 @@ class QEpyCalculator(Calculator):
     def get_bz_k_points(self):
         """See :func:`qepy.driver.Driver.get_bz_k_points`"""
         return self.driver.get_bz_k_points()
+
+    def get_bz_to_ibz_map(self):
+        return None
 
     def get_number_of_spins(self):
         """See :func:`qepy.driver.Driver.get_number_of_spins`"""
@@ -276,7 +396,7 @@ class QEpyCalculator(Calculator):
 
     def get_eigenvalues(self, kpt=0, spin=0):
         """See :func:`qepy.driver.Driver.get_eigenvalues`"""
-        return self.driver.get_eigenvalues(kpt=kpt, spin=spin)
+        return self.driver.get_eigenvalues(kpt=kpt, spin=spin) * units['Ry']
 
     def get_occupation_numbers(self, kpt=0, spin=0):
         """See :func:`qepy.driver.Driver.get_occupation_numbers`"""

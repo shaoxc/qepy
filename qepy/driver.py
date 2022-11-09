@@ -254,6 +254,16 @@ class Driver(metaclass = Logger) :
             qepy.qepy_electrons_scf(print_level, 0, self.embed)
         return self.embed.etotal
 
+    def non_scf(self, **kwargs):
+        # fix some saved variables from last scf calculations
+        qepy.control_flags.set_lscf(0)
+        qepy.control_flags.set_lbfgs(0)
+        qepy.control_flags.set_lmd(0)
+        qepy.control_flags.set_lwf(0)
+        #
+        qepy.non_scf()
+        return qepy.ener.get_etot()
+
     def electrons(self, **kwargs):
         qepy.electrons()
         return qepy.ener.get_etot()
@@ -600,7 +610,8 @@ class Driver(metaclass = Logger) :
         """Return k-points in the irreducible part of the Brillouin zone.
 
         The coordinates are relative to reciprocal latice vectors."""
-        return qepy.klist.get_array_xk()[:, :self.get_number_of_k_points()]
+        xk = qepy.klist.get_array_xk()[:, :self.get_number_of_k_points()].T
+        return xk @ qepy.cell_base.get_array_at()
 
     def get_k_point_weights(self):
         """Weights of the k-points.

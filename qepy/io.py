@@ -82,7 +82,7 @@ class QEInput(object):
                 key = ' '.join(l)
                 fh.write(key + '\n')
                 for v in value :
-                    fh.write(v + '\n')
+                    fh.write(str(v) + '\n')
                 fh.write('\n')
 
         if not hasattr(filename, 'write'): fh.close()

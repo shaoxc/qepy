@@ -12,7 +12,7 @@ PW_SOURCES = pwcom.f90 scf_mod.f90 read_file_new.f90 punch.f90 \
 			 atomic_wfc_mod.f90 close_files.f90 stress.f90 electrons.f90 \
 			 scale_h.f90 pw2casino.f90 forces.f90 update_pot.f90 move_ions.f90 \
 			 add_qexsd_step.f90 hinit1.f90 run_pwscf.f90 stop_run.f90 \
-			 sum_band.f90
+			 sum_band.f90 non_scf.f90
 PW_FILES = $(addprefix ${QEDIR}/PW/src/,${PW_SOURCES})
 
 LAXLIB_SOURCES = mp_diag.f90 la_helper.f90
