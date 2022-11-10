@@ -244,12 +244,15 @@ class Driver(metaclass = Logger) :
         else :
             return qepy.control_flags.get_n_scf_steps()
 
-    def scf(self, print_level = 2, maxiter = None, **kwargs):
+    def scf(self, print_level = 2, maxiter = None, original = False, **kwargs):
         """Run the scf/tddft until converged or maximum number of iterations"""
         if maxiter is not None and not self.embed.iterative :
             qepy.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
             qepy.qepy_molecule_optical_absorption(self.embed)
+        if not self.embed.iterative and self.embed.exttype < 2 :
+            # Use electrons to support hybrid xc functional
+            return self.electrons(original=original)
         else :
             qepy.qepy_electrons_scf(print_level, 0, self.embed)
         return self.embed.etotal
@@ -264,8 +267,11 @@ class Driver(metaclass = Logger) :
         qepy.non_scf()
         return qepy.ener.get_etot()
 
-    def electrons(self, **kwargs):
-        qepy.electrons()
+    def electrons(self, original = False, **kwargs):
+        if original :
+            qepy.electrons()
+        else :
+            qepy.qepy_electrons(self.embed)
         return qepy.ener.get_etot()
 
     def end_scf(self, **kwargs):
