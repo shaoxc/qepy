@@ -484,7 +484,8 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !qepy <-- add descf
   TYPE(scf_type),save :: rho_prev
   !! save the last step unmix density for descf
-  !
+  REAL(DP) :: extene = 0.0_DP
+  !! external energy
   LOGICAL :: add_descf
   !! add the descf to the total energy for last step
   !
@@ -998,23 +999,26 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
      !
      !qepy --> add extene
      hwf_energy = hwf_energy + plugin_etot
-     IF (abs(embed%extene)<1.D-15) THEN
+     extene = embed%extene
+     IF (abs(extene)<1.D-15) THEN
         IF (ALLOCATED(embed%extpot)) THEN
-           embed%extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+           extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+        ELSE
+           extene = 0.0_DP
         ENDIF
 #if defined(__MPI)
-        CALL mp_sum( embed%extene,  intra_bgrp_comm )
+        CALL mp_sum( extene,  intra_bgrp_comm )
 #endif
-        etot = etot + embed%extene
-        hwf_energy = hwf_energy + embed%extene
-        embed%extene = 0.d0
-     ELSE
-        etot = etot + embed%extene
-        hwf_energy = hwf_energy + embed%extene
      ENDIF
+     etot = etot + extene
+     hwf_energy = hwf_energy + extene
      !qepy <-- add extene
      !
      CALL print_energies ( printout )
+     IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
+        IF (abs(extene)>1.D-15) WRITE ( stdout , '(A,F17.8,A)') &
+           '     external contribution     =',extene,' Ry'
+     ENDIF
      !call qepy_calc_energies(etot, exttype)
      embed%etotal=etot
      embed%dnorm = dr2

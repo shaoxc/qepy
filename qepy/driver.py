@@ -1,7 +1,7 @@
 import numpy as np
 import tempfile
 import qepy
-from qepy.core import Logger
+from qepy.core import Logger, env
 from qepy.io import QEInput
 from qepy import constants
 
@@ -68,6 +68,10 @@ class Driver(metaclass = Logger) :
              qe_options = None, prog = 'pw', **kwargs):
         if embed is None :
             embed = qepy.qepy_common.embed_base()
+        # stop the last driver and save new driver
+        if hasattr(env['DRIVER'], 'stop'): env['DRIVER'].stop()
+        env['DRIVER'] = self
+        #
         self.task = task
         self.embed = embed
         self.comm = comm
@@ -292,6 +296,9 @@ class Driver(metaclass = Logger) :
         what : str
              see :func:`qepy.driver.Driver.save`.
         """
+        #
+        env['DRIVER'] = None
+        #
         if self.task == 'optical' :
             self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
@@ -686,6 +693,11 @@ class Driver(metaclass = Logger) :
         nr = np.zeros(3, dtype = 'int32')
         qepy.qepy_mod.qepy_get_grid(nr, gather)
         return nr
+    #ASE DFTCalculator END
+
+    def get_volume(self):
+        """Return the volume."""
+        return qepy.cell_base.get_omega()
 
     def data2field(self, data, cell = None, grid = None):
         """QE data to dftpy DirectField, please call it in serial."""

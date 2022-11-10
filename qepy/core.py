@@ -1,4 +1,5 @@
 import os
+import sys
 import types
 from functools import wraps
 
@@ -50,3 +51,9 @@ def stdout2file(fileobj = None):
             return results
         return wrapper
     return decorator
+
+
+env = {
+    'STDOUT' : sys.stdout,  # file descriptor of sprint
+    'DRIVER' : None, # save the instance of driver class
+}
