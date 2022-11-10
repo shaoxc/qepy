@@ -31,7 +31,7 @@ class Test(unittest.TestCase):
 
     def test_1_read(self):
         inputobj = qepy.qepy_common.input_base()
-        inputobj.prefix = 'al'
+        inputobj.prefix = 'tmp'
         if commf : inputobj.my_world_comm = commf
 
         qepy.qepy_initial(inputobj)

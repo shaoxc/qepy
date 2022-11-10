@@ -10,8 +10,8 @@ oldxml = False # oldxml version QE
 
 inputobj = qepy.qepy_common.input_base()
 #-----------------------------------------------------------------------
-inputobj.prefix = 'al'
-# inputobj.tmp_dir = './al.wfx/'
+inputobj.prefix = 'tmp'
+# inputobj.tmp_dir = './tmp.wfx/'
 #-----------------------------------------------------------------------
 if comm : inputobj.my_world_comm = comm
 qepy.qepy_initial(inputobj)

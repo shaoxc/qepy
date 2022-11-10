@@ -1,11 +1,8 @@
 &control
     calculation = 'scf'
-    restart_mode = 'from_scratch'
-    prefix = 'al'
+    prefix = 'tmp'
     tprnfor = .true.
     tstress = .true.
-!   verbosity = 'high'
-!   iprint = 1
     pseudo_dir = './DATA/'
 /
 &system
@@ -45,7 +42,7 @@ K_POINTS (automatic)
 
 &inputtddft
     job            = 'optical'
-    prefix         = 'al'
+    prefix         = 'tmp'
     tmp_dir        = './'
     dt             = 1.0
     nstep          = 10

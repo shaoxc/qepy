@@ -7,7 +7,7 @@ except Exception:
     comm = None
 
 def main():
-    driver = Driver(comm = comm, prefix = 'al', task = 'nscf')
+    driver = Driver(comm = comm, prefix = 'tmp', task = 'nscf')
     #
     energy = driver.get_energy()
     if driver.is_root :

@@ -9,6 +9,8 @@ __pycache__/
 dist/
 build/
 *.save/
+tmp*
 log*
+tags
 dev/
 bak/

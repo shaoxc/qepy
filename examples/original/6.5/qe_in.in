@@ -1,11 +1,9 @@
 &control
     calculation = 'scf'
     restart_mode = 'from_scratch'
-    prefix = 'al'
+    prefix = 'tmp'
     tprnfor = .true.
     tstress = .true.
-!   verbosity = 'high'
-!   iprint = 1
     pseudo_dir = './'
 	disk_io = 'none'
 /

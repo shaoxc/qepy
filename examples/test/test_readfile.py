@@ -21,7 +21,7 @@ def test_0_scf():
     driver.stop()
 
 def test_1_read():
-    driver = Driver(comm = comm, prefix = 'al', task = 'nscf')
+    driver = Driver(comm = comm, prefix = 'tmp', task = 'nscf')
     energy = driver.get_energy()
     if driver.is_root :
         print('energy :\n', energy)

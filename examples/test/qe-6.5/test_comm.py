@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
     def test_initial_comm(self):
         return # read_file take some time
         inputobj = qepy.qepy_common.input_base()
-        inputobj.prefix = 'al'
+        inputobj.prefix = 'tmp'
         if commf : inputobj.my_world_comm = commf
         for i in range(50000): # Error happened ~16000
             # qepy.qepy_mod.qepy_set_stdout('/dev/null')
