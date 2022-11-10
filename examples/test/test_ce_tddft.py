@@ -27,8 +27,8 @@ def test_0_scf():
     assert np.isclose(energy, -552.93477389, atol = 1E-6)
 
 def test_1_tddft_continue():
-    # Run TDDFT
-    driver = Driver(inputfile, comm, task = 'optical')
+    # Run TDDFT after scf, without stop
+    driver = Driver(inputfile, comm, task = 'optical', progress = True)
     driver.scf()
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
@@ -37,6 +37,7 @@ def test_1_tddft_continue():
     driver.stop()
 
 def test_2_tddft_iterative():
+    # Run TDDFT
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
     for i in range(5):
         driver.diagonalize()

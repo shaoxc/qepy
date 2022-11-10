@@ -41,9 +41,12 @@ class Driver(metaclass = Logger) :
 
     outdir : str
         The output directory of QE
-    qe_options: dict
+    qe_options : dict
         A dictionary with input parameters for QE to generate QE input file.
-
+    prog : str
+        The name of QE program, default is `pw` which is pw.x in QE.
+    progress : bool
+        If True, will continue run the QE without clean the workspace, most times used for TDDFT after scf.
     kwargs : dict
         Other options
 
@@ -65,13 +68,9 @@ class Driver(metaclass = Logger) :
 
     def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
-             qe_options = None, prog = 'pw', **kwargs):
+             qe_options = None, prog = 'pw', progress = False, **kwargs):
         if embed is None :
             embed = qepy.qepy_common.embed_base()
-        # stop the last driver and save new driver
-        if hasattr(env['DRIVER'], 'stop'): env['DRIVER'].stop()
-        env['DRIVER'] = self
-        #
         self.task = task
         self.embed = embed
         self.comm = comm
@@ -82,6 +81,7 @@ class Driver(metaclass = Logger) :
         self.logfile = logfile
         self.qe_options = qe_options
         self.prog = prog
+        self.progress = progress
         #
         self.embed.ldescf = ldescf
         #
@@ -148,6 +148,11 @@ class Driver(metaclass = Logger) :
             A dictionary with input parameters for QE to generate QE input file.
 
         """
+        # stop the last driver and save new driver
+        if not self.progress :
+            if hasattr(env['DRIVER'], 'stop'): env['DRIVER'].stop()
+            env['DRIVER'] = self
+        #
         inputfile=self.inputfile
         commf=self.commf
         task=self.task
@@ -192,10 +197,10 @@ class Driver(metaclass = Logger) :
         if commf is None : commf = self.commf
         if embed is None : embed = self.embed
         #
-        try :
+        if self.progress :
             qepy.wvfct.get_array_g2kin()
             qepy.qepy_tddft_readin(inputfile)
-        except Exception :
+        else :
             qepy.qepy_tddft_main_initial(inputfile, commf)
             qepy.read_file()
         qepy.qepy_tddft_main_setup(embed)
@@ -254,7 +259,7 @@ class Driver(metaclass = Logger) :
             qepy.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
             qepy.qepy_molecule_optical_absorption(self.embed)
-        if not self.embed.iterative and self.embed.exttype < 2 :
+        elif not self.embed.iterative and self.embed.exttype < 2 :
             # Use electrons to support hybrid xc functional
             return self.electrons(original=original)
         else :
