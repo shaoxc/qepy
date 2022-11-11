@@ -49,6 +49,7 @@ CONTAINS
       IF ( present(lattice) ) THEN
          IF (.not. lmovecell) THEN
             call errore("qepy_update_ions","lattice update only works for calculation= 'vc-relax' and 'vc-md'.",1)
+            ! This is due to the `gshells` function in the initialization will set `ngl`, which is one of the shape of `vloc`.
          ENDIF
          lmovecell_ = .TRUE.
       ELSE
