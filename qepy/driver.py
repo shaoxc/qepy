@@ -537,6 +537,10 @@ class Driver(metaclass = Logger) :
             self.embed.extene = extene
         else :
             self.embed.extene = 0.0
+        #
+        if potential is None : potential = np.zeros((1, 1))
+        if potential.ndim != 2 : raise ValueError("The array should be 2-d.")
+        #
         qepy.qepy_mod.qepy_set_extpot(self.embed, potential, gather = gather)
 
     def get_output(self):
@@ -745,3 +749,11 @@ class Driver(metaclass = Logger) :
         from dftpy.ions import Ions
         atoms = cls.get_ase_atoms()
         return Ions.from_ase(atoms)
+
+    def set_density(self, density, gather = True, **kwargs):
+        """Set density array in real space."""
+        #
+        if density is None : density = np.zeros((1, 1))
+        if density.ndim != 2 : raise ValueError("The array should be 2-d.")
+        #
+        qepy.qepy_mod.qepy_set_rho(density, gather = gather)
