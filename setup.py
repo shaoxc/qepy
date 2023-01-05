@@ -170,6 +170,7 @@ if __name__ == "__main__":
             python_requires = '>=3.7',
             install_requires=[
                 'setuptools_scm',
+                'setuptools<=59.8.0',
                 'numpy>=1.18.0',
                 'f90wrap>=0.2.8',
                 'importlib-metadata>=0.12;python_version<"3.8"'
