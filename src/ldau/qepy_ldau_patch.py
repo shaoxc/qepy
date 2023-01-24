@@ -17,6 +17,7 @@ def conf2array(confs):
             econf=vv[1]
         else:
             econf=v
+        if not occ : occ = 1
         data.append((k.capitalize(), econf.strip(), (n, l, occ)))
     occs = np.array(data, dtype=nlocc)
     return occs
