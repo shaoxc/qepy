@@ -487,7 +487,7 @@ class Driver(metaclass = Logger) :
         else :
             wf = np.empty(1, order = 'F', dtype = np.complex128)
         if band is None :
-            band = np.arange(self.get_number_of_bands)
+            band = np.arange(self.get_number_of_bands())
         else :
             band = np.asarray(band)
             if band.ndim == 0 : band = [band]

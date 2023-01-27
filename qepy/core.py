@@ -29,6 +29,7 @@ class Logger(type):
             results = function(*args, **kwargs)
             if stdout is not None :
                 os.dup2(stdout, 1)
+                os.close(stdout)
             return results
         return wrapper
 
@@ -48,6 +49,7 @@ def stdout2file(fileobj = None):
             results = function(*args, **kwargs)
             if stdout is not None :
                 os.dup2(stdout, 1)
+                os.close(stdout)
             return results
         return wrapper
     return decorator
