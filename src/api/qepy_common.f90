@@ -26,9 +26,42 @@ MODULE qepy_common
       real(kind=dp), allocatable      :: dipole(:,:)
    end type tddft_base
    !
+   type, public :: energies_base
+      real(kind=dp)                   :: etot           !'Total energy'
+      real(kind=dp)                   :: ek             !'Kinetic energy'
+      real(kind=dp)                   :: eloc           !'Local energy'
+      real(kind=dp)                   :: enl            !'Non-Local energy'
+      real(kind=dp)                   :: ewld           !'Ewald energy'
+      real(kind=dp)                   :: exc            !'xc contribution'
+      real(kind=dp)                   :: ehart          !'hartree energy'
+      real(kind=dp)                   :: fock2          !'EXX energy'
+      real(kind=dp)                   :: demet          !'Smearing (-TS)'
+      real(kind=dp)                   :: elondon        !'Dispersion Correction'
+      real(kind=dp)                   :: edftd3         !'DFT-D3 Dispersion'
+      real(kind=dp)                   :: exdm           !'Dispersion XDM Correction'
+      real(kind=dp)                   :: etsvdw         !'Dispersion T-S Correction'
+      real(kind=dp)                   :: eext           !'External forces energy'
+      real(kind=dp)                   :: etotefield     !'electric field correction'
+      real(kind=dp)                   :: etotgatefield  !'gate field correction'
+      real(kind=dp)                   :: eth            !'Hubbard energy'
+      real(kind=dp)                   :: epaw           !'one-center paw contrib.'
+      real(kind=dp)                   :: ept            !'potentiostat contribution'
+      !
+      real(kind=dp)                   :: extene         !'External energy0'
+      ! some energies details -->
+      real(kind=dp)                   :: etxc           ! the exchange and correlation energy
+      real(kind=dp)                   :: etxcc          ! the nlcc exchange and correlation
+      real(kind=dp)                   :: paw_ehart_ae   !'PAW hartree energy AE'
+      real(kind=dp)                   :: paw_ehart_ps   !'PAW hartree energy PS'
+      real(kind=dp)                   :: paw_exc_ae     !'PAW xc energy AE'
+      real(kind=dp)                   :: paw_exc_ps     !'PAW xc energy PS'
+      ! <--
+   end type energies_base
+   !
    type, public :: embed_base
       type(input_base)                :: input
       type(tddft_base)                :: tddft
+      type(energies_base)             :: energies
       real(kind=dp), allocatable      :: extpot(:,:)
       real(kind=dp)                   :: extene = 0.0
       integer                         :: exttype = 0

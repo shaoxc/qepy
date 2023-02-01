@@ -2,6 +2,7 @@ MODULE qepy_mod
    USE kinds,                   ONLY : DP
    USE qepy_scatter_mod,        ONLY : gather_grid, scatter_grid
    USE qepy_common,             ONLY : embed_base, input_base
+   USE fft_base,                ONLY : dfftp
    !
    IMPLICIT NONE
    PUBLIC
@@ -12,6 +13,10 @@ MODULE qepy_mod
    !
    INTERFACE mp_scatter
       MODULE PROCEDURE mp_scatter_real, mp_scatter_complex
+   END INTERFACE
+   !
+   INTERFACE qepy_get_value
+      MODULE PROCEDURE qepy_get_value_real_1, qepy_get_value_real_2
    END INTERFACE
    !
 CONTAINS
@@ -76,6 +81,59 @@ CONTAINS
       ENDIF
    END SUBROUTINE
 
+   SUBROUTINE qepy_get_value_real_1(fin, fout, gather, scatter)
+      USE kinds,                ONLY : DP
+      USE fft_base,             ONLY : dfftp
+      !
+      IMPLICIT NONE
+      real(DP), INTENT(IN)        :: fin(:)
+      real(DP), INTENT(OUT)       :: fout(:)
+      LOGICAL,INTENT(in),OPTIONAL :: gather
+      LOGICAL,INTENT(in),OPTIONAL :: scatter
+      !
+      INTEGER                     :: nnr
+      LOGICAL                     :: gather_ = .FALSE.
+      LOGICAL                     :: scatter_ = .FALSE.
+      !
+      IF ( present(gather) ) gather_ = gather
+      IF ( present(scatter) ) scatter_ = scatter
+      !
+      IF ( gather ) THEN
+         CALL mp_gather(fin, fout)
+      ELSE IF ( scatter ) THEN
+         CALL mp_scatter(fin, fout)
+      ELSE
+         !nnr = dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
+         nnr = size(fin)
+         fout(1:nnr) = fin
+         fout(nnr:size(fout)) = 0.0_DP
+      ENDIF
+      !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_get_value_real_2(fin, fout, gather, scatter)
+      USE kinds,                ONLY : DP
+      !
+      IMPLICIT NONE
+      real(DP), INTENT(IN)        :: fin(:,:)
+      real(DP), INTENT(OUT)       :: fout(:,:)
+      LOGICAL,INTENT(in),OPTIONAL :: gather
+      LOGICAL,INTENT(in),OPTIONAL :: scatter
+      !
+      INTEGER                     :: ispin, nspin
+      LOGICAL                     :: gather_ = .FALSE.
+      LOGICAL                     :: scatter_ = .FALSE.
+      !
+      IF ( present(gather) ) gather_ = gather
+      IF ( present(scatter) ) scatter_ = scatter
+      !
+      nspin = size(fin, 2)
+      DO ispin = 1, nspin
+         call qepy_get_value_real_1(fin(:, ispin), fout(:, ispin), gather_, scatter_)
+      END DO
+      !
+   END SUBROUTINE
+
    SUBROUTINE qepy_get_rho(rhor, gather)
       USE kinds,                ONLY : DP
       use scf,                  ONLY : rho, rhoz_or_updw
@@ -86,24 +144,14 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      INTEGER :: ispin, nnr
-      LOGICAL :: mflag
+      LOGICAL :: gather_ = .true.
       !
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
+      IF ( present(gather) ) gather_ = gather
       !
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->updw' )
-      DO ispin = 1, nspin
-         IF ( mflag ) THEN
-            CALL mp_gather(rho%of_r(:,ispin), rhor(:,ispin))
-         ELSE
-            nnr=dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
-            rhor(1:nnr,ispin) = rho%of_r(1:nnr,ispin)
-         ENDIF
-      END DO
+      !
+      call qepy_get_value(rho%of_r, rhor, gather = gather_)
+      !
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
    END SUBROUTINE
 
@@ -118,25 +166,14 @@ CONTAINS
       REAL(DP), INTENT(IN) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      INTEGER :: ispin, nnr
-      LOGICAL :: mflag
+      LOGICAL :: gather_ = .true.
       !
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
+      IF ( present(gather) ) gather_ = gather
       !
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->updw' )
-      DO ispin = 1, nspin
-         IF ( mflag ) THEN
-            CALL mp_scatter(rhor(:,ispin), rho%of_r(:,ispin))
-         ELSE
-            nnr=dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
-            rho%of_r(1:nnr,ispin) = rhor(1:nnr,ispin)
-            rho%of_r(nnr:dfftp%nnr,ispin) = 0.0_DP
-         ENDIF
-      END DO
+      !
+      call qepy_get_value(rhor, rho%of_r, scatter = gather_)
+      !
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
       CALL rho_r2g(dfftp, rho%of_r, rho%of_g )
    END SUBROUTINE
@@ -149,18 +186,12 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      LOGICAL :: mflag
+      LOGICAL :: gather_ = .true.
       !
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
-      IF ( mflag ) THEN
-         CALL mp_gather(rho_core, rhoc)
-      ELSE
-         rhoc = rho_core(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p)
-      ENDIF
+      IF ( present(gather) ) gather_ = gather
+      !
+      call qepy_get_value(rho_core, rhoc, gather = gather_)
+      !
    END SUBROUTINE
 
    SUBROUTINE qepy_set_rho_core(rhoc, gather)
@@ -171,19 +202,12 @@ CONTAINS
       REAL(DP), INTENT(IN) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      LOGICAL :: mflag
+      LOGICAL :: gather_ = .true.
       !
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
-      IF ( mflag ) THEN
-         CALL mp_scatter(rhoc, rho_core)
-      ELSE
-         rho_core(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p) = rhoc
-         rho_core(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr) = 0.0_DP
-      ENDIF
+      IF ( present(gather) ) gather_ = gather
+      !
+      call qepy_get_value(rhoc, rho_core, scatter = gather_)
+      !
    END SUBROUTINE
 
    SUBROUTINE qepy_set_extpot(embed, vin, gather)
@@ -199,27 +223,17 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: ispin, ns
-      LOGICAL :: mflag
+      LOGICAL :: gather_ = .true.
       !
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
+      IF ( present(gather) ) gather_ = gather
       !
       call embed%allocate_extpot()
       !
       ns = size(vin,2)
       CALL mp_bcast(ns, dfftp%root, dfftp%comm)
       !
-      DO ispin = 1, ns
-         IF ( mflag ) THEN
-            CALL mp_scatter(vin(:,ispin), embed%extpot(:,ispin))
-         ELSE
-            embed%extpot(1:dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p, ispin) = vin(:,ispin)
-            embed%extpot(dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p+1:dfftp%nnr, ispin) = 0.0_DP
-         ENDIF
-      END DO
+      call qepy_get_value(vin(:,1:ns), embed%extpot(:,1:ns), scatter = gather_)
+      !
       DO ispin = ns+1, nspin
          embed%extpot(:,ispin) = embed%extpot(:,1)
       END DO
@@ -234,7 +248,6 @@ CONTAINS
       INTEGER,INTENT(OUT),OPTIONAL :: nr(3)
       LOGICAL,INTENT(in),OPTIONAL  :: gather
       !
-      LOGICAL                      :: mflag
       INTEGER                      :: nrw(3)
       !
       IF ( present(gather) ) THEN
@@ -254,15 +267,12 @@ CONTAINS
       TYPE(fft_type_descriptor),INTENT(IN) :: dfft
       LOGICAL,INTENT(in),OPTIONAL          :: gather
       !
-      LOGICAL                              :: mflag
+      LOGICAL                              :: gather_ = .true.
       INTEGER                              :: nrw(3)
       !
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
-      IF ( mflag ) THEN
+      IF ( present(gather) ) gather_ = gather
+      !
+      IF ( gather_ ) THEN
          nrw =(/dfft%nr1, dfft%nr2, dfft%nr3/)
       ELSE
          nrw =(/dfft%nr1x, dfft%my_nr2p, dfft%my_nr3p/)
@@ -278,7 +288,6 @@ CONTAINS
       INTEGER,INTENT(OUT),OPTIONAL :: nr(3)
       LOGICAL,INTENT(in),OPTIONAL  :: gather
       !
-      LOGICAL                      :: mflag
       INTEGER                      :: nrw(3)
       !
       IF ( present(gather) ) THEN
@@ -302,19 +311,18 @@ CONTAINS
       !
       IF ( .NOT. present(fname) ) return
       IF ( present(uni) ) THEN
-         stdout=uni
+         stdout = uni
       ELSE
-         stdout=666
+         stdout = 666
       ENDIF
-
-      !IF(ionode)
-      exst=.false.
+      !
+      exst = .false.
       IF ( present(append)) THEN
          IF (append) INQUIRE (file = TRIM(fname), exist = exst)
       ENDIF
-
+      !
       IF (exst) THEN
-         OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', POSITION= 'append', iostat = ierr )
+         OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', POSITION = 'append', iostat = ierr )
       ELSE
          OPEN (UNIT = stdout, FILE = TRIM(fname), FORM = 'formatted', STATUS = 'unknown', iostat = ierr )
       ENDIF
@@ -371,15 +379,17 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: j, nnr, npw
-      LOGICAL :: mflag
+      LOGICAL :: gather_ = .true.
+      !
+      IF ( present(gather) ) gather_ = gather
       !
       IF ( dffts%has_task_groups ) THEN
          call errore('qepy_get_wf', 'Sorry this one not support task-group version', 1)
       ENDIF
       !
-!$omp parallel
+      !$omp parallel
       psic(:) = (0.0_DP, 0.0_DP)
-      npw=ngk(ik)
+      npw = ngk(ik)
       !$omp do
       IF ( gamma_only ) THEN
          psic(dffts%nl (1:npw))  = evc(1:npw,ibnd)
@@ -390,19 +400,15 @@ CONTAINS
          ENDDO
       END IF
       !$omp end do nowait
-!$omp end parallel
+      !$omp end parallel
       CALL invfft ('Wave', psic, dffts)
-
-      IF ( present(gather) ) THEN
-         mflag=gather
-      ELSE
-         mflag=.true.
-      ENDIF
-      IF ( mflag ) THEN
+      !
+      IF ( gather_ ) THEN
          CALL mp_gather(psic(1:dffts%nnr), wf)
       ELSE
          nnr = min(size(wf), dffts%nnr)
-         wf(1:nnr)=psic(1:nnr)
+         wf(1:nnr) = psic(1:nnr)
+         wf(nnr:size(wf)) = (0.0_DP, 0.0_DP)
       ENDIF
    END SUBROUTINE
 
@@ -419,4 +425,97 @@ CONTAINS
       !
    END SUBROUTINE
 
+   SUBROUTINE qepy_calc_effective_potential(embed, potential, gather)
+      USE kinds,                ONLY : DP
+      USE ions_base,            ONLY : nat, ntyp => nsp
+      USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs
+      USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
+                                       vtxc, etxc, etxcc, ewld, demet, epaw, &
+                                       elondon, edftd3, ef_up, ef_dw
+      USE ldaU,                 ONLY : eth
+      USE extfield,             ONLY : tefield, etotefield
+      USE lsda_mod,             ONLY : nspin
+      !
+      IMPLICIT NONE
+      TYPE(embed_base), INTENT(INOUT) :: embed
+      REAL(DP), INTENT(OUT),OPTIONAL  :: potential(:,:)
+      LOGICAL,INTENT(in),OPTIONAL     :: gather
+      !
+      REAL(DP) :: charge
+      !
+      LOGICAL :: gather_ = .true.
+      !
+      IF ( present(gather) ) gather_ = gather
+      !
+      CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
+         ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+      !
+      IF ( present(potential) ) THEN
+         call qepy_get_value(vrs, potential, gather = gather_)
+      ENDIF
+      !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_set_effective_potential(embed, potential, gather)
+      USE kinds,                ONLY : DP
+      USE scf,                  ONLY : kedtau, v, vltot, vrs
+      USE lsda_mod,             ONLY : nspin
+      USE gvecs,                ONLY : doublegrid
+      !
+      IMPLICIT NONE
+      TYPE(embed_base), INTENT(INOUT) :: embed
+      REAL(DP),INTENT(OUT)            :: potential(:,:)
+      LOGICAL,INTENT(in),OPTIONAL     :: gather
+      !
+      LOGICAL :: gather_ = .true.
+      !
+      IF ( present(gather) ) gather_ = gather
+      !
+      call qepy_get_value(potential, vrs, gather = gather_)
+      !
+      CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
+      !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_calc_density(rhor, gather)
+      USE kinds,                ONLY : DP
+      USE wvfct,                ONLY : nbnd, et
+      USE klist,                ONLY : nks, nkstot
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(OUT),OPTIONAL :: rhor(:,:)
+      LOGICAL,INTENT(in),OPTIONAL :: gather
+      !
+      CALL poolrecover( et, nbnd, nkstot, nks )
+      CALL sum_band()
+      !
+      IF ( present(rhor) ) THEN
+         IF ( present(gather) ) THEN
+            call qepy_get_rho(rhor, gather)
+         ELSE
+            call qepy_get_rho(rhor)
+         ENDIF
+      ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE qepy_diagonalize(iter, threshold)
+      USE klist,                ONLY : nks, nkstot
+      USE bp,                   ONLY : lelfield
+      USE control_flags,        ONLY : ethr
+      !
+      IMPLICIT NONE
+      INTEGER,INTENT(in),OPTIONAL :: iter
+      REAL(DP),INTENT(in),OPTIONAL :: threshold
+      !
+      INTEGER                     :: it = 1
+      !
+      IF ( present(iter) ) it = iter
+      IF ( present(threshold) ) ethr = threshold
+      !
+      IF ( lelfield ) THEN
+         CALL c_bands_efield( it )
+      ELSE
+         CALL c_bands( it )
+      ENDIF
+   END SUBROUTINE
 END MODULE qepy_mod

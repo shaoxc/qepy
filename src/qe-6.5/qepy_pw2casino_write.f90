@@ -467,8 +467,10 @@
             ikk = ik + nk*(ispin-1)
             npw = ngk(ikk)
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
-            CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
-            CALL calbec ( npw, vkb, evc, becp )
+            IF ( nkb > 0 ) THEN
+               CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
+               CALL calbec ( npw, vkb, evc, becp )
+            ENDIF
             !
             ! -TS term for metals (if any)
             !
@@ -732,6 +734,84 @@
       WRITE (stdout,*) '-------------------------------------'
       WRITE (stdout,*)
       embed%etotal=etot_
+      !
+      embed%energies%etot             = etot_                      !'Total energy'
+      embed%energies%ek               = ek                         !'Kinetic energy'
+      embed%energies%eloc             = eloc                       !'Local energy'
+      embed%energies%enl              = enl                        !'Non-Local energy'
+      embed%energies%ewld             = ewld                       !'Ewald energy'
+      embed%energies%exc              = etxc-etxcc                 !'xc contribution'
+      embed%energies%ehart            = ehart                      !'hartree energy'
+      embed%energies%fock2            = fock2                      !'EXX energy'
+      embed%energies%demet            = demet                      !'Smearing (-TS)'
+      !
+      IF (llondon) THEN
+         embed%energies%elondon       = elondon                    !'Dispersion Correction'
+      ELSE
+         embed%energies%elondon       = 0.d0
+      ENDIF
+      IF (ldftd3) THEN
+         embed%energies%edftd3        = edftd3                     !'DFT-D3 Dispersion'
+      ELSE
+         embed%energies%edftd3        = 0.d0
+      ENDIF
+      IF (lxdm) THEN
+         embed%energies%exdm          = exdm                       !'Dispersion XDM Correction'
+      ELSE
+         embed%energies%exdm          = 0.d0
+      ENDIF
+      IF (ts_vdw) THEN
+         embed%energies%etsvdw        = 2.0d0*EtsvdW               !'Dispersion T-S Correction'
+      ELSE
+         embed%energies%etsvdw        = 0.d0
+      ENDIF
+      IF( textfor ) THEN
+         embed%energies%eext          = eext                       !'External forces energy'
+      ELSE
+         embed%energies%eext          = 0.d0
+      ENDIF
+      IF ( tefield ) THEN
+         embed%energies%etotefield    = etotefield                 !'electric field correction'
+      ELSE
+         embed%energies%etotefield    = 0.d0
+      ENDIF
+      IF ( gate) THEN
+         embed%energies%etotgatefield = etotgatefield              !'gate field correction'
+      ELSE
+         embed%energies%etotgatefield = 0.d0
+      ENDIF
+      IF ( lda_plus_u ) THEN
+         embed%energies%eth           = eth                        !'Hubbard energy'
+      ELSE
+         embed%energies%eth           = 0.d0
+      ENDIF
+      IF (okpaw) THEN
+         embed%energies%epaw          = epaw                       !'one-center paw contrib.'
+      ELSE
+         embed%energies%epaw          = 0.d0
+      ENDIF
+      IF ( lfcpopt .or. lfcpdyn ) THEN
+         embed%energies%ept           = ef * tot_charge            !'potentiostat contribution'
+      ELSE
+         embed%energies%ept           = 0.d0
+      ENDIF
+      !
+      embed%energies%extene           = extene                     !'External energy0'
+      ! some energies details -->
+      embed%energies%etxc             = etxc                       ! the exchange and correlation energy
+      embed%energies%etxcc            = etxcc                      ! the nlcc exchange and correlation
+      IF (okpaw) THEN
+         embed%energies%paw_ehart_ae  = SUM(etot_cmp_paw(:,1,1))   !'PAW hartree energy AE'
+         embed%energies%paw_ehart_ps  = SUM(etot_cmp_paw(:,1,2))   !'PAW hartree energy PS'
+         embed%energies%paw_exc_ae    = SUM(etot_cmp_paw(:,2,1))   !'PAW xc energy AE'
+         embed%energies%paw_exc_ps    = SUM(etot_cmp_paw(:,2,2))   !'PAW xc energy PS'
+      ELSE
+         embed%energies%paw_ehart_ae  = 0.d0
+         embed%energies%paw_ehart_ps  = 0.d0
+         embed%energies%paw_exc_ae    = 0.d0
+         embed%energies%paw_exc_ps    = 0.d0
+      ENDIF
+      ! <--
 
    END SUBROUTINE qepy_calc_energies
 
