@@ -15,7 +15,7 @@ QEINC := $(QEINC:%/Makefile=%/) -I.
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
 
-QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90
+QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90 funct.f90
 
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
               qepy_hinit1.f90 qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90 \
