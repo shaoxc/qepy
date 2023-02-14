@@ -372,6 +372,7 @@ CONTAINS
       USE fft_base,             ONLY : dfftp, dffts
       USE fft_interfaces,       ONLY : invfft
       USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+      USE bp,                   ONLY : lelfield
       !
       IMPLICIT NONE
       INTEGER,INTENT(IN) :: ik, ibnd
@@ -387,6 +388,7 @@ CONTAINS
          call errore('qepy_get_wf', 'Sorry this one not support task-group version', 1)
       ENDIF
       !
+      IF ( nks > 1 .OR. lelfield ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
       !$omp parallel
       psic(:) = (0.0_DP, 0.0_DP)
       npw = ngk(ik)
@@ -410,6 +412,60 @@ CONTAINS
          wf(1:nnr) = psic(1:nnr)
          wf(nnr:size(wf)) = (0.0_DP, 0.0_DP)
       ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE qepy_get_vkb(ik, vk, gather)
+      USE kinds,                ONLY : DP
+      USE io_files,             ONLY : iunwfc, nwordwfc
+      USE buffers,              ONLY : get_buffer
+      USE wavefunctions,        ONLY : evc, psic
+      USE klist,                ONLY : nks, igk_k, ngk, xk
+      USE uspp,                 ONLY : vkb, nkb
+      USE fft_base,             ONLY : dfftp, dffts
+      USE fft_interfaces,       ONLY : invfft
+      USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+      !
+      IMPLICIT NONE
+      INTEGER,INTENT(IN) :: ik
+      COMPLEX(DP), INTENT(OUT) :: vk(:,:)
+      LOGICAL,INTENT(in),OPTIONAL :: gather
+      !
+      INTEGER :: i, j, nnr, npw
+      LOGICAL :: gather_ = .true.
+      !
+      IF ( present(gather) ) gather_ = gather
+      !
+      IF ( dffts%has_task_groups ) THEN
+         call errore('qepy_get_vkb', 'Sorry this one not support task-group version', 1)
+      ENDIF
+      !
+      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+      !
+      vk(:,:) = (0.0_DP, 0.0_DP)
+      DO i = 1, nkb
+         !$omp parallel
+         psic(:) = (0.0_DP, 0.0_DP)
+         npw = ngk(ik)
+         !$omp do
+         IF ( gamma_only ) THEN
+            psic(dffts%nl (1:npw))  = vkb(1:npw,i)
+            psic(dffts%nlm(1:npw)) = CONJG( vkb(1:npw,i) )
+         ELSE
+            DO j = 1, npw
+               psic(dffts%nl(igk_k(j,ik))) = vkb(j,i)
+            ENDDO
+         END IF
+         !$omp end do nowait
+         !$omp end parallel
+         CALL invfft ('Wave', psic, dffts)
+         !
+         IF ( gather_ ) THEN
+            CALL mp_gather(psic(1:dffts%nnr), vk(:, i))
+         ELSE
+            nnr = min(size(vk, 1), dffts%nnr)
+            vk(1:nnr, i) = psic(1:nnr)
+         ENDIF
+      ENDDO
    END SUBROUTINE
 
    SUBROUTINE qepy_set_extforces(embed, forces)
@@ -464,7 +520,7 @@ CONTAINS
       !
       IMPLICIT NONE
       TYPE(embed_base), INTENT(INOUT) :: embed
-      REAL(DP),INTENT(OUT)            :: potential(:,:)
+      REAL(DP),INTENT(IN)             :: potential(:,:)
       LOGICAL,INTENT(in),OPTIONAL     :: gather
       !
       LOGICAL :: gather_ = .true.
@@ -518,4 +574,5 @@ CONTAINS
          CALL c_bands( it )
       ENDIF
    END SUBROUTINE
+
 END MODULE qepy_mod

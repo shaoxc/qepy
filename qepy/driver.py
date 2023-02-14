@@ -708,13 +708,17 @@ class Driver(metaclass = Logger) :
         """Return the volume."""
         return qepy.cell_base.get_omega()
 
+    def get_ecutrho(self):
+        """Return the cutoff for density."""
+        return qepy.gvect.get_ecutrho()
+
     def data2field(self, data, cell = None, grid = None):
         """QE data to dftpy DirectField, please call it in serial."""
         from dftpy.field import DirectField
         from dftpy.grid import DirectGrid
         #
         if cell is None : cell = self.get_ions_lattice()
-        if grid is None : grid = DirectGrid(lattice=cell, nr=self.get_number_of_grid_points())
+        if grid is None : grid = DirectGrid(lattice=cell, nr=self.get_number_of_grid_points(), ecut=self.get_ecutrho())
         field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=self.get_number_of_spins())
         return field
 

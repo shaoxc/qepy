@@ -48,6 +48,7 @@ MODULE qepy_common
       real(kind=dp)                   :: ept            !'potentiostat contribution'
       !
       real(kind=dp)                   :: extene         !'External energy0'
+      real(kind=dp)                   :: ehf            !'Harris-Foulkes estimate'
       ! some energies details -->
       real(kind=dp)                   :: etxc           ! the exchange and correlation energy
       real(kind=dp)                   :: etxcc          ! the nlcc exchange and correlation

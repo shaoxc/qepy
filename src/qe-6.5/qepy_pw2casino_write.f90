@@ -337,7 +337,7 @@
       USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
       USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
       USE lsda_mod, ONLY: lsda, nspin
-      USE scf, ONLY: rho, rho_core, rhog_core, v, vnew
+      USE scf, ONLY: rho, rho_core, rhog_core, v, vnew, vrs
       USE ldaU, ONLY : eth
       USE vlocal, ONLY: vloc, strf
       USE wvfct, ONLY: npwx, nbnd, wg, et
@@ -416,6 +416,9 @@
       REAL (DP), EXTERNAL :: get_clock
       !
       REAL(DP) :: extene
+      REAL(DP) :: ehf
+      REAL(DP) :: deband_hwf
+      REAL(DP), EXTERNAL :: qepy_delta_e
       !
 
       IF( lsda )THEN
@@ -486,10 +489,6 @@
             g2kin(1:npw) = ( ( xk(1,ikk) + g(1,igk_k(1:npw,ikk)) )**2 + &
                              ( xk(2,ikk) + g(2,igk_k(1:npw,ikk)) )**2 + &
                              ( xk(3,ikk) + g(3,igk_k(1:npw,ikk)) )**2 ) * tpiba2
-!print*, 'evc', evc(1:3,1)
-!print*, 'wg', wg(1,1:3)
-!print*, 'et', et(1,1:3)
-!print*, 'ef', ef
             DO ibnd = 1, nbnd
                DO j = 1, npw
                   IF(gamma_only)THEN !.and.j>1)then
@@ -547,6 +546,9 @@
       IF (ALLOCATED(embed%extpot)) THEN
          extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
       ENDIF
+      !
+      deband_hwf = qepy_delta_e(vrs)
+      !
 #if defined(__MPI)
       CALL mp_sum( eloc,  intra_bgrp_comm )
       CALL mp_sum( ek,    intra_bgrp_comm )
@@ -655,6 +657,10 @@
       IF ( lfcpopt .or. lfcpdyn ) THEN
          etot_ = etot_ + ef * tot_charge
       ENDIF
+      !
+      !deband_hwf = deband
+      !ehf = etot_ + eband + deband_hwf - eloc - enl - ek
+      ehf = etot_ + eband + deband_hwf - enl - ek
       !qepy <-- additional energies (electrons_scf)
       !
       CALL deallocate_bec_type (becp)
@@ -744,6 +750,8 @@
       embed%energies%ehart            = ehart                      !'hartree energy'
       embed%energies%fock2            = fock2                      !'EXX energy'
       embed%energies%demet            = demet                      !'Smearing (-TS)'
+      !
+      embed%energies%ehf              = ehf
       !
       IF (llondon) THEN
          embed%energies%elondon       = elondon                    !'Dispersion Correction'

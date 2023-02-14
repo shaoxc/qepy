@@ -1598,3 +1598,82 @@ END SUBROUTINE qepy_electrons_scf
   !domat = .FALSE.
   !!
 !END FUNCTION exxenergyace
+
+FUNCTION qepy_delta_e(vr)
+ !-----------------------------------------------------------------------
+ !! This function computes \(\textrm{delta_e}\), where:
+ !
+ !! $$\begin{alignat*}{2} \text{delta}\_\text{e} &= - \int\text{rho}\%\text{of}\_\text{r(r)}\cdot 
+ !!                                                           \text{v}\%\text{of}\_\text{r(r)} && \\
+ !!                          &= - \int \text{rho}\%\text{kin}\_\text{r(r)}\cdot \text{v}\%\text{kin}\_
+ !!                                                           \text{r(r)} && \text{[for Meta-GGA]} \\
+ !!                          &= - \sum \text{rho}\%\text{ns}\cdot \text{v}\%\text{ns} && 
+ !!                                                                               \text{[for LDA+U]}\\
+ !!                          &= - \sum \text{becsum}\cdot \text{D1}\_\text{Hxc} && \text{[for PAW]}
+ !!                                                                                  \end{alignat*} $$
+ !
+ ! ... delta_e =  - \int rho%of_r(r)  v%of_r(r)
+ !                - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
+ !                - \sum rho%ns       v%ns       [for LDA+U]
+ !                - \sum becsum       D1_Hxc     [for PAW]
+ !
+ USE funct,  ONLY : dft_is_meta
+ !
+ USE kinds,                ONLY : DP
+ USE lsda_mod,             ONLY : nspin
+ USE fft_base,             ONLY : dfftp
+ USE scf,                  ONLY : rho, v, vrs
+ USE ldaU,                 ONLY : lda_plus_u
+ USE paw_variables,        ONLY : okpaw, ddd_paw
+ USE mp_bands,             ONLY : intra_bgrp_comm
+ USE noncollin_module,     ONLY : noncolin
+ USE cell_base,            ONLY : omega
+ USE mp,                   ONLY : mp_sum
+ !
+ IMPLICIT NONE
+ !
+ REAL(DP) :: qepy_delta_e
+ REAL(DP) :: vr(size(vrs,1),size(vrs,2))
+ !
+ REAL(DP) :: delta_e
+ REAL(DP) :: delta_e_hub
+ INTEGER  :: ir
+ !
+ delta_e = 0._DP
+ IF ( nspin==2 ) THEN
+    !
+    DO ir = 1,dfftp%nnr
+      delta_e = delta_e - ( rho%of_r(ir,1) + rho%of_r(ir,2) ) * vr(ir,1) &  ! up
+                        - ( rho%of_r(ir,1) - rho%of_r(ir,2) ) * vr(ir,2)    ! dw
+    ENDDO 
+    delta_e = 0.5_DP*delta_e
+    !
+ ELSE
+    delta_e = - SUM( rho%of_r(:,:)*vr(:,:) )
+ ENDIF
+ !
+ IF ( dft_is_meta() ) &
+    delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
+ !
+ delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+ !
+ CALL mp_sum( delta_e, intra_bgrp_comm )
+ !
+ IF (lda_plus_u) THEN
+   IF (noncolin) THEN
+     delta_e_hub = - SUM( rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:) )
+     delta_e = delta_e + delta_e_hub
+   ELSE
+     delta_e_hub = - SUM( rho%ns(:,:,:,:)*v%ns(:,:,:,:) )
+     IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+     delta_e = delta_e + delta_e_hub
+   ENDIF
+ ENDIF
+ !
+ IF (okpaw) delta_e = delta_e - SUM( ddd_paw(:,:,:)*rho%bec(:,:,:) )
+ !
+ qepy_delta_e = delta_e
+ !
+ RETURN
+ !
+END FUNCTION qepy_delta_e
