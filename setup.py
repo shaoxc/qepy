@@ -8,42 +8,21 @@ import shutil
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-with open('qepy/__init__.py') as fd :
-    lines = fd.read()
+with open('qepy/__init__.py') as fh :
+    lines = fh.read()
     __version__ = re.search('__version__ = "(.*)"', lines).group(1)
     __author__ = re.search('__author__ = "(.*)"', lines).group(1)
     __contact__ = re.search('__contact__ = "(.*)"', lines).group(1)
     __license__ = re.search('__license__ = "(.*)"', lines).group(1)
 
-name = 'qepy'
-description = "QEpy: Quantum ESPRESSO Python interface"
+with open('qepy/__new__.py') as fh :
+    init_new = fh.read()
+
 with open('README.md') as fh :
     long_description = fh.read()
 
-fix_mpi4py = """# Fix the MPI_IN_PLACE and MKL
-import sys, os
-from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
-if 'mpi4py' in sys.modules :
-    if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
-        mpilib = util._get_soname(util._findLib_ld('mpi'))
-    else :
-        mpilib = None
-    mpilib = mpilib or util.find_library('mpi') or util.find_library('mpifort')
-    try:
-        CDLL(mpilib, RTLD_LOCAL | RTLD_GLOBAL)
-    except Exception :
-        pass
-try:
-    if hasattr(util, '_findLib_ld'):
-        mkllib = os.path.basename(util._findLib_ld('mkl_rt'))
-    else :
-        mkllib = util.find_library('mkl_rt')
-    CDLL(mkllib, RTLD_LOCAL | RTLD_GLOBAL)
-except Exception :
-    pass
-# End fix
-"""
-
+name = 'qepy'
+description = "QEpy: Quantum ESPRESSO Python interface"
 
 class MakeBuild(build_ext):
     def run(self):
@@ -136,7 +115,7 @@ class MakeBuild(build_ext):
             first = True
             for line in lines :
                 if first and '_qepy' in line :
-                    fh.write(fix_mpi4py)
+                    fh.write(init_new)
                     first = False
                 fh.write(line)
 

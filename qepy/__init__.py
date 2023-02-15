@@ -12,8 +12,10 @@ def qepy_clean_saved():
     mods = [name for _, name, _ in pkgutil.iter_modules(qepy.__path__)]
     for mod in mods :
         if hasattr(qepy, mod):
-            mod += '._arrays'
-            operator.attrgetter(mod)(qepy).clear()
+            for item in ['_arrays', '_objs'] :
+                if hasattr(operator.attrgetter(mod)(qepy), item):
+                    attr = mod + '.' + item
+                    operator.attrgetter(attr)(qepy).clear()
 
 
 qepy_clean_saved()
