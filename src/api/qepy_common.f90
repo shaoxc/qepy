@@ -3,7 +3,7 @@ MODULE qepy_common
    IMPLICIT NONE
    PRIVATE
    !
-   PUBLIC :: arr2pointer, allocate_extpot, allocate_extforces
+   PUBLIC :: arr2pointer
    !
    type, public :: input_base
       INTEGER            :: my_world_comm = 0
@@ -24,6 +24,9 @@ MODULE qepy_common
       integer                         :: nstep = 1
       logical                         :: iterative = .false.
       real(kind=dp), allocatable      :: dipole(:,:)
+   CONTAINS
+      !--------------------------------------------------------------------------------
+      PROCEDURE :: free => free_tddft
    end type tddft_base
    !
    type, public :: energies_base
@@ -57,6 +60,10 @@ MODULE qepy_common
       real(kind=dp)                   :: paw_exc_ae     !'PAW xc energy AE'
       real(kind=dp)                   :: paw_exc_ps     !'PAW xc energy PS'
       ! <--
+   CONTAINS
+      !--------------------------------------------------------------------------------
+      PROCEDURE :: reset => assignment_energies
+      GENERIC :: assignment(=) => reset
    end type energies_base
    !
    type, public :: embed_base
@@ -86,8 +93,9 @@ MODULE qepy_common
       !! Olderversion QE (XML file name is 'data-file.xml')
    CONTAINS
       !--------------------------------------------------------------------------------
-      PROCEDURE :: allocate_extpot => allocate_extpot_class
-      PROCEDURE :: allocate_extforces => allocate_extforces_class
+      PROCEDURE :: allocate_extpot
+      PROCEDURE :: allocate_extforces
+      PROCEDURE :: free => free_embed
    end type embed_base
    !
    !
@@ -100,15 +108,23 @@ MODULE qepy_common
    !
 CONTAINS
    !
-   SUBROUTINE allocate_extpot_class(embed)
-      USE kinds,                ONLY : DP
-      USE fft_base,             ONLY : dfftp
-      USE lsda_mod,             ONLY : lsda, nspin
+   SUBROUTINE free_embed(obj)
       !
       IMPLICIT NONE
-      CLASS(embed_base), INTENT(INOUT) :: embed
+      CLASS(embed_base), INTENT(INOUT) :: obj
       !
-      CALL allocate_extpot(embed)
+      IF (ALLOCATED(obj%extpot)) DEALLOCATE(obj%extpot)
+      IF (ALLOCATED(obj%extforces)) DEALLOCATE(obj%extforces)
+      call obj%tddft%free()
+      !
+   END SUBROUTINE
+   !
+   SUBROUTINE free_tddft(obj)
+      !
+      IMPLICIT NONE
+      CLASS(tddft_base), INTENT(INOUT) :: obj
+      !
+      IF (ALLOCATED(obj%dipole)) DEALLOCATE(obj%dipole)
       !
    END SUBROUTINE
    !
@@ -118,7 +134,7 @@ CONTAINS
       USE lsda_mod,             ONLY : lsda, nspin
       !
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(INOUT) :: embed
+      CLASS(embed_base), INTENT(INOUT) :: embed
       !
       IF (ALLOCATED(embed%extpot)) THEN
          IF (SIZE(embed%extpot, 1) /= dfftp%nnr) DEALLOCATE(embed%extpot)
@@ -129,25 +145,13 @@ CONTAINS
       ENDIF
    END SUBROUTINE
    !
-   SUBROUTINE allocate_extforces_class(embed)
-      USE kinds,                ONLY : DP
-      USE fft_base,             ONLY : dfftp
-      USE ions_base,            ONLY : nat
-      !
-      IMPLICIT NONE
-      CLASS(embed_base), INTENT(INOUT) :: embed
-      !
-      CALL allocate_extforces(embed)
-      !
-   END SUBROUTINE
-   !
    SUBROUTINE allocate_extforces(embed)
       USE kinds,                ONLY : DP
       USE fft_base,             ONLY : dfftp
       USE ions_base,            ONLY : nat
       !
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(INOUT) :: embed
+      CLASS(embed_base), INTENT(INOUT) :: embed
       !
       IF (ALLOCATED(embed%extforces)) THEN
          IF (SIZE(embed%extforces,2) /= nat) DEALLOCATE(embed%extforces)
@@ -156,6 +160,42 @@ CONTAINS
          ALLOCATE(embed%extforces(3, nat))
          embed%extforces = 0.0_DP
       ENDIF
+   END SUBROUTINE
+   !
+   SUBROUTINE assignment_energies(obj, value)
+      !
+      IMPLICIT NONE
+      CLASS(energies_base),INTENT(INOUT) :: obj
+      REAL(DP),INTENT(IN)                :: value
+       
+      obj.etot          = value
+      obj.ek            = value
+      obj.eloc          = value
+      obj.enl           = value
+      obj.ewld          = value
+      obj.exc           = value
+      obj.ehart         = value
+      obj.fock2         = value
+      obj.demet         = value
+      obj.elondon       = value
+      obj.edftd3        = value
+      obj.exdm          = value
+      obj.etsvdw        = value
+      obj.eext          = value
+      obj.etotefield    = value
+      obj.etotgatefield = value
+      obj.eth           = value
+      obj.epaw          = value
+      obj.ept           = value
+      obj.extene        = value
+      obj.ehf           = value
+      obj.etxc          = value
+      obj.etxcc         = value
+      obj.paw_ehart_ae  = value
+      obj.paw_ehart_ps  = value
+      obj.paw_exc_ae    = value
+      obj.paw_exc_ps    = value
+      
    END SUBROUTINE
    !
    SUBROUTINE arr2pointer_real_1(arr, p, n1)

@@ -741,6 +741,8 @@
       WRITE (stdout,*)
       embed%etotal=etot_
       !
+      call embed%energies%reset(0.d0)
+      !
       embed%energies%etot             = etot_                      !'Total energy'
       embed%energies%ek               = ek                         !'Kinetic energy'
       embed%energies%eloc             = eloc                       !'Local energy'

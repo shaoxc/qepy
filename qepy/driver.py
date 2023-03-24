@@ -766,3 +766,27 @@ class Driver(object) :
         if density.ndim != 2 : raise ValueError("The array should be 2-d.")
         #
         qepy.qepy_mod.qepy_set_rho(density, gather = gather)
+
+    @staticmethod
+    def switch_nlpp(nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):
+        nhm_ = qepy.uspp_param.get_nhm()
+        nbetam_ = qepy.uspp_param.get_nbetam()
+        nh_ = qepy.uspp_param.get_array_nh().copy()
+        nkb_ = qepy.uspp.get_nkb()
+
+        if nh is None: nh = nh_ * 0
+
+        print('nnn', nhm, type(nhm))
+        qepy.uspp_param.set_nhm(nhm)
+        qepy.uspp_param.set_nbetam(nbetam)
+        qepy.uspp.set_nkb(nkb)
+        qepy.uspp_param.set_array_nh(nh)
+
+        pp_options = {
+            'nhm' : nhm_,
+            'nbetam' : nbetam_,
+            'nh': nh_,
+            'nkb': nkb_,
+        }
+
+        return pp_options
