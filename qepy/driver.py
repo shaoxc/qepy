@@ -2,11 +2,11 @@ import numpy as np
 import tempfile
 import os
 import qepy
-from qepy.core import Logger, env
+from qepy.core import env
 from qepy.io import QEInput
 from qepy import constants
 
-class Driver(metaclass = Logger) :
+class Driver(object) :
     """
     The driver of QEpy.
 
@@ -90,8 +90,6 @@ class Driver(metaclass = Logger) :
         self.qepy = qepy
         self.qeinput = QEInput()
         #
-        self._init_log()
-        #
         self.driver_initialize()
 
     def _init_log(self):
@@ -108,6 +106,7 @@ class Driver(metaclass = Logger) :
                 self.fileobj = open(self.logfile, 'w+')
         else :
             self.fileobj = None
+        env['STDOUT'] = self.fileobj
         return self.fileobj
 
     @property
@@ -124,7 +123,6 @@ class Driver(metaclass = Logger) :
 
     def restart(self, prog=None, **kwargs):
         prog = prog or self.prog
-        self._init_log()
         self.driver_initialize()
 
     def driver_initialize(self, **kwargs):
@@ -153,6 +151,8 @@ class Driver(metaclass = Logger) :
         if not self.progress :
             if hasattr(env['DRIVER'], 'stop'): env['DRIVER'].stop()
             env['DRIVER'] = self
+        #
+        self._init_log()
         #
         inputfile=self.inputfile
         commf=self.commf
@@ -306,15 +306,17 @@ class Driver(metaclass = Logger) :
         what : str
              see :func:`qepy.driver.Driver.save`.
         """
-        #
-        env['DRIVER'] = None
-        #
         if self.task == 'optical' :
             self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
             qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
 
         if hasattr(self.fileobj, 'close'): self.fileobj.close()
+        qepy.qepy_clean_saved()
+        #
+        env['DRIVER'] = None
+        env['STDOUT'] = None
+        #
 
     def tddft_restart(self, istep=None, **kwargs):
         """Restart the tddft from previous interrupted run.
@@ -559,10 +561,13 @@ class Driver(metaclass = Logger) :
         """
         if self.fileobj is not None :
             if self.fileobj_interact :
+                self.fileobj.flush()
                 self.fileobj.seek(0)
                 lines = self.fileobj.readlines()
                 self.fileobj.close()
-                self.fileobj = tempfile.NamedTemporaryFile('w+')
+                #
+                self._init_log()
+                #
                 return lines
             else :
                 self.fileobj.seek(0)
@@ -766,3 +771,27 @@ class Driver(metaclass = Logger) :
         if density.ndim != 2 : raise ValueError("The array should be 2-d.")
         #
         qepy.qepy_mod.qepy_set_rho(density, gather = gather)
+
+    @staticmethod
+    def switch_nlpp(nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):
+        nhm_ = qepy.uspp_param.get_nhm()
+        nbetam_ = qepy.uspp_param.get_nbetam()
+        nh_ = qepy.uspp_param.get_array_nh().copy()
+        nkb_ = qepy.uspp.get_nkb()
+
+        if nh is None: nh = nh_ * 0
+
+        print('nnn', nhm, type(nhm))
+        qepy.uspp_param.set_nhm(nhm)
+        qepy.uspp_param.set_nbetam(nbetam)
+        qepy.uspp.set_nkb(nkb)
+        qepy.uspp_param.set_array_nh(nh)
+
+        pp_options = {
+            'nhm' : nhm_,
+            'nbetam' : nbetam_,
+            'nh': nh_,
+            'nkb': nkb_,
+        }
+
+        return pp_options
