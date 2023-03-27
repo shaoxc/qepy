@@ -42,6 +42,8 @@ SUBROUTINE oldxml_read_file()
   USE wavefunctions,        ONLY : evc
   USE buffers,              ONLY : get_buffer, save_buffer
   !
+  USE io_files,             ONLY : nd_nmbr
+  !
   IMPLICIT NONE 
   INTEGER :: ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file
@@ -71,6 +73,18 @@ SUBROUTINE oldxml_read_file()
   io_level = 1
   !CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
+  !qepy --> serial version read MPI
+  IF ( .NOT. exst_file .and. len_trim(nd_nmbr) == 0 ) THEN
+     nd_nmbr = '1'
+     CLOSE ( UNIT=iunwfc, STATUS='delete' )
+     CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
+     IF ( .NOT. exst_file) THEN
+        nd_nmbr = ' '
+        CLOSE ( UNIT=iunwfc, STATUS='delete' )
+        CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
+     ENDIF
+  ENDIF
+  !qepy <-- serial version read MPI
   !
   ! ... Allocate and compute k+G indices and number of plane waves
   ! ... FIXME: should be read from file, not re-computed

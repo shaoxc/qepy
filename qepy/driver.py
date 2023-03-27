@@ -1,5 +1,6 @@
 import numpy as np
 import tempfile
+import os
 import qepy
 from qepy.core import Logger, env
 from qepy.io import QEInput
@@ -168,10 +169,14 @@ class Driver(metaclass = Logger) :
         elif task == 'nscf' :
             inputobj = qepy.qepy_common.input_base()
             if self.prefix : inputobj.prefix = self.prefix
-            if self.outdir : inputobj.tmp_dir = self.outdir
+            if self.outdir : inputobj.tmp_dir = str(self.outdir) + '/'
             if commf : inputobj.my_world_comm = commf
             qepy.qepy_initial(inputobj)
-            qepy.qepy_read_file()
+            tmpdir = inputobj.tmp_dir.decode().strip() + inputobj.prefix.decode().strip() + '.save' + '/'
+            if os.path.isfile(tmpdir + 'data-file.xml'): # only works for qe-6.5 !
+                qepy.oldxml_read_file()
+            else :
+                qepy.qepy_read_file()
         else :
             qepy.qepy_pwscf(inputfile, commf, embed = self.embed)
             self.embed.iterative = self.iterative
