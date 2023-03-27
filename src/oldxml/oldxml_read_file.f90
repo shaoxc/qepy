@@ -74,7 +74,8 @@ SUBROUTINE oldxml_read_file()
   !CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !qepy --> serial version read MPI
-  IF ( .NOT. exst_file .and. len_trim(nd_nmbr) == 0 ) THEN
+  inquire (unit = iunwfc, size = file_size)
+  IF ( len_trim(nd_nmbr) == 0 .and. ((.NOT. exst_file) .or. file_size == 0) ) THEN
      nd_nmbr = '1'
      CLOSE ( UNIT=iunwfc, STATUS='delete' )
      CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
