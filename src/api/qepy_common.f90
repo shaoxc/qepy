@@ -168,33 +168,33 @@ CONTAINS
       CLASS(energies_base),INTENT(INOUT) :: obj
       REAL(DP),INTENT(IN)                :: value
        
-      obj.etot          = value
-      obj.ek            = value
-      obj.eloc          = value
-      obj.enl           = value
-      obj.ewld          = value
-      obj.exc           = value
-      obj.ehart         = value
-      obj.fock2         = value
-      obj.demet         = value
-      obj.elondon       = value
-      obj.edftd3        = value
-      obj.exdm          = value
-      obj.etsvdw        = value
-      obj.eext          = value
-      obj.etotefield    = value
-      obj.etotgatefield = value
-      obj.eth           = value
-      obj.epaw          = value
-      obj.ept           = value
-      obj.extene        = value
-      obj.ehf           = value
-      obj.etxc          = value
-      obj.etxcc         = value
-      obj.paw_ehart_ae  = value
-      obj.paw_ehart_ps  = value
-      obj.paw_exc_ae    = value
-      obj.paw_exc_ps    = value
+      obj%etot          = value
+      obj%ek            = value
+      obj%eloc          = value
+      obj%enl           = value
+      obj%ewld          = value
+      obj%exc           = value
+      obj%ehart         = value
+      obj%fock2         = value
+      obj%demet         = value
+      obj%elondon       = value
+      obj%edftd3        = value
+      obj%exdm          = value
+      obj%etsvdw        = value
+      obj%eext          = value
+      obj%etotefield    = value
+      obj%etotgatefield = value
+      obj%eth           = value
+      obj%epaw          = value
+      obj%ept           = value
+      obj%extene        = value
+      obj%ehf           = value
+      obj%etxc          = value
+      obj%etxcc         = value
+      obj%paw_ehart_ae  = value
+      obj%paw_ehart_ps  = value
+      obj%paw_exc_ae    = value
+      obj%paw_exc_ps    = value
       
    END SUBROUTINE
    !
