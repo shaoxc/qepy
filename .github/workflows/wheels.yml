@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - github
+    paths-ignore:
+      - '.github/workflows/publish.yml'
   pull_request:
     branches:
       - github
