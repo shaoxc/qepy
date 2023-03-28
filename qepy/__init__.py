@@ -21,9 +21,9 @@ def qepy_clean_saved():
 qepy_clean_saved()
 __author__ = "Pavanello Research Group"
 __contact__ = "m.pavanello@rutgers.edu"
-__version__ = "0.0.2"
+__version__ = "0.0.2rc1"
 __license__ = "GPL"
-__date__ = "2023-03-25"
+__date__ = "2023-03-28"
 
 try:
     from importlib.metadata import version # python >= 3.8
