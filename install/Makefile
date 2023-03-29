@@ -76,6 +76,7 @@ WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
 $(info 'F90FLAGS', ${F90FLAGS})
 F2FLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
 #$(info 'F2FLAGS', ${F2FLAGS})
+export LDFLAGS := ${LDFLAGS}
 
 ifeq ($(findstring -D__MPI, ${F2FLAGS}), -D__MPI)
    GOAL=mpi

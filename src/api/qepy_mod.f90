@@ -389,20 +389,20 @@ CONTAINS
       ENDIF
       !
       IF ( nks > 1 .OR. lelfield ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-      !$omp parallel
       psic(:) = (0.0_DP, 0.0_DP)
       npw = ngk(ik)
-      !$omp do
       IF ( gamma_only ) THEN
          psic(dffts%nl (1:npw))  = evc(1:npw,ibnd)
          psic(dffts%nlm(1:npw)) = CONJG( evc(1:npw,ibnd) )
       ELSE
+         !$omp parallel
+         !$omp do
          DO j = 1, npw
             psic(dffts%nl(igk_k(j,ik))) = evc(j,ibnd)
          ENDDO
+         !$omp end do nowait
+         !$omp end parallel
       END IF
-      !$omp end do nowait
-      !$omp end parallel
       CALL invfft ('Wave', psic, dffts)
       !
       IF ( gather_ ) THEN
@@ -443,20 +443,20 @@ CONTAINS
       !
       vk(:,:) = (0.0_DP, 0.0_DP)
       DO i = 1, nkb
-         !$omp parallel
          psic(:) = (0.0_DP, 0.0_DP)
          npw = ngk(ik)
-         !$omp do
          IF ( gamma_only ) THEN
             psic(dffts%nl (1:npw))  = vkb(1:npw,i)
             psic(dffts%nlm(1:npw)) = CONJG( vkb(1:npw,i) )
          ELSE
+            !$omp parallel
+            !$omp do
             DO j = 1, npw
                psic(dffts%nl(igk_k(j,ik))) = vkb(j,i)
             ENDDO
+            !$omp end do nowait
+            !$omp end parallel
          END IF
-         !$omp end do nowait
-         !$omp end parallel
          CALL invfft ('Wave', psic, dffts)
          !
          IF ( gather_ ) THEN
