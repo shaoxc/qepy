@@ -15,6 +15,9 @@ variables:
 
 build:
   stage: build
+  except:
+    - github
+    - action
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - git clone https://github.com/dceresoli/ce-tddft.git src/ce-tddft
@@ -34,6 +37,9 @@ build:
 
 test:
   stage: test
+  except:
+    - github
+    - action
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - cp -r $PUBLIC/* $PACKAGE
@@ -42,6 +48,9 @@ test:
 
 qe65:
   stage: qe65
+  except:
+    - github
+    - action
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - cp -r $PUBLIC/* $PACKAGE
@@ -52,8 +61,7 @@ qe65:
 docker_image:
   stage: deploy
   only:
-    refs:
-      - docker
+    - docker
   image: docker:stable
   services:
     - docker:dind
