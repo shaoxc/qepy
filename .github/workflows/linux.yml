@@ -17,7 +17,7 @@ jobs:
       matrix:
         buildplat:
         - [ubuntu-20.04, manylinux, x86_64]
-        python: ["cp310"]
+        python: ["cp37"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
