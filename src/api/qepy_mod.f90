@@ -92,15 +92,18 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: scatter
       !
       INTEGER                     :: nnr
-      LOGICAL                     :: gather_ = .FALSE.
-      LOGICAL                     :: scatter_ = .FALSE.
+      LOGICAL                     :: gather_
+      LOGICAL                     :: scatter_
+      !
+      gather_ = .FALSE.
+      scatter_ = .FALSE.
       !
       IF ( present(gather) ) gather_ = gather
       IF ( present(scatter) ) scatter_ = scatter
       !
-      IF ( gather ) THEN
+      IF ( gather_ ) THEN
          CALL mp_gather(fin, fout)
-      ELSE IF ( scatter ) THEN
+      ELSE IF ( scatter_ ) THEN
          CALL mp_scatter(fin, fout)
       ELSE
          !nnr = dfftp%nr1x* dfftp%my_nr2p* dfftp%my_nr3p
@@ -121,8 +124,11 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: scatter
       !
       INTEGER                     :: ispin, nspin
-      LOGICAL                     :: gather_ = .FALSE.
-      LOGICAL                     :: scatter_ = .FALSE.
+      LOGICAL                     :: gather_
+      LOGICAL                     :: scatter_
+      !
+      gather_ = .FALSE.
+      scatter_ = .FALSE.
       !
       IF ( present(gather) ) gather_ = gather
       IF ( present(scatter) ) scatter_ = scatter
@@ -144,8 +150,9 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->updw' )
@@ -166,8 +173,9 @@ CONTAINS
       REAL(DP), INTENT(IN) :: rhor(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       IF (nspin > 1) CALL rhoz_or_updw( rho, 'only_r', '->updw' )
@@ -186,8 +194,9 @@ CONTAINS
       REAL(DP), INTENT(OUT) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       call qepy_get_value(rho_core, rhoc, gather = gather_)
@@ -202,8 +211,9 @@ CONTAINS
       REAL(DP), INTENT(IN) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       call qepy_get_value(rhoc, rho_core, scatter = gather_)
@@ -223,8 +233,9 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: ispin, ns
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       call embed%allocate_extpot()
@@ -267,9 +278,10 @@ CONTAINS
       TYPE(fft_type_descriptor),INTENT(IN) :: dfft
       LOGICAL,INTENT(in),OPTIONAL          :: gather
       !
-      LOGICAL                              :: gather_ = .true.
+      LOGICAL                              :: gather_
       INTEGER                              :: nrw(3)
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       IF ( gather_ ) THEN
@@ -380,8 +392,9 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: j, nnr, npw
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       IF ( dffts%has_task_groups ) THEN
@@ -431,8 +444,9 @@ CONTAINS
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       INTEGER :: i, j, nnr, npw
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       IF ( dffts%has_task_groups ) THEN
@@ -499,8 +513,9 @@ CONTAINS
       !
       REAL(DP) :: charge
       !
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
@@ -523,8 +538,9 @@ CONTAINS
       REAL(DP),INTENT(IN)             :: potential(:,:)
       LOGICAL,INTENT(in),OPTIONAL     :: gather
       !
-      LOGICAL :: gather_ = .true.
+      LOGICAL :: gather_
       !
+      gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       call qepy_get_value(potential, vrs, gather = gather_)
