@@ -77,7 +77,8 @@ $(info 'F90FLAGS', ${F90FLAGS})
 F2FLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
 #$(info 'F2FLAGS', ${F2FLAGS})
 export LDFLAGS := ${LDFLAGS}
-export NPY_DISTUTILS_APPEND_FLAGS=1 # For the old version numpy (e.g 1.17.3)
+# For the old version numpy (e.g 1.17.3)
+export NPY_DISTUTILS_APPEND_FLAGS=1
 
 ifeq ($(findstring -D__MPI, ${F2FLAGS}), -D__MPI)
    GOAL=mpi
