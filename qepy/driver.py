@@ -153,6 +153,7 @@ class Driver(object) :
             env['DRIVER'] = self
         #
         self._init_log()
+        qepy.qepy_common.set_embed(self.embed)
         #
         inputfile=self.inputfile
         commf=self.commf
@@ -165,7 +166,7 @@ class Driver(object) :
             self.qeinput.write_qe_input(inputfile, basefile=basefile, qe_options=qe_options, prog=prog)
         #
         if task == 'optical' :
-            self.tddft_initialize(inputfile=inputfile, commf = commf, embed = self.embed, **kwargs)
+            self.tddft_initialize(inputfile=inputfile, commf = commf, **kwargs)
         elif task == 'nscf' :
             inputobj = qepy.qepy_common.input_base()
             if self.prefix : inputobj.prefix = self.prefix
@@ -174,11 +175,13 @@ class Driver(object) :
             qepy.qepy_initial(inputobj)
             tmpdir = inputobj.tmp_dir.decode().strip() + inputobj.prefix.decode().strip() + '.save' + '/'
             if os.path.isfile(tmpdir + 'data-file.xml'): # only works for qe-6.5 !
+                if not hasattr(qepy, 'oldxml_read_file') :
+                    raise AttributeError("Please reinstall the QEpy with 'oldxml=yes'.")
                 qepy.oldxml_read_file()
             else :
-                qepy.qepy_read_file()
+                qepy.read_file()
         else :
-            qepy.qepy_pwscf(inputfile, commf, embed = self.embed)
+            qepy.qepy_pwscf(inputfile, commf)
             self.embed.iterative = self.iterative
             if self.embed.iterative :
                 qepy.control_flags.set_niter(1)
@@ -186,7 +189,7 @@ class Driver(object) :
         self.density = np.zeros((1, 1))
         self.iter = 0
 
-    def tddft_initialize(self, inputfile = None, commf = None, embed = None, **kwargs):
+    def tddft_initialize(self, inputfile = None, commf = None, **kwargs):
         """ Initialize the tddft
 
         Parameters
@@ -195,12 +198,9 @@ class Driver(object) :
             Name of QE input file, which also contains `&inputtddft` section.
         commf : object
             Parallel communicator (Fortran)
-        embed : object (Fortran)
-            embed object for QE
         """
         if inputfile is None : inputfile = self.inputfile
         if commf is None : commf = self.commf
-        if embed is None : embed = self.embed
         #
         if self.progress :
             qepy.wvfct.get_array_g2kin()
@@ -208,7 +208,7 @@ class Driver(object) :
         else :
             qepy.qepy_tddft_main_initial(inputfile, commf)
             qepy.read_file()
-        qepy.qepy_tddft_main_setup(embed)
+        qepy.qepy_tddft_main_setup()
         self.embed.tddft.iterative = self.iterative
 
     def diagonalize(self, print_level = 2, **kwargs):
@@ -221,10 +221,10 @@ class Driver(object) :
         """
         self.iter += 1
         if self.task == 'optical' :
-            qepy.qepy_molecule_optical_absorption(self.embed)
+            qepy.qepy_molecule_optical_absorption()
         else :
             self.embed.mix_coef = -1.0
-            qepy.qepy_electrons_scf(print_level, 0, self.embed)
+            qepy.qepy_electrons_scf(print_level, 0)
 
     def mix(self, mix_coef = 0.7, print_level = 2):
         """Mixing the density
@@ -236,7 +236,7 @@ class Driver(object) :
         """
         if self.task == 'optical' : return
         self.embed.mix_coef = mix_coef
-        qepy.qepy_electrons_scf(print_level, 0, self.embed)
+        qepy.qepy_electrons_scf(print_level, 0)
 
     def check_convergence(self, **kwargs):
         """Check the convergence of the SCF"""
@@ -263,12 +263,12 @@ class Driver(object) :
         if maxiter is not None and not self.embed.iterative :
             qepy.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
-            qepy.qepy_molecule_optical_absorption(self.embed)
+            qepy.qepy_molecule_optical_absorption()
         elif not self.embed.iterative and self.embed.exttype < 2 :
             # Use electrons to support hybrid xc functional
             return self.electrons(original=original)
         else :
-            qepy.qepy_electrons_scf(print_level, 0, self.embed)
+            qepy.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
 
     def non_scf(self, **kwargs):
@@ -285,14 +285,14 @@ class Driver(object) :
         if original :
             qepy.electrons()
         else :
-            qepy.qepy_electrons(self.embed)
+            qepy.qepy_electrons()
         return qepy.ener.get_etot()
 
     def end_scf(self, **kwargs):
         """End the scf and clean the scf workspace. Only need run it in iterative mode"""
         if self.embed.iterative :
             self.embed.finish = True
-            qepy.qepy_electrons_scf(0, 0, self.embed)
+            qepy.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
         """stop.
@@ -333,7 +333,7 @@ class Driver(object) :
     def tddft_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
         if self.embed.tddft.iterative :
             self.embed.tddft.finish = True
-            qepy.qepy_molecule_optical_absorption(self.embed)
+            qepy.qepy_molecule_optical_absorption()
         #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
         qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
         qepy.qepy_stop_tddft(exit_status)
@@ -376,7 +376,7 @@ class Driver(object) :
 
     def calc_energy(self, **kwargs):
         """Calculate the energy with the pw2casino of QE."""
-        qepy.qepy_calc_energies(self.embed)
+        qepy.qepy_calc_energies()
         return self.embed.etotal
 
     def update_ions(self, positions = None, lattice = None, update = 0, **kwargs):
@@ -398,11 +398,11 @@ class Driver(object) :
             lattice = lattice.T
             if not qepy.cellmd.get_lmovecell():
                 raise ValueError(" Lattice update only works for variable-cell simulations.\n Please restart the QEpy with calculation= 'vc-relax' or 'vc-md'")
-            qepy.qepy_api.qepy_update_ions(self.embed, positions, update, lattice)
+            qepy.qepy_mod.qepy_update_ions(positions, update, lattice)
         else :
-            qepy.qepy_api.qepy_update_ions(self.embed, positions, update)
+            qepy.qepy_mod.qepy_update_ions(positions, update)
 
-    def pwscf_restart(self, oldxml=False):
+    def pwscf_restart(self, oldxml=False, starting_pot='file', starting_wfc='file'):
         """Read PW ouput/restart files.
 
         Parameters
@@ -418,16 +418,20 @@ class Driver(object) :
             qepy.oldxml_pw_restart.pw_readfile('reset')
             qepy.oldxml_pw_restart.pw_readfile('dim')
             qepy.oldxml_pw_restart.pw_readfile('bs')
-            if qepy.basis.get_starting_pot().strip() != 'file' :
-                qepy.oldxml_potinit(starting = 'file')
-            if qepy.basis.get_starting_wfc().strip() != 'file' :
-                qepy.oldxml_wfcinit(starting = 'file')
+            if qepy.basis.get_starting_pot().strip() != starting_pot :
+                qepy.basis.set_starting_pot(starting_pot)
+                qepy.oldxml_potinit()
+            if qepy.basis.get_starting_wfc().strip() != starting_wfc :
+                qepy.basis.set_starting_wfc(starting_wfc)
+                qepy.oldxml_wfcinit()
         else :
-            qepy.qepy_pw_restart_new.qepy_read_xml_file(alloc=False)
-            if qepy.basis.get_starting_pot().strip() != 'file' :
-                qepy.qepy_potinit(starting = 'file')
-            if qepy.basis.get_starting_wfc().strip() != 'file' :
-                qepy.qepy_wfcinit(starting = 'file')
+            qepy.qepy_mod.qepy_restart_from_xml()
+            if qepy.basis.get_starting_pot().strip() != starting_pot :
+                qepy.basis.set_starting_pot(starting_pot)
+                qepy.potinit()
+            if qepy.basis.get_starting_wfc().strip() != starting_wfc :
+                qepy.basis.set_starting_wfc(starting_wfc)
+                qepy.wfcinit()
 
     @property
     def is_root(self):
@@ -440,6 +444,14 @@ class Driver(object) :
             return self.comm.rank == 0
         else :
             return qepy.io_global.get_ionode()
+
+    @property
+    def qe_is_mpi(self):
+        return qepy.qepy_common.get_is_mpi()
+
+    @property
+    def qe_is_openmp(self):
+        return qepy.qepy_common.get_is_openmp()
 
     @staticmethod
     def get_ions_lattice():
@@ -548,7 +560,7 @@ class Driver(object) :
         if potential is None : potential = np.zeros((1, 1))
         if potential.ndim != 2 : raise ValueError("The array should be 2-d.")
         #
-        qepy.qepy_mod.qepy_set_extpot(self.embed, potential, gather = gather)
+        qepy.qepy_mod.qepy_set_extpot(potential, gather = gather)
 
     def get_output(self):
         """Return the output of QE.
@@ -600,7 +612,7 @@ class Driver(object) :
               7   no ewald + local + nlcc       111
             ===== ============================= ===
         """
-        qepy.qepy_forces(icalc, self.embed)
+        qepy.qepy_forces(icalc)
         forces = qepy.force_mod.get_array_force().T
         return forces
 
@@ -608,7 +620,7 @@ class Driver(object) :
         """Return the stress (3, 3)."""
         stress = np.zeros((3, 3), order='F')
         qepy.stress(stress)
-        # qepy.qepy_stress(stress, 0, self.embed)
+        # qepy.qepy_stress(stress, 0)
         return stress
 
     #ASE DFTCalculator

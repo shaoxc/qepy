@@ -36,24 +36,28 @@ class Test(unittest.TestCase):
 
         qepy.qepy_initial(inputobj)
 
-        qepy.qepy_read_file()
+        qepy.read_file()
 
         embed = qepy.qepy_common.embed_base()
-        qepy.qepy_calc_energies(embed)
+        qepy.qepy_common.set_embed(embed)
+        qepy.qepy_calc_energies()
         self.assertTrue(np.isclose(embed.etotal, -552.93477389, atol = 1E-6))
         qepy.qepy_stop_run(0, what = 'no')
 
     def test_2_read_pw(self):
         qepy.qepy_pwscf(inputfile, commf)
         embed = qepy.qepy_common.embed_base()
+        qepy.qepy_common.set_embed(embed)
 
-        qepy.qepy_pw_restart_new.qepy_read_xml_file(alloc=False)
+        qepy.qepy_mod.qepy_restart_from_xml()
         if qepy.basis.get_starting_pot().strip() != 'file' :
-            qepy.qepy_potinit(starting = 'file')
+            qepy.basis.set_starting_pot('file')
+            qepy.potinit()
         if qepy.basis.get_starting_wfc().strip() != 'file' :
-            qepy.qepy_wfcinit(starting = 'file')
+            qepy.basis.set_starting_wfc('file')
+            qepy.wfcinit()
 
-        qepy.qepy_calc_energies(embed)
+        qepy.qepy_calc_energies()
         self.assertTrue(np.isclose(embed.etotal, -552.93477389, atol = 1E-6))
         qepy.qepy_stop_run(0, what = 'no')
 

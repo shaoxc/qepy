@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-MODULE qepy_pw_restart_new
+MODULE pw_restart_new
 !----------------------------------------------------------------------------
   !
   ! ... New PWscf I/O using xml schema and (optionally) hdf5 binaries
@@ -49,8 +49,7 @@ MODULE qepy_pw_restart_new
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries
-  !PUBLIC :: read_xml_file, read_collected_wfc
-  PUBLIC :: qepy_read_xml_file, read_collected_wfc
+  PUBLIC :: read_xml_file, read_collected_wfc
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -896,7 +895,7 @@ MODULE qepy_pw_restart_new
     END SUBROUTINE gk_l2gmap_kdip
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE qepy_read_xml_file ( wfc_is_collected, alloc )
+    SUBROUTINE read_xml_file ( wfc_is_collected )
       !------------------------------------------------------------------------
       !
       ! ... This routine allocates space for all quantities already computed
@@ -961,38 +960,30 @@ MODULE qepy_pw_restart_new
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
       !
-      !qepy --> other parameters
+      !qepy fix --> other parameters
       USE tsvdw_module,         ONLY : vdw_econv_thr
       USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, k_points, assume_isolated, &  
                                        input_parameters_occupations => occupations, dftd3_threebody, &
                                        dftd3_version
-      !qepy <-- other parameters
+      !qepy fix <-- other parameters
       !
       IMPLICIT NONE
       LOGICAL, INTENT(OUT) :: wfc_is_collected
       !
-      LOGICAL, INTENT(IN), OPTIONAL :: alloc
-      LOGICAL :: lalloc
-      !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      !qepy --> 
+      !qepy fix --> declare vdw
       !CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
       CHARACTER(LEN=20) :: dft_name, occupations
-      !qepy <-- 
+      INTEGER           :: npwx_g
+      !qepy fix <-- declare vdw
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
       TYPE (output_type)        :: output_obj 
       TYPE (parallel_info_type) :: parinfo_obj
       TYPE (general_info_type ) :: geninfo_obj
       TYPE (input_type)         :: input_obj
-      !
-      if (present(alloc)) then
-         lalloc = alloc
-      else
-         lalloc = .TRUE.
-      endif
       !
       !
       filename = xmlfile ( )
@@ -1036,14 +1027,14 @@ MODULE qepy_pw_restart_new
       CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
       !!
       !! Basis set section
-      if (lalloc) then
-      !qepy: Here, npwx is npwx_g, which is greater than npwx in mpi
+      !qepy fix --> npwx is npwx_g
+      !Here, npwx is npwx_g, which is greater than npwx in mpi
       CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only, ecutwfc,&
            ecutrho, dffts%nr1,dffts%nr2,dffts%nr3, dfftp%nr1,dfftp%nr2,dfftp%nr3, &
-           dum1,dum2,dum3, ngm_g, ngms_g, npwx, bg(:,1), bg(:,2), bg(:,3) )
+           dum1,dum2,dum3, ngm_g, ngms_g, npwx_g, bg(:,1), bg(:,2), bg(:,3) )
       ecutwfc = ecutwfc*e2
       ecutrho = ecutrho*e2
-      endif
+      !qepy fix <-- npwx is npwx_g
       dual = ecutrho/ecutwfc
       ! FIXME: next line ensures exact consistency between reciprocal and
       ! direct lattice vectors, preventing weird phonon symmetry errors
@@ -1104,9 +1095,7 @@ MODULE qepy_pw_restart_new
       IF ( lsda ) &
            CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
       !! Symmetry section
-      if (lalloc) then
       ALLOCATE ( irt(48,nat) )
-      endif
       IF ( lvalid_input ) THEN 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
               nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
@@ -1132,13 +1121,13 @@ MODULE qepy_pw_restart_new
       do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
-      !qepy --> additional parameters
+      !qepy fix --> additional parameters
       dftd3_version   = output_obj%dft%vdW%dftd3_version
       dftd3_threebody = output_obj%dft%vdW%dftd3_threebody
       !vdw_econv_thr   = output_obj%dft%vdW%ts_vdw_econv_thr
       !!ts_vdw_econv_thr not in output but in input
       vdw_econv_thr   = input_obj%dft%vdW%ts_vdw_econv_thr
-      !qepy <-- additional parameters
+      !qepy fix <-- additional parameters
       !
       ! ... xml data no longer needed, can be discarded
       !
@@ -1149,14 +1138,12 @@ MODULE qepy_pw_restart_new
       !
       ! END OF READING VARIABLES FROM XML DATA FILE
       !
-      if (lalloc) then
       ALLOCATE( force ( 3, nat ) )
       ALLOCATE( extfor( 3, nat ) )
       IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
       IF ( gate ) ALLOCATE( forcegate( 3, nat ) )
-      endif
       !
-    END SUBROUTINE qepy_read_xml_file
+    END SUBROUTINE read_xml_file
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_wfc ( dirname, ik, evc )
@@ -1276,4 +1263,4 @@ MODULE qepy_pw_restart_new
     END SUBROUTINE read_collected_wfc
     !
     !------------------------------------------------------------------------
-  END MODULE qepy_pw_restart_new
+  END MODULE pw_restart_new

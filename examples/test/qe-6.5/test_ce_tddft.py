@@ -30,25 +30,24 @@ class Test(unittest.TestCase):
         qepy.punch('all')
 
     def test_1_tddft_continue(self):
-        embed = qepy.qepy_common.embed_base()
         qepy.qepy_tddft_readin(inputfile)
-        qepy.qepy_tddft_main_setup(embed)
-        qepy.qepy_molecule_optical_absorption(embed)
+        qepy.qepy_tddft_main_setup()
+        qepy.qepy_molecule_optical_absorption()
         qepy.qepy_stop_run(0, print_flag=0, what='no', finalize=False)
         qepy.qepy_stop_tddft(0)
 
     def test_2_tddft_iterative(self):
-        qepy.qepy_tddft_main_initial(inputfile, commf)
-        qepy.read_file()
         embed = qepy.qepy_common.embed_base()
+        qepy.qepy_tddft_main_initial(inputfile, commf, embed = embed)
+        qepy.read_file()
         embed.tddft.iterative = True
-        qepy.qepy_tddft_main_setup(embed)
+        qepy.qepy_tddft_main_setup()
 
         for i in range(5):
-            qepy.qepy_molecule_optical_absorption(embed)
+            qepy.qepy_molecule_optical_absorption()
         dip = qepy.qepy_tddft_common.get_array_dipole().copy()
         embed.tddft.finish = True
-        qepy.qepy_molecule_optical_absorption(embed)
+        qepy.qepy_molecule_optical_absorption()
         qepy.qepy_stop_tddft(0)
 
         assert(abs(dip[0, 0] - 0.54355)<1E-3)

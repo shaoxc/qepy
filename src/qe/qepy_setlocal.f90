@@ -11,7 +11,7 @@
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-SUBROUTINE qepy_setlocal(exttype)
+SUBROUTINE qepy_setlocal()
   !----------------------------------------------------------------------
   !! This routine computes the local potential in real space vltot(ir).
   !
@@ -36,6 +36,8 @@ SUBROUTINE qepy_setlocal(exttype)
   USE qmmm,              ONLY : qmmm_add_esf
   USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local 
   !
+  USE qepy_common,       ONLY : embed
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), ALLOCATABLE :: aux(:), v_corr(:)
@@ -43,12 +45,9 @@ SUBROUTINE qepy_setlocal(exttype)
   INTEGER :: nt, ng
   ! counter on atom types
   ! counter on g vectors
-  integer, intent(in), optional      :: exttype
   logical              :: have = .true.
   !
-  if (present(exttype)) then
-     if (iand(exttype,1) == 1) have = .false.
-  endif
+  if (iand(embed%exttype,1) == 1) have = .false.
   !
   if (have) then
   ALLOCATE( aux(dfftp%nnr) )

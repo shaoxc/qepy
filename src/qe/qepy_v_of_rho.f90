@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+                     ehart, etxc, vtxc, eth, etotefield, charge, v)
   !----------------------------------------------------------------------------
   !! This routine computes the Hartree and Exchange and Correlation
   !! potential and energies which corresponds to a given charge density
@@ -35,11 +35,9 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE ener,                 ONLY : epaw
   !
-  USE qepy_common,             ONLY : embed_base
+  USE qepy_common,          ONLY : embed
   !
   IMPLICIT NONE
-  !
-  TYPE(embed_base), INTENT(INOUT)    :: embed
   !
   TYPE(scf_type), INTENT(INOUT) :: rho
   !! the valence charge
@@ -71,7 +69,7 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   REAL(DP) :: etot_cmp_paw(nat,2,2)
 
   call qepy_v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+                     ehart, etxc, vtxc, eth, etotefield, charge, v)
   IF (okpaw) THEN
      CALL PAW_potential( rho%bec, ddd_paw, epaw, etot_cmp_paw )
      CALL PAW_symmetrize_ddd( ddd_paw )
@@ -83,8 +81,7 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   !
   ! ... define the total local potential (external + scf)
   !
-  CALL embed%allocate_extpot()
-  v%of_r = v%of_r + embed%extpot
+  IF (ALLOCATED(embed%extpot)) v%of_r = v%of_r + embed%extpot
   !
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !
@@ -100,7 +97,7 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   END SUBROUTINE 
 !----------------------------------------------------------------------------
 SUBROUTINE qepy_v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+                     ehart, etxc, vtxc, eth, etotefield, charge, v)
   !----------------------------------------------------------------------------
   !! This routine computes the Hartree and Exchange and Correlation
   !! potential and energies which corresponds to a given charge density
@@ -118,11 +115,9 @@ SUBROUTINE qepy_v_of_rho( rho, rho_core, rhog_core, &
   USE cell_base,        ONLY : alat
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
-  USE qepy_common,         ONLY : embed_base
+  USE qepy_common,      ONLY : embed
   !
   IMPLICIT NONE
-  !
-  type(embed_base), intent(in)    :: embed
   !
   TYPE(scf_type), INTENT(INOUT) :: rho
   !! the valence charge

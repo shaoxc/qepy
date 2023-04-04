@@ -7,7 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-SUBROUTINE qepy_update_hamiltonian(istep, embed)
+SUBROUTINE qepy_update_hamiltonian(istep)
   !-----------------------------------------------------------------------
   !
   ! ... Update the hamiltonian
@@ -33,15 +33,12 @@ SUBROUTINE qepy_update_hamiltonian(istep, embed)
   USE uspp,          ONLY : nkb
   USE pwcom
   !
-  USE qepy_common,             ONLY : embed_base
+  USE qepy_common,             ONLY : embed
   !
   implicit none
   integer, intent(in) :: istep
   real(dp) :: charge, eth, etotefield
   real(dp), external :: ewald, delta_eband
-  !
-  TYPE(embed_base), INTENT(INOUT)    :: embed
-  !
 
   call start_clock('updateH')
   
@@ -57,16 +54,14 @@ SUBROUTINE qepy_update_hamiltonian(istep, embed)
   end if
     
   ! calculate HXC-potential
-  !call v_of_rho( rho, rho_core, rhog_core, ehart, etxc, vtxc, eth, etotefield, charge, v )
-  call qepy_v_of_rho( rho, rho_core, rhog_core, ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+  call qepy_v_of_rho( rho, rho_core, rhog_core, ehart, etxc, vtxc, eth, etotefield, charge, v)
     
   ! calculate total local potential (external + scf)
   !call setlocal
   !call set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)    
-  call qepy_setlocal(embed%exttype)
+  call qepy_setlocal()
   !
-  call embed%allocate_extpot()
-  v%of_r = v%of_r + embed%extpot
+  IF (ALLOCATED(embed%extpot)) v%of_r = v%of_r + embed%extpot
   !
   CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
   !

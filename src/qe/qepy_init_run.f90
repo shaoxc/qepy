@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_init_run(oldxml)
+SUBROUTINE qepy_init_run()
   !----------------------------------------------------------------------------
   !
   USE klist,              ONLY : nkstot
@@ -36,17 +36,14 @@ SUBROUTINE qepy_init_run(oldxml)
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   !
-  IMPLICIT NONE
-  LOGICAL, INTENT(IN), OPTIONAL :: oldxml
-  LOGICAL               :: oldver
+  USE qepy_common,        ONLY : embed
   !
-  if (present(oldxml)) then
-     oldver = oldxml
-  else
-     oldver = .FALSE.
-  endif
+  IMPLICIT NONE
+  LOGICAL               :: oldxml
+  !
+  oldxml = embed%oldxml
 #if !defined (__OLDXML) 
-if (oldver) then
+if (oldxml) then
    CALL errore( 'qepy_init_run', 'Do no use oldxml in normal version. Please rebuild with -D__OLDXML.', 1 )
 endif
 #endif
@@ -128,29 +125,27 @@ endif
   CALL hinit0()
   !
   CALL mp_barrier( intra_image_comm ) ! for oldxml
-  if (oldver) then
+  if (oldxml) then
 #if defined (__OLDXML) 
      call oldxml_potinit()
 #else
    CALL errore( 'qepy_init_run', 'Do no use oldxml in normal version. Please rebuild with -D__OLDXML.', 1 )
 #endif
   else
-  !CALL potinit()
-  CALL qepy_potinit('')
+  CALL potinit()
   endif
   !
   CALL newd()
   !
   CALL mp_barrier( intra_image_comm ) ! for oldxml
-  if (oldver) then
+  if (oldxml) then
 #if defined (__OLDXML) 
      call oldxml_wfcinit()
 #else
    CALL errore( 'qepy_init_run', 'Do no use oldxml in normal version. Please rebuild with -D__OLDXML.', 1 )
 #endif
   else
-  !CALL wfcinit()
-  CALL qepy_wfcinit('')
+  CALL wfcinit()
   endif
   !
   IF(use_wannier) CALL wannier_init()

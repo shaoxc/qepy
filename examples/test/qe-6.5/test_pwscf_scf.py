@@ -17,15 +17,16 @@ inputfile = path / 'qe_in.in'
 
 class Test(unittest.TestCase):
     def test_scf(self):
-        qepy.qepy_pwscf(inputfile, commf)
         embed = qepy.qepy_common.embed_base()
+        qepy.qepy_common.set_embed(embed)
+        qepy.qepy_pwscf(inputfile, commf)
         # embed.ldescf = True # add scf correction energy
         embed.iterative = True
         for i in range(60):
             embed.mix_coef = -1.0
-            qepy.qepy_electrons_scf(2, 0, embed)
+            qepy.qepy_electrons_scf(2, 0)
             embed.mix_coef = 0.7
-            qepy.qepy_electrons_scf(2, 0, embed)
+            qepy.qepy_electrons_scf(2, 0)
             if qepy.control_flags.get_conv_elec() : break
 
         conv_flag = bool(qepy.control_flags.get_conv_elec())

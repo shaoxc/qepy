@@ -46,7 +46,7 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
   USE command_line_options, ONLY : input_file_, command_line, ndiag_
-  USE qepy_common,          ONLY : embed_base, messenger
+  USE qepy_common,          ONLY : embed_base, set_embed, messenger, p_embed => embed
   !
   IMPLICIT NONE
   !
@@ -73,6 +73,8 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
      oldver = .FALSE.
   endif
   !
+  if (present(embed)) call set_embed(embed)
+  if (.not. associated(p_embed)) call set_embed(messenger)
   !
   IF ( PRESENT(my_world_comm)) THEN
      CALL mp_startup(my_world_comm=my_world_comm, start_images=.TRUE. )
@@ -131,11 +133,7 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   !
   input_file_=trim(infile)
   CALL read_input_file( 'PW', input_file_ )
-  if (present(embed)) then
-     call qepy_run_pwscf(exit_status, oldver, embed)
-  else
-     call qepy_run_pwscf(exit_status, oldver, messenger)
-  endif
+  call qepy_run_pwscf(exit_status, oldver)
 END SUBROUTINE qepy_pwscf
    !
 SUBROUTINE qepy_pwscf_finalise()
@@ -147,7 +145,7 @@ SUBROUTINE qepy_pwscf_finalise()
    !CALL do_stop( exit_status )
 END SUBROUTINE qepy_pwscf_finalise
 
-SUBROUTINE qepy_initial(input)
+SUBROUTINE qepy_initial(input, embed)
   !
   USE io_global,   ONLY : ionode
   USE mp_global,   ONLY : mp_startup
@@ -155,13 +153,18 @@ SUBROUTINE qepy_initial(input)
   USE qepy_common, ONLY : input_base
   USE io_files,    ONLY : tmp_dir, prefix
   USE check_stop,  ONLY : check_stop_init
+  USE qepy_common, ONLY : embed_base, set_embed, messenger, p_embed => embed
   !
   IMPLICIT NONE
   !
   TYPE(input_base), OPTIONAL :: input
+  type(embed_base), intent(inout), optional :: embed
   !
   LOGICAL            :: start_images = .false.
   !CHARACTER(len=256) :: code = 'QEPY'
+  !
+  if (present(embed)) call set_embed(embed)
+  if (.not. associated(p_embed)) call set_embed(messenger)
   !
   IF (PRESENT(input)) THEN
      start_images = input%start_images
@@ -184,7 +187,6 @@ SUBROUTINE qepy_initial(input)
   ENDIF
   !
   CALL check_stop_init()
-  !
 END SUBROUTINE qepy_initial
 
 SUBROUTINE qepy_finalise_end(input)

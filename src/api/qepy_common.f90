@@ -3,7 +3,18 @@ MODULE qepy_common
    IMPLICIT NONE
    PRIVATE
    !
-   PUBLIC :: arr2pointer
+   PUBLIC :: arr2pointer, set_embed
+   !
+#if defined(__MPI)
+   logical, public :: is_mpi = .TRUE.
+#else
+   logical, public :: is_mpi = .FALSE.
+#endif
+#if defined(_OPENMP)
+   logical, public :: is_openmp = .TRUE.
+#else
+   logical, public :: is_openmp = .FALSE.
+#endif
    !
    type, public :: input_base
       INTEGER            :: my_world_comm = 0
@@ -71,15 +82,15 @@ MODULE qepy_common
       type(tddft_base)                :: tddft
       type(energies_base)             :: energies
       real(kind=dp), allocatable      :: extpot(:,:)
-      real(kind=dp)                   :: extene = 0.0
+      real(kind=dp)                   :: extene = 0.d0
       integer                         :: exttype = 0
       real(kind=dp), allocatable      :: extforces(:,:)
-      real(kind=dp)                   :: extstress(3,3)
+      real(kind=dp)                   :: extstress(3,3) = 0.d0
       logical                         :: initial = .true.
-      real(kind=dp)                   :: mix_coef = -1.0
+      real(kind=dp)                   :: mix_coef = -1.d0
       logical                         :: finish = .false.
-      real(kind=dp)                   :: etotal = 0.0
-      real(kind=dp)                   :: dnorm = 1.0
+      real(kind=dp)                   :: etotal = 0.d0
+      real(kind=dp)                   :: dnorm = 1.d0
       logical                         :: lewald = .true.
       logical                         :: nlpp = .true.
       real(kind=dp)                   :: diag_conv = 1.D-2
@@ -99,7 +110,8 @@ MODULE qepy_common
    end type embed_base
    !
    !
-   TYPE ( embed_base ), public :: messenger
+   TYPE ( embed_base ), public, pointer :: embed
+   TYPE ( embed_base ), public, target  :: messenger
    !
    !
    INTERFACE arr2pointer
@@ -107,6 +119,15 @@ MODULE qepy_common
    END INTERFACE
    !
 CONTAINS
+   !
+   SUBROUTINE set_embed(obj)
+      !
+      IMPLICIT NONE
+      TYPE(embed_base), INTENT(IN), TARGET :: obj
+      !
+      embed => obj
+      !
+   END SUBROUTINE
    !
    SUBROUTINE free_embed(obj)
       !

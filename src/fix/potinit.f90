@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_potinit(starting)
+SUBROUTINE potinit()
   !----------------------------------------------------------------------------
   !
   ! ... This routine initializes the self consistent potential in the array
@@ -56,8 +56,9 @@ SUBROUTINE qepy_potinit(starting)
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
   !
+  !qepy fix --> import module
   USE klist,                ONLY : nelup, neldw
-  !
+  !qepy fix --> import module
   IMPLICIT NONE
   !
   REAL(DP)              :: charge           ! the starting charge
@@ -67,8 +68,6 @@ SUBROUTINE qepy_potinit(starting)
   LOGICAL               :: exst 
   CHARACTER(LEN=320)    :: filename
   !
-  CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: starting
-  !
   CALL start_clock('potinit')
   !
   filename = TRIM (restart_dir( )) // 'charge-density'
@@ -77,10 +76,6 @@ SUBROUTINE qepy_potinit(starting)
 #else 
   exst     =  check_file_exist( TRIM(filename) // '.dat' )
 #endif
-  !
-  IF (present(starting)) THEN
-     IF (len_trim(starting)>1) starting_pot = trim(starting)
-  ENDIF
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !
@@ -184,11 +179,11 @@ SUBROUTINE qepy_potinit(starting)
      CALL errore( 'potinit', 'starting and expected charges differ', 1 )
      !
   END IF
-  !qepy --> scale charge for spin
+  !qepy fix --> scale charge for spin
   IF ( nspin == 2 ) THEN
      rho%of_g(1,2) = (nelup-neldw) / omega
   ENDIF
-  !qepy <-- scale charge for spin
+  !qepy fix <-- scale charge for spin
   !
   ! ... bring starting rho from G- to R-space
   !
@@ -252,39 +247,39 @@ SUBROUTINE qepy_potinit(starting)
   !
   RETURN
   !
-END SUBROUTINE qepy_potinit
+END SUBROUTINE potinit
 !
 !-------------
-!SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
-!  !-------------
-!  !
-!  USE kinds,     ONLY: dp
-!  USE constants, ONLY: pi
-!  USE io_global, ONLY: stdout
-!  USE noncollin_module, ONLY: angle1, angle2
-!  !
-!  IMPLICIT NONE
-!  INTEGER, INTENT (in):: ngm, nspin
-!  COMPLEX(dp), INTENT (inout):: rho(ngm,nspin)
-!  !---  
-!  !  set up noncollinear m_x,y,z from collinear m_z (AlexS) 
-!  !
-!  WRITE(stdout,*)
-!  WRITE(stdout,*) '-----------'
-!  WRITE(stdout,'("Spin angles Theta, Phi (degree) = ",2f8.4)') &
-!       angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
-!  WRITE(stdout,*) '-----------'
-!  !
-!  ! now set rho(2)=magn*sin(theta)*cos(phi)   x
-!  !         rho(3)=magn*sin(theta)*sin(phi)   y
-!  !         rho(4)=magn*cos(theta)            z
-!  !
-!  rho(:,2) = rho(:,4)*sin(angle1(1))
-!  rho(:,3) = rho(:,2)*sin(angle2(1))
-!  rho(:,4) = rho(:,4)*cos(angle1(1))
-!  rho(:,2) = rho(:,2)*cos(angle2(1))
-!  !
-!  RETURN
-!  !
-!END SUBROUTINE nc_magnetization_from_lsda
+SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
+  !-------------
+  !
+  USE kinds,     ONLY: dp
+  USE constants, ONLY: pi
+  USE io_global, ONLY: stdout
+  USE noncollin_module, ONLY: angle1, angle2
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT (in):: ngm, nspin
+  COMPLEX(dp), INTENT (inout):: rho(ngm,nspin)
+  !---  
+  !  set up noncollinear m_x,y,z from collinear m_z (AlexS) 
+  !
+  WRITE(stdout,*)
+  WRITE(stdout,*) '-----------'
+  WRITE(stdout,'("Spin angles Theta, Phi (degree) = ",2f8.4)') &
+       angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
+  WRITE(stdout,*) '-----------'
+  !
+  ! now set rho(2)=magn*sin(theta)*cos(phi)   x
+  !         rho(3)=magn*sin(theta)*sin(phi)   y
+  !         rho(4)=magn*cos(theta)            z
+  !
+  rho(:,2) = rho(:,4)*sin(angle1(1))
+  rho(:,3) = rho(:,2)*sin(angle2(1))
+  rho(:,4) = rho(:,4)*cos(angle1(1))
+  rho(:,2) = rho(:,2)*cos(angle2(1))
+  !
+  RETURN
+  !
+END SUBROUTINE nc_magnetization_from_lsda
 

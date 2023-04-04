@@ -320,7 +320,7 @@
 
 !CONTAINS
 
-   SUBROUTINE qepy_calc_energies(embed)
+   SUBROUTINE qepy_calc_energies()
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type, is_allocated_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
@@ -357,7 +357,7 @@
       USE pw2blip
       !
       !qepy --> import more
-      USE qepy_common,          ONLY : embed_base
+      USE qepy_common,          ONLY : embed
       USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                        vtxc, etxc, etxcc, ewld, demet, epaw, &
                                        elondon, edftd3, ef_up, ef_dw, exdm, ef
@@ -394,8 +394,6 @@
       !qepy <-- import more
       !
       IMPLICIT NONE
-
-      type(embed_base), intent(inout)    :: embed
       !
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
@@ -757,53 +755,33 @@
       !
       IF (llondon) THEN
          embed%energies%elondon       = elondon                    !'Dispersion Correction'
-      ELSE
-         embed%energies%elondon       = 0.d0
       ENDIF
       IF (ldftd3) THEN
          embed%energies%edftd3        = edftd3                     !'DFT-D3 Dispersion'
-      ELSE
-         embed%energies%edftd3        = 0.d0
       ENDIF
       IF (lxdm) THEN
          embed%energies%exdm          = exdm                       !'Dispersion XDM Correction'
-      ELSE
-         embed%energies%exdm          = 0.d0
       ENDIF
       IF (ts_vdw) THEN
          embed%energies%etsvdw        = 2.0d0*EtsvdW               !'Dispersion T-S Correction'
-      ELSE
-         embed%energies%etsvdw        = 0.d0
       ENDIF
       IF( textfor ) THEN
          embed%energies%eext          = eext                       !'External forces energy'
-      ELSE
-         embed%energies%eext          = 0.d0
       ENDIF
       IF ( tefield ) THEN
          embed%energies%etotefield    = etotefield                 !'electric field correction'
-      ELSE
-         embed%energies%etotefield    = 0.d0
       ENDIF
       IF ( gate) THEN
          embed%energies%etotgatefield = etotgatefield              !'gate field correction'
-      ELSE
-         embed%energies%etotgatefield = 0.d0
       ENDIF
       IF ( lda_plus_u ) THEN
          embed%energies%eth           = eth                        !'Hubbard energy'
-      ELSE
-         embed%energies%eth           = 0.d0
       ENDIF
       IF (okpaw) THEN
          embed%energies%epaw          = epaw                       !'one-center paw contrib.'
-      ELSE
-         embed%energies%epaw          = 0.d0
       ENDIF
       IF ( lfcpopt .or. lfcpdyn ) THEN
          embed%energies%ept           = ef * tot_charge            !'potentiostat contribution'
-      ELSE
-         embed%energies%ept           = 0.d0
       ENDIF
       !
       embed%energies%extene           = extene                     !'External energy0'
@@ -815,11 +793,6 @@
          embed%energies%paw_ehart_ps  = SUM(etot_cmp_paw(:,1,2))   !'PAW hartree energy PS'
          embed%energies%paw_exc_ae    = SUM(etot_cmp_paw(:,2,1))   !'PAW xc energy AE'
          embed%energies%paw_exc_ps    = SUM(etot_cmp_paw(:,2,2))   !'PAW xc energy PS'
-      ELSE
-         embed%energies%paw_ehart_ae  = 0.d0
-         embed%energies%paw_ehart_ps  = 0.d0
-         embed%energies%paw_exc_ae    = 0.d0
-         embed%energies%paw_exc_ps    = 0.d0
       ENDIF
       ! <--
 

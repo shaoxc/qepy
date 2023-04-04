@@ -15,13 +15,13 @@ QEINC := $(QEINC:%/Makefile=%/) -I.
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
 
-QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90 funct.f90
+QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90 \
+			funct.f90 potinit.f90 wfcinit.f90 pw_restart_new.f90 read_file_new.f90
 
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
-              qepy_hinit1.f90 qepy_potinit.f90 qepy_wfcinit.f90 qepy_pw_restart_new.f90 \
               qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
-              qepy_forces.f90 qepy_stress.f90 qepy_stop_run.f90 qepy_api.f90 \
-              qepy_read_file_new.f90 qepy_electrons_nscf.f90 qepy_sum_band.f90
+              qepy_electrons_nscf.f90 qepy_hinit1.f90 qepy_forces.f90 qepy_stop_run.f90 \
+              qepy_stress.f90 
 
 OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
                 oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \

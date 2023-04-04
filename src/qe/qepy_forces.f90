@@ -11,7 +11,7 @@
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_forces(icalc, embed)
+SUBROUTINE qepy_forces(icalc)
   !----------------------------------------------------------------------------
   !! This routine is a driver routine which computes the forces
   !! acting on the atoms. The complete expression of the forces
@@ -57,12 +57,11 @@ SUBROUTINE qepy_forces(icalc, embed)
   USE qmmm,              ONLY : qmmm_mode
   !
   USE becmod, ONLY: becp, deallocate_bec_type, is_allocated_bec_type
-  USE qepy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed
   !
   IMPLICIT NONE
   !
   integer,intent(in),optional             :: icalc
-  type(embed_base),intent(inout),optional :: embed
   integer                                 :: calctype
   !
   REAL(DP), ALLOCATABLE :: forcenl(:,:),   &
@@ -204,9 +203,7 @@ SUBROUTINE qepy_forces(icalc, embed)
   CALL plugin_int_forces()
   !
   !qepy --> add external forces
-  if (present(embed)) then
-     if (allocated(embed%extforces)) force(:,:) = force(:,:) + embed%extforces
-  endif
+  if (allocated(embed%extforces)) force(:,:) = force(:,:) + embed%extforces
   !qepy <-- add external forces
   !
   ! ... Berry's phase electric field terms
@@ -300,7 +297,6 @@ SUBROUTINE qepy_forces(icalc, embed)
   ! ... call void routine for user define/ plugin patches on external forces
   !
   CALL plugin_ext_forces()
-  !
   !
   ! ... write on output the forces
   !

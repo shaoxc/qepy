@@ -1,7 +1,7 @@
 MODULE qepy_mod
    USE kinds,                   ONLY : DP
    USE qepy_scatter_mod,        ONLY : gather_grid, scatter_grid
-   USE qepy_common,             ONLY : embed_base, input_base
+   USE qepy_common,             ONLY : embed
    USE fft_base,                ONLY : dfftp
    !
    IMPLICIT NONE
@@ -220,7 +220,7 @@ CONTAINS
       !
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_extpot(embed, vin, gather)
+   SUBROUTINE qepy_set_extpot(vin, gather)
       USE kinds,                ONLY : DP
       USE fft_rho,              ONLY : rho_g2r, rho_r2g
       USE fft_base,             ONLY : dfftp, dffts
@@ -228,7 +228,6 @@ CONTAINS
       USE mp,                   ONLY : mp_bcast
       !
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: vin(:,:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
@@ -482,12 +481,11 @@ CONTAINS
       ENDDO
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_extforces(embed, forces)
+   SUBROUTINE qepy_set_extforces(forces)
       USE kinds,                ONLY : DP
       USE ions_base,            ONLY : nat, ntyp => nsp
       !
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(IN) :: forces(:,:)
       !
       call embed%allocate_extforces()
@@ -495,7 +493,7 @@ CONTAINS
       !
    END SUBROUTINE
 
-   SUBROUTINE qepy_calc_effective_potential(embed, potential, gather)
+   SUBROUTINE qepy_calc_effective_potential(potential, gather)
       USE kinds,                ONLY : DP
       USE ions_base,            ONLY : nat, ntyp => nsp
       USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs
@@ -507,7 +505,6 @@ CONTAINS
       USE lsda_mod,             ONLY : nspin
       !
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP), INTENT(OUT),OPTIONAL  :: potential(:,:)
       LOGICAL,INTENT(in),OPTIONAL     :: gather
       !
@@ -519,7 +516,7 @@ CONTAINS
       IF ( present(gather) ) gather_ = gather
       !
       CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-         ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+         ehart, etxc, vtxc, eth, etotefield, charge, v)
       !
       IF ( present(potential) ) THEN
          call qepy_get_value(vrs, potential, gather = gather_)
@@ -527,14 +524,13 @@ CONTAINS
       !
    END SUBROUTINE
 
-   SUBROUTINE qepy_set_effective_potential(embed, potential, gather)
+   SUBROUTINE qepy_set_effective_potential(potential, gather)
       USE kinds,                ONLY : DP
       USE scf,                  ONLY : kedtau, v, vltot, vrs
       USE lsda_mod,             ONLY : nspin
       USE gvecs,                ONLY : doublegrid
       !
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(INOUT) :: embed
       REAL(DP),INTENT(IN)             :: potential(:,:)
       LOGICAL,INTENT(in),OPTIONAL     :: gather
       !
@@ -589,6 +585,139 @@ CONTAINS
       ELSE
          CALL c_bands( it )
       ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE qepy_update_ions(pos, ikind, lattice)
+      !-----------------------------------------------------------------------
+      ! This is function Combined 'run_pwscf' and 'move_ions'.
+      !***********************************************************************
+      ! pos:
+      !   ionic positions in bohr
+      ! ikind:
+      !   ikind = 0  all
+      !   ikind = 1  atomic configuration dependent information
+      ! lattice:
+      !   lattice parameter in bohr
+      !***********************************************************************
+      !-----------------------------------------------------------------------
+      USE mp_images,            ONLY : intra_image_comm
+      USE extrapolation,        ONLY : update_file, update_pot
+      USE io_global,            ONLY : ionode_id, ionode
+      USE ions_base,            ONLY : nat, ityp, tau
+      USE symm_base,            ONLY : checkallsym
+      USE mp,                   ONLY : mp_bcast
+      USE control_flags,        ONLY : treinit_gvecs
+      USE cell_base,            ONLY : alat, at, bg, omega, cell_force, &
+                                     fix_volume, fix_area, ibrav, enforce_ibrav
+      USE cellmd,               ONLY : omega_old, at_old, press, lmovecell, calc, cell_factor
+      !
+      !
+      INTEGER                  :: ierr
+      REAL(DP), INTENT(IN) :: pos(:,:)
+      INTEGER,INTENT(IN),OPTIONAL  :: ikind
+      REAL(DP), INTENT(IN), OPTIONAL  :: lattice(3,3)
+      !
+      INTEGER   :: iflag
+      LOGICAL :: lmovecell_
+      !
+      IF ( present(ikind) ) THEN
+         iflag = ikind
+      ELSE
+         iflag = 0
+      ENDIF
+      !
+      IF ( present(lattice) ) THEN
+         IF (.not. lmovecell) THEN
+            call errore("qepy_update_ions","lattice update only works for calculation= 'vc-relax' and 'vc-md'.",1)
+            ! This is due to the `gshells` function in the initialization will set `ngl`, which is one of the shape of `vloc`.
+         ENDIF
+         lmovecell_ = .TRUE.
+      ELSE
+         lmovecell_ = .FALSE.
+      ENDIF
+
+      CALL update_file()
+
+      IF ( ionode ) THEN
+         tau(:,:)=pos(:,:) / alat
+         IF ( lmovecell_ ) THEN
+            !
+            IF (ALLOCATED(embed%extpot)) DEALLOCATE(embed%extpot)
+            !
+            at_old = at
+            omega_old = omega
+            IF (fix_volume) CALL impose_deviatoric_strain( alat*at, lattice )
+            IF (fix_area)   CALL impose_deviatoric_strain_2d( alat*at, lattice )
+            at = lattice / alat
+            IF(enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3) )
+            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
+            CALL volume( alat, at(1,1),at(1,2),at(1,3), omega )
+            !
+         ENDIF
+         CALL checkallsym( nat, tau, ityp)
+      ENDIF
+      !
+      CALL mp_bcast( tau, ionode_id, intra_image_comm )
+      !
+      IF ( lmovecell_ ) THEN
+         !
+         CALL mp_bcast( at,        ionode_id, intra_image_comm )
+         CALL mp_bcast( at_old,    ionode_id, intra_image_comm )
+         CALL mp_bcast( omega,     ionode_id, intra_image_comm )
+         CALL mp_bcast( omega_old, ionode_id, intra_image_comm )
+         CALL mp_bcast( bg,        ionode_id, intra_image_comm )
+         !
+      ENDIF
+      IF (iflag == 0 ) THEN
+         CALL punch( 'config-nowf' )
+         IF ( treinit_gvecs ) THEN
+            CALL reset_gvectors()
+         ELSE
+            CALL update_pot()
+            CALL qepy_hinit1()
+         END IF
+      ELSE IF (iflag == 1 ) THEN
+         CALL set_rhoc()
+         CALL qepy_hinit1()
+      END IF
+   END SUBROUTINE
+
+   SUBROUTINE qepy_restart_from_xml()
+      USE symm_base,            ONLY : irt
+      USE force_mod,            ONLY : force
+      USE ions_base,            ONLY : extfor
+      USE extfield,             ONLY : forcefield, forcegate
+      USE pw_restart_new,       ONLY : read_xml_file
+      !
+      LOGICAL              :: wfc_is_collected
+      !
+      IF (ALLOCATED(irt)) DEALLOCATE(irt)
+      IF (ALLOCATED(force)) DEALLOCATE(force)
+      IF (ALLOCATED(extfor)) DEALLOCATE(extfor)
+      IF (ALLOCATED(forcefield)) DEALLOCATE(forcefield)
+      IF (ALLOCATED(forcegate)) DEALLOCATE(forcegate)
+      !
+      CALL read_xml_file(wfc_is_collected)
+      !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_sum_band(occupations)
+      USE fixed_occ,            ONLY : tfixed_occ, f_inp
+      !
+      REAL(DP),INTENT(in),OPTIONAL :: occupations(:,:)
+      !
+      IF ( present(occupations) ) THEN
+         IF (ALLOCATED(f_inp)) DEALLOCATE(f_inp)
+         ALLOCATE(f_inp(size(occupations,1), size(occupations,2)))
+         f_inp(:,:) = occupations(:,:)
+         tfixed_occ = .TRUE.
+      ELSE
+         tfixed_occ = .FALSE.
+         IF (ALLOCATED(f_inp)) DEALLOCATE(f_inp)
+      ENDIF
+      !
+      CALL sum_band()
+      !
    END SUBROUTINE
 
 END MODULE qepy_mod

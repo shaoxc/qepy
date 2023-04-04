@@ -11,7 +11,7 @@
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_electrons(embed)
+SUBROUTINE qepy_electrons()
   !----------------------------------------------------------------------------
   !! General self-consistency loop, also for hybrid functionals
   !! For non-hybrid functionals it just calls "electron_scf"
@@ -51,11 +51,9 @@ SUBROUTINE qepy_electrons(embed)
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   USE loc_scdm_k,           ONLY : localize_orbitals_k
   !
-  USE qepy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed
   !
   IMPLICIT NONE
-  !
-  type(embed_base), intent(inout)    :: embed
   !
   ! ... a few local variables
   !
@@ -160,7 +158,7 @@ SUBROUTINE qepy_electrons(embed)
      ! ... Self-consistency loop. For hybrid functionals the exchange potential
      ! ... is calculated with the orbitals at previous step (none at first step)
      !
-     CALL qepy_electrons_scf ( printout, exxen, embed )
+     CALL qepy_electrons_scf ( printout, exxen)
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      !
@@ -214,7 +212,7 @@ SUBROUTINE qepy_electrons(embed)
         ! start self-consistency loop on exchange
         !
         CALL qepy_v_of_rho( rho, rho_core, rhog_core, &
-             ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+             ehart, etxc, vtxc, eth, etotefield, charge, v)
         etot = etot + etxc + exxen
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
@@ -352,7 +350,7 @@ SUBROUTINE qepy_electrons(embed)
 END SUBROUTINE qepy_electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
+SUBROUTINE qepy_electrons_scf ( printout, exxen)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -424,7 +422,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
-  USE qepy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed
   !
   IMPLICIT NONE
   !
@@ -433,7 +431,6 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !! * if printout>1, also prints decomposition into energy contributions.
   REAL(DP),INTENT (IN) :: exxen
   !! current estimate of the exchange energy
-  type(embed_base), intent(inout)    :: embed
   !
   ! ... local variables
   !
@@ -527,7 +524,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   ENDIF
   endif
   if (iand(embed%exttype,1) == 1) then
-     call qepy_setlocal(embed%exttype)
+     call qepy_setlocal()
   endif
   !
   IF ( llondon ) THEN
@@ -571,7 +568,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
   CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+     ehart, etxc, vtxc, eth, etotefield, charge, v)
 
   if ( add_descf .and. embed%mix_coef<0.0_DP ) then
      descf = qepy_delta_escf(rho, rho_prev)
@@ -816,7 +813,7 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            ! ... charge density (i.e. the new estimate)
            !
            CALL qepy_v_of_rho_all( rhoin, rho_core, rhog_core, &
-              ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+              ehart, etxc, vtxc, eth, etotefield, charge, v)
            !CALL v_of_rho( rhoin, rho_core, rhog_core, &
            !               ehart, etxc, vtxc, eth, etotefield, charge, v)
            !!
@@ -846,10 +843,8 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen, embed)
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
-           !CALL v_of_rho( rho,rho_core,rhog_core, &
-           !           ehart, etxc, vtxc, eth, etotefield, charge, v)
            CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-              ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+                          ehart, etxc, vtxc, eth, etotefield, charge, v)
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            !IF (okpaw) THEN

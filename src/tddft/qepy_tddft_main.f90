@@ -7,8 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-!PROGRAM tddft_main
-SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm)
+SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm, embed)
   !-----------------------------------------------------------------------
   !
   ! ... This is the main driver of the real time TDDFT propagation.
@@ -19,6 +18,7 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm)
   ! ...
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, meta_ionode, meta_ionode_id
+  !USE mp,              ONLY : mp_bcast
   USE tddft_module,    ONLY : job, molecule, max_seconds
   USE check_stop,      ONLY : check_stop_init
   USE control_flags,   ONLY : io_level, gamma_only, use_para_diag
@@ -36,6 +36,7 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm)
   USE ions_base,        ONLY : nat, ntyp => nsp
   USE cell_base,        ONLY : ibrav
   !USE tddft_version
+  USE qepy_common,      ONLY : embed_base, set_embed, messenger, p_embed => embed
   USE iotk_module  
   !------------------------------------------------------------------------
   IMPLICIT NONE
@@ -44,9 +45,14 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm)
   !
   CHARACTER(len=*) :: infile
   INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
+  type(embed_base), intent(inout), optional :: embed
   !------------------------------------------------------------------------
 
   ! begin with the initialization part
+  !
+  if (present(embed)) call set_embed(embed)
+  if (.not. associated(p_embed)) call set_embed(messenger)
+  !
 #ifdef __MPI
   IF ( PRESENT(my_world_comm)) THEN
      CALL mp_startup(my_world_comm=my_world_comm, start_images=.TRUE. )
@@ -83,11 +89,11 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm)
 
   io_level = 1
  
-  !! read ground state wavefunctions
+  ! read ground state wavefunctions
   !call read_file
 END SUBROUTINE qepy_tddft_main_initial
 !
-SUBROUTINE qepy_tddft_main_setup(embed)
+SUBROUTINE qepy_tddft_main_setup()
   !-----------------------------------------------------------------------
   !
   ! ... This is the main driver of the real time TDDFT propagation.
@@ -118,14 +124,11 @@ SUBROUTINE qepy_tddft_main_setup(embed)
   !USE tddft_version
   USE iotk_module  
   !
-  USE qepy_common,             ONLY : embed_base
-  !
   !------------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER (LEN=9)   :: code = 'TDDFT'
   LOGICAL, EXTERNAL  :: check_para_diag
   !
-  TYPE(embed_base), INTENT(INOUT)    :: embed
   !------------------------------------------------------------------------
 #ifdef __MPI
   use_para_diag = check_para_diag(nbnd)
@@ -150,7 +153,7 @@ SUBROUTINE qepy_tddft_main_setup(embed)
   assume_isolated_ = 'none'
   call plugin_read_input()
   call qepy_tddft_allocate()
-  call qepy_tddft_setup(embed)
+  call qepy_tddft_setup()
   call tddft_summary()
 
 #ifdef __BANDS
@@ -161,7 +164,7 @@ SUBROUTINE qepy_tddft_main_setup(embed)
   !select case (trim(job))
   !case ('optical')
   !   if (molecule) then
-  !      call qepy_molecule_optical_absorption(embed)
+  !      call qepy_molecule_optical_absorption()
   !   else
   !      call errore('tddft_main', 'solids are not yet implemented', 1)
   !   endif
@@ -195,6 +198,6 @@ SUBROUTINE qepy_stop_tddft(print_flag)
   ENDIF
   !call stop_code( .true. )
   !STOP
+
 END SUBROUTINE qepy_stop_tddft
 
-!END PROGRAM tddft_main

@@ -6,55 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-!SUBROUTINE stop_run( exit_status )
-  !!----------------------------------------------------------------------------
-  !!! Close all files and synchronize processes before stopping:
-  !!
-  !!! * exit_status = 0: successfull execution, remove temporary files;
-  !!! * exit_status =-1: code stopped by user request;
-  !!! * exit_status = 1: convergence not achieved.
-  !!
-  !!! Do not remove temporary files needed for restart.
-  !!
-  !USE io_global,          ONLY : ionode
-  !USE mp_global,          ONLY : mp_global_end
-  !USE environment,        ONLY : environment_end
-  !USE io_files,           ONLY : iuntmp, seqopn
-  !!
-  !IMPLICIT NONE
-  !!
-  !INTEGER, INTENT(IN) :: exit_status
-  !LOGICAL             :: exst, opnd, lflag
-  !!
-  !lflag = ( exit_status == 0 ) 
-  !IF ( lflag ) THEN
-     !! 
-     !! ... remove files needed only to restart
-     !!
-     !CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
-     !CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-     !!
-     !IF ( ionode ) THEN
-        !CALL seqopn( iuntmp, 'update', 'FORMATTED', exst )
-        !CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-        !CALL seqopn( iuntmp, 'para', 'FORMATTED', exst )
-        !CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-     !ENDIF
-     !!
-  !ENDIF
-  !!
-  !CALL close_files( lflag )
-  !!
-  !CALL print_clock_pw()
-  !!
-  !CALL clean_pw( .TRUE. )
-  !!
-  !CALL environment_end( 'PWSCF' )
-  !!
-  !CALL mp_global_end()
-  !!
-!END SUBROUTINE stop_run
-
 SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   !----------------------------------------------------------------------------
   !! Close all files and synchronize processes before stopping:

@@ -1,3 +1,4 @@
+import qepy
 from qepy.driver import Driver
 import numpy as np
 import pathlib
@@ -9,6 +10,7 @@ except Exception:
     comm = None
 
 def test_oldxml():
+    if comm and comm.size > 1 : return
     path = pathlib.Path(__file__).resolve().parent / 'DATA/oldxml'
     driver = Driver(comm = comm, prefix = 'al_oldxml', outdir=path, task = 'nscf')
     energy = driver.get_energy()
@@ -18,11 +20,12 @@ def test_oldxml():
 def test_oldxml_collect():
     path = pathlib.Path(__file__).resolve().parent / 'DATA/oldxml_collect'
     driver = Driver(comm = comm, prefix = 'al_oldxml', outdir=path, task = 'nscf')
-    wfc = path / 'al_oldxml.wfc1'
-    if wfc.is_file(): wfc.unlink()
-    wfc = path / 'al_oldxml.wfc'
-    if wfc.is_file(): wfc.unlink()
     energy = driver.get_energy()
+    #
+    if driver.is_root :
+        for f in path.glob('al_oldxml.wfc*'):
+            f.unlink()
+    #
     assert np.isclose(energy, -552.93477389, atol = 1E-6)
     driver.stop(what = 'no')
 

@@ -17,9 +17,9 @@ inputfile = path / 'qe_in.in'
 
 class Test(unittest.TestCase):
     def test_scf(self):
-        qepy.qepy_pwscf(inputfile, commf)
         embed = qepy.qepy_common.embed_base()
-        qepy.qepy_electrons_scf(2, 0, embed)
+        qepy.qepy_pwscf(inputfile, commf, embed = embed)
+        qepy.qepy_electrons_scf(2, 0)
 
         conv_flag = bool(qepy.control_flags.get_conv_elec())
         self.assertTrue(conv_flag)

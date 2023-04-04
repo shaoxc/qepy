@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_electrons_nscf ( printout, exxen, embed)
+SUBROUTINE qepy_electrons_nscf ( printout, exxen)
   !----------------------------------------------------------------------------
   !! This routine is a driver of the self-consistent cycle.
   !! It uses the routine c_bands for computing the bands at fixed
@@ -78,7 +78,7 @@ SUBROUTINE qepy_electrons_nscf ( printout, exxen, embed)
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
-  USE qepy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed
   !
   IMPLICIT NONE
   !
@@ -87,7 +87,6 @@ SUBROUTINE qepy_electrons_nscf ( printout, exxen, embed)
   !! * if printout>1, also prints decomposition into energy contributions.
   REAL(DP),INTENT (IN) :: exxen
   !! current estimate of the exchange energy
-  type(embed_base), intent(inout)    :: embed
   !
   ! ... local variables
   !
@@ -170,15 +169,16 @@ SUBROUTINE qepy_electrons_nscf ( printout, exxen, embed)
   ! ... calculates the ewald contribution to total energy
   !
   !if (embed%initial) then
-  if (embed%exttype<1) then
+  if (embed%lewald) then
   IF ( do_comp_esm ) THEN
      ewld = esm_ewald()
   ELSE
      ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   ENDIF
-  else if (iand(embed%exttype,1) == 1) then
-     call qepy_setlocal(embed%exttype)
+  endif
+  if (iand(embed%exttype,1) == 1) then
+     call qepy_setlocal()
   endif
   !
   IF ( llondon ) THEN
@@ -211,7 +211,7 @@ SUBROUTINE qepy_electrons_nscf ( printout, exxen, embed)
   end if ! if (embed%initial)
   !
   CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+     ehart, etxc, vtxc, eth, etotefield, charge, v)
 
   IF ( check_stop_now() ) THEN
      conv_elec=.FALSE.

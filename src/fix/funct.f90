@@ -1106,10 +1106,10 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     LOGICAL, INTENT(IN), OPTIONAL :: nomsg
     !
-    !qepy --> reset values
+    !qepy fix --> reset values
     dft = 'not set'
     discard_input_dft = .FALSE.
-    !qepy <-- reset values
+    !qepy fix <-- reset values
 
     CALL set_dft_from_name( dft_ )
     IF (dft == 'not set') CALL errore( 'enforce_input_dft', 'cannot fix unset dft', 1 )

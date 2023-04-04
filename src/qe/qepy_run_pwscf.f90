@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
+SUBROUTINE qepy_run_pwscf( exit_status )
   !----------------------------------------------------------------------------
   !! Author: Paolo Giannozzi  
   !! License: GNU  
@@ -54,7 +54,7 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
   USE mp_world, ONLY: world_comm
   !
   USE kinds,                ONLY : DP
-  USE qepy_common,          ONLY : embed_base
+  USE qepy_common,          ONLY : embed
   !
   IMPLICIT NONE
   !
@@ -73,17 +73,13 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
-  LOGICAL, INTENT(IN), OPTIONAL :: oldxml
-  type(embed_base), intent(inout), optional :: embed
   !
   exit_status = 0
   IF ( ionode ) WRITE( UNIT = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
   !qepy --> lmovecell
-  if (present(embed)) then
-     if (.not. lmovecell) then
-        lmovecell = embed%lmovecell
-     endif
+  if (.not. lmovecell) then
+     lmovecell = embed%lmovecell
   endif
   if (lmovecell) then
      if (cell_factor < 1.2d0 ) cell_factor = 2.d0
@@ -137,11 +133,7 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
   ENDIF
   !
   !CALL init_run()
-  if (present(oldxml)) then
-  CALL qepy_init_run(oldxml)
-  else
-  CALL qepy_init_run(.FALSE.)
-  endif
+  CALL qepy_init_run()
   !
   IF ( check_stop_now() ) THEN
      CALL qexsd_set_status( 255 )
@@ -150,10 +142,10 @@ SUBROUTINE qepy_run_pwscf( exit_status, oldxml, embed )
      RETURN
   ENDIF
   exit_status = 255
-  !qepy -->
+  !qepy --> init force
   !fix: force allocate with NaN
   force=0.0_dp
-  !qepy <--
+  !qepy <-- init force
   !
   !main_loop: DO idone = 1, nstep
      !!

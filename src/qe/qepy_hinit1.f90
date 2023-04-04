@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_hinit1(exttype)
+SUBROUTINE qepy_hinit1()
   !----------------------------------------------------------------------------
   !! Atomic configuration dependent hamiltonian initialization,
   !! potential, wavefunctions for Hubbard U.  
@@ -33,8 +33,6 @@ SUBROUTINE qepy_hinit1(exttype)
   !
   IMPLICIT NONE
   !
-  integer,                         intent(in)      :: exttype
-  !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
   !
@@ -43,7 +41,7 @@ SUBROUTINE qepy_hinit1(exttype)
   !
   ! ... calculate the total local potential
   !
-  CALL qepy_setlocal(exttype)
+  CALL qepy_setlocal()
   !
   IF ( tqr ) CALL generate_qpointlist()
   !

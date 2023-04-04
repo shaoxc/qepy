@@ -7,7 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-SUBROUTINE qepy_tddft_setup(embed)
+SUBROUTINE qepy_tddft_setup
   !-----------------------------------------------------------------------
   !
   ! ... TDDFT setup
@@ -30,15 +30,12 @@ SUBROUTINE qepy_tddft_setup(embed)
   USE constants,     ONLY : rytoev
   USE tddft_module
   !
-  USE qepy_common,             ONLY : embed_base
+  USE qepy_common,             ONLY : embed
   !
 
   implicit none
   integer :: ik, ibnd
   real(dp) :: emin, emax, xmax, small, fac, target
-  !
-  TYPE(embed_base), INTENT(INOUT)    :: embed
-  !
     
   call start_clock ('tddft_setup')
     
@@ -47,8 +44,7 @@ SUBROUTINE qepy_tddft_setup(embed)
   call init_at_1
 
   ! computes the total local potential (external+scf) on the smooth grid
-  !call setlocal
-  call qepy_setlocal(embed%exttype)
+  call qepy_setlocal()
   call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
     
   ! compute the D for the pseudopotentials
@@ -150,7 +146,7 @@ SUBROUTINE qepy_tddft_setup(embed)
   endif
 
   ! initialize hamiltonian
-  call qepy_update_hamiltonian(-1, embed)
+  call qepy_update_hamiltonian(-1)
 
   call stop_clock('tddft_setup')
   

@@ -29,3 +29,5 @@ def test_scf():
     assert np.isclose(forces[0, 0], -0.00835135, atol = 1E-3)
     assert np.isclose(stress[1, 1], -0.00256059, atol = 1E-3)
     driver.stop()
+
+test_scf()

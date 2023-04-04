@@ -7,7 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine qepy_molecule_optical_absorption(embed)
+subroutine qepy_molecule_optical_absorption()
   !----------------------------------------------------------------------
   !  ... Compute optical absorption spectrum by real-time TDDFT 
   !  ... References:
@@ -37,7 +37,7 @@ subroutine qepy_molecule_optical_absorption(embed)
   USE pwcom
   USE tddft_module
   !
-  USE qepy_common,             ONLY : embed_base
+  USE qepy_common,             ONLY : embed
   USE qepy_tddft_common,       ONLY : tddft_psi, b, &
                                       tddft_hpsi, tddft_spsi, &
                                       tddft_Ppsi, &
@@ -62,7 +62,6 @@ subroutine qepy_molecule_optical_absorption(embed)
   real(dp), external :: get_clock
   external tddft_ch_psi_all
   !
-  TYPE(embed_base), INTENT(INOUT)    :: embed
   INTEGER :: iter
   !
   INTEGER :: iuntemp ! unit for swap
@@ -109,7 +108,7 @@ subroutine qepy_molecule_optical_absorption(embed)
      if (okvan .and. is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
      call sum_band()
      !qepy -->
-     call qepy_update_hamiltonian(-1, embed)
+     call qepy_update_hamiltonian(-1)
      iunwfc = iuntemp
  
      if (iverbosity > 0) write(stdout,'(5X,''Done with restart'')')

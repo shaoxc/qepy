@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_read_file()
+SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
   ! Wrapper routine, for backwards compatibility
@@ -27,7 +27,7 @@ SUBROUTINE qepy_read_file()
   LOGICAL :: exst, wfc_is_collected
   !
   wfc_is_collected = .true.
-  CALL qepy_read_file_new( wfc_is_collected )
+  CALL read_file_new( wfc_is_collected )
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -53,12 +53,12 @@ SUBROUTINE qepy_read_file()
           'read_file: Wavefunctions in collected format not available'
   END IF
   !
-  !CALL close_buffer  ( iunwfc, 'KEEP' )
+  CALL close_buffer  ( iunwfc, 'KEEP' )
   !
-END SUBROUTINE qepy_read_file
+END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_read_file_new ( needwf )
+SUBROUTINE read_file_new ( needwf )
   !----------------------------------------------------------------------------
   !
   ! Reads xml data file produced by pw.x or cp.x, performs initializations
@@ -73,7 +73,7 @@ SUBROUTINE qepy_read_file_new ( needwf )
   USE klist,          ONLY : nkstot, nks, xk, wk
   USE lsda_mod,       ONLY : isk
   USE wvfct,          ONLY : nbnd, et, wg
-  USE qepy_pw_restart_new, ONLY : qepy_read_xml_file
+  USE pw_restart_new, ONLY : read_xml_file
   !
   IMPLICIT NONE
   !
@@ -86,16 +86,16 @@ SUBROUTINE qepy_read_file_new ( needwf )
   !
   ! ... Read the contents of the xml data file
   !
-  CALL qepy_read_xml_file ( wfc_is_collected )
+  CALL read_xml_file ( wfc_is_collected )
   !
   ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
   ! ... charge density / potential / ... , but not KS orbitals
   !
-  CALL qepy_post_xml_init ( )
+  CALL post_xml_init ( )
   !
   IF ( needwf ) THEN
      IF ( .NOT. wfc_is_collected ) WRITE( stdout, '(5x,A)') &
-          'qepy_read_file_new: Wavefunctions not in collected format?!?'
+          'read_file_new: Wavefunctions not in collected format?!?'
      !
      ! ... initialization of KS orbitals
      !
@@ -117,9 +117,9 @@ SUBROUTINE qepy_read_file_new ( needwf )
   END IF
   needwf = wfc_is_collected
   !
-END SUBROUTINE qepy_read_file_new
+END SUBROUTINE read_file_new
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_post_xml_init (  )
+SUBROUTINE post_xml_init (  )
   !----------------------------------------------------------------------------
   !
   ! ... Various initializations needed to start a calculation:
@@ -160,7 +160,7 @@ SUBROUTINE qepy_post_xml_init (  )
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
                                    init_realspace_vars,real_space
   !
-  !qepy --> import
+  !qepy fix --> import
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
@@ -177,16 +177,16 @@ SUBROUTINE qepy_post_xml_init (  )
   USE input_parameters,     ONLY : dftd3_threebody, dftd3_version
   USE funct,                ONLY : get_dft_short
   USE tsvdw_module,         ONLY : tsvdw_initialize
-  !qepy <-- import
+  !qepy fix <-- import
   IMPLICIT NONE
   !
   INTEGER  :: inlc
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=20) :: dft_name
-  !qepy --> variablesi
+  !qepy fix --> variables
   CHARACTER(LEN=256):: dft_
   REAL (DP), EXTERNAL :: get_clock
-  !qepy <-- variables
+  !qepy fix <-- variables
   !
   ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
@@ -265,11 +265,11 @@ SUBROUTINE qepy_post_xml_init (  )
   !
   ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
-  !qepy --> init vdw
+  !qepy fix --> init vdw
   IF ( ts_vdw) THEN
       CALL tsvdw_initialize()
       CALL set_h_ainv()
-     !CALL infomsg('qepy_read_file_new','*** vdW-TS term will be missing in potential ***')
+     !CALL infomsg('qepy fix_read_file_new','*** vdW-TS term will be missing in potential ***')
      !ts_vdw = .false.
   END IF
   !
@@ -291,7 +291,7 @@ SUBROUTINE qepy_post_xml_init (  )
      dft_ = dftd3_xc ( dft_ )
      CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
   ENDIF
-  !qepy <-- init
+  !qepy fix <-- init vdw
   CALL v_of_rho( rho, rho_core, rhog_core, &
        ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
@@ -338,4 +338,4 @@ SUBROUTINE qepy_post_xml_init (  )
       !
     END SUBROUTINE set_gcut
     !
-  END SUBROUTINE qepy_post_xml_init
+  END SUBROUTINE post_xml_init
