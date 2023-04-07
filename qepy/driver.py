@@ -121,6 +121,26 @@ class Driver(object) :
         else :
             self.commf = self.comm
 
+    @property
+    def is_root(self):
+        """Whether it is the root.
+
+        If the comm is set, root is rank == 0.
+        Otherwise root is ionode of QE.
+        """
+        if hasattr(self.comm, 'rank'):
+            return self.comm.rank == 0
+        else :
+            return qepy.io_global.get_ionode()
+
+    @property
+    def qe_is_mpi(self):
+        return qepy.qepy_common.get_is_mpi()
+
+    @property
+    def qe_is_openmp(self):
+        return qepy.qepy_common.get_is_openmp()
+
     def restart(self, prog=None, **kwargs):
         prog = prog or self.prog
         self.driver_initialize()
@@ -433,53 +453,6 @@ class Driver(object) :
                 qepy.basis.set_starting_wfc(starting_wfc)
                 qepy.wfcinit()
 
-    @property
-    def is_root(self):
-        """Whether it is the root.
-
-        If the comm is set, root is rank == 0.
-        Otherwise root is ionode of QE.
-        """
-        if hasattr(self.comm, 'rank'):
-            return self.comm.rank == 0
-        else :
-            return qepy.io_global.get_ionode()
-
-    @property
-    def qe_is_mpi(self):
-        return qepy.qepy_common.get_is_mpi()
-
-    @property
-    def qe_is_openmp(self):
-        return qepy.qepy_common.get_is_openmp()
-
-    @staticmethod
-    def get_ions_lattice():
-        """Return the lattice of ions."""
-        alat = qepy.cell_base.get_alat()
-        lattice = qepy.cell_base.get_array_at() * alat
-        return lattice.T
-
-    @staticmethod
-    def get_ions_positions():
-        """Return the cartesian positions of ions."""
-        alat = qepy.cell_base.get_alat()
-        pos = qepy.ions_base.get_array_tau().T * alat
-        return pos
-
-    @staticmethod
-    def get_ions_symbols():
-        """Return the symbols of ions."""
-        ityp = qepy.ions_base.get_array_ityp() - 1
-        nat = qepy.ions_base.get_nat()
-        ntyp = qepy.ions_base.get_nsp()
-        label = qepy.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')[:ntyp]
-        label = [x.strip() for x in label]
-        symbols = []
-        for i in range(nat):
-            symbols.append(label[ityp[i]])
-        return symbols
-
     def get_density(self, gather = True):
         """Return density array in real space."""
         nr = self.get_number_of_grid_points(gather = gather)
@@ -616,52 +589,59 @@ class Driver(object) :
         forces = qepy.force_mod.get_array_force().T
         return forces
 
-    def get_stress(self, **kwargs):
+    @classmethod
+    def get_stress(cls, **kwargs):
         """Return the stress (3, 3)."""
         stress = np.zeros((3, 3), order='F')
         qepy.stress(stress)
-        # qepy.qepy_stress(stress, 0)
         return stress
 
     #ASE DFTCalculator
-    def get_number_of_bands(self):
+    @classmethod
+    def get_number_of_bands(cls):
         """Return the number of bands."""
         return qepy.wvfct.get_nbnd()
 
-    def get_xc_functional(self):
+    @classmethod
+    def get_xc_functional(cls):
         """Return the XC-functional identifier.
 
         'LDA', 'PBE', ..."""
         return qepy.funct.get_dft_short().decode("utf-8")
 
-    def get_bz_k_points(self):
+    @classmethod
+    def get_bz_k_points(cls):
         """Return all the k-points in the 1. Brillouin zone.
 
         The coordinates are relative to reciprocal latice vectors."""
         return qepy.klist.get_array_xk()
 
-    def get_number_of_spins(self):
+    @classmethod
+    def get_number_of_spins(cls):
         """Return the number of spins in the calculation.
 
         Spin-paired calculations: 1, spin-polarized calculation: 2."""
         return qepy.lsda_mod.get_nspin()
 
-    def get_spin_polarized(self):
+    @classmethod
+    def get_spin_polarized(cls):
         """Is it a spin-polarized calculation?"""
         return bool(qepy.lsda_mod.get_lsda())
 
-    def get_ibz_k_points(self):
+    @classmethod
+    def get_ibz_k_points(cls):
         """Return k-points in the irreducible part of the Brillouin zone.
 
         The coordinates are relative to reciprocal latice vectors."""
-        xk = qepy.klist.get_array_xk()[:, :self.get_number_of_k_points()].T
+        xk = qepy.klist.get_array_xk()[:, :cls.get_number_of_k_points()].T
         return xk @ qepy.cell_base.get_array_at()
 
-    def get_k_point_weights(self):
+    @classmethod
+    def get_k_point_weights(cls):
         """Weights of the k-points.
 
         The sum of all weights is one."""
-        return qepy.klist.get_array_wk()[:self.get_number_of_k_points()]
+        return qepy.klist.get_array_wk()[:cls.get_number_of_k_points()]
 
     def get_pseudo_density(self, spin=None, pad=True, gather = True):
         """Return pseudo-density array.
@@ -675,11 +655,13 @@ class Driver(object) :
         else :
             return density[:, spin]
 
-    def get_effective_potential(self, spin=0, pad=True):
+    @classmethod
+    def get_effective_potential(cls, spin=0, pad=True):
         """Return pseudo-effective-potential array."""
         return qepy.scf.get_array_vrs()
 
-    def get_pseudo_wave_function(self, band=None, kpt=0, spin=0, broadcast=True,
+    @classmethod
+    def get_pseudo_wave_function(cls, band=None, kpt=0, spin=0, broadcast=True,
                                  pad=True):
         """Return pseudo-wave-function array."""
         qepy.qepy_mod.qepy_get_evc(kpt + 1)
@@ -689,15 +671,18 @@ class Driver(object) :
         else :
             return evc[:, band]
 
-    def get_eigenvalues(self, kpt=0, spin=0):
+    @classmethod
+    def get_eigenvalues(cls, kpt=0, spin=0):
         """Return eigenvalue array."""
         return qepy.wvfct.get_array_et()[:, kpt]
 
-    def get_occupation_numbers(self, kpt=0, spin=0):
+    @classmethod
+    def get_occupation_numbers(cls, kpt=0, spin=0):
         """Return occupation number array."""
         return qepy.wvfct.get_array_wg()[:, kpt]
 
-    def get_fermi_level(self):
+    @classmethod
+    def get_fermi_level(cls):
         """Return the Fermi level."""
         return qepy.ener.get_ef()
 
@@ -715,47 +700,112 @@ class Driver(object) :
         # """Calculate integrals for maximally localized Wannier functions."""
         # raise NotImplementedError
 
-    def get_magnetic_moment(self, **kwargs):
+    @classmethod
+    def get_magnetic_moment(cls, **kwargs):
         """Return the total magnetic moment."""
         return qepy.lsda_mod.get_magtot()
 
-    def get_number_of_grid_points(self, gather = True):
+    @classmethod
+    def get_number_of_grid_points(cls, gather = True):
         """Return the shape of arrays."""
         nr = np.zeros(3, dtype = 'int32')
         qepy.qepy_mod.qepy_get_grid(nr, gather)
         return nr
     #ASE DFTCalculator END
 
-    def get_volume(self):
+    @classmethod
+    def get_volume(cls):
         """Return the volume."""
         return qepy.cell_base.get_omega()
 
-    def get_ecutrho(self):
+    @classmethod
+    def get_ecutrho(cls):
         """Return the cutoff for density."""
         return qepy.gvect.get_ecutrho()
 
-    def data2field(self, data, cell = None, grid = None):
-        """QE data to dftpy DirectField, please call it in serial."""
+    @classmethod
+    def get_ions_lattice(cls):
+        """Return the lattice of ions."""
+        alat = qepy.cell_base.get_alat()
+        lattice = qepy.cell_base.get_array_at() * alat
+        return lattice.T
+
+    @classmethod
+    def get_ions_positions(cls):
+        """Return the cartesian positions of ions."""
+        alat = qepy.cell_base.get_alat()
+        pos = qepy.ions_base.get_array_tau().T * alat
+        return pos
+
+    @classmethod
+    def get_ions_symbols(cls):
+        """Return the symbols of ions."""
+        ityp = qepy.ions_base.get_array_ityp() - 1
+        nat = qepy.ions_base.get_nat()
+        ntyp = qepy.ions_base.get_nsp()
+        label = qepy.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')[:ntyp]
+        label = [x.strip() for x in label]
+        symbols = []
+        for i in range(nat):
+            symbols.append(label[ityp[i]])
+        return symbols
+
+    @classmethod
+    def data2field(cls, data, cell = None, grid = None, rank = None):
+        """QE data to dftpy DirectField.
+        If data is None or small temporary array will return np.zeros(1).
+        """
         from dftpy.field import DirectField
         from dftpy.grid import DirectGrid
         #
-        if cell is None : cell = self.get_ions_lattice()
-        if grid is None : grid = DirectGrid(lattice=cell, nr=self.get_number_of_grid_points(), ecut=self.get_ecutrho())
-        field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=self.get_number_of_spins())
+        if data is None or data.size < 8 : return np.zeros(1)
+        #
+        if cell is None : cell = cls.get_ions_lattice()
+        if grid is None : grid = DirectGrid(lattice=cell, nr=cls.get_number_of_grid_points(), ecut=cls.get_ecutrho())
+        if not rank :
+            rank = data.shape[1] if data.ndim == 2 else 1
+        #
+        if data.size != grid.nnrR*rank :
+            raise ValueError('The size of data not match the grid,\
+                    please check the data or set another grid', data.size, grid.nnrR*rank)
+        #
+        field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=rank)
         return field
 
-    def field2data(self, field, data = None):
-        """dftpy DirectField to QE data, please call it in serial."""
-        nspin = self.get_number_of_spins()
-        if data is None :
-            nnrR = np.prod(self.get_number_of_grid_points())
-            data = np.empty((nnrR, nspin))
+    @classmethod
+    def field2data(cls, field, data = None):
+        """dftpy DirectField to QE data.
+        If the input field is not 3d array, will return np.zeros((1, 1)).
+        """
+        #
+        if field is None or field.ndim < 3 : return np.zeros((1, 1))
         #
         ns = field.shape[0] if field.ndim == 4 else 1
+        if data is None :
+            nnrR = np.prod(cls.get_number_of_grid_points())
+            data = np.empty((nnrR, ns))
+        #
+        if data.size != field.size :
+            raise ValueError('The size of field is different with data,\
+                    please check the field or set another data', field.size, data.size)
+        #
         if ns == 1 : field = [field]
-        for i in range(nspin):
+        for i in range(ns):
             data[:, i] = field[i].ravel(order = 'F')
         return data
+
+    @classmethod
+    def get_dftpy_grid(cls, nr = None, cell = None, mp = None, **kwargs):
+        """Return the dftpy DirectGrid from QE."""
+        from dftpy.grid import DirectGrid
+        if cell is None : cell = cls.get_ions_lattice()
+        if nr is None :
+            nr = cls.get_number_of_grid_points()
+            ecut = cls.get_ecutrho()
+        else :
+            ecut = None
+        grid = DirectGrid(lattice=cell, nr=nr, ecut=ecut, mp=mp, **kwargs)
+        return grid
 
     @classmethod
     def get_ase_atoms(cls):
@@ -776,7 +826,8 @@ class Driver(object) :
         atoms = cls.get_ase_atoms()
         return Ions.from_ase(atoms)
 
-    def set_density(self, density, gather = True, **kwargs):
+    @classmethod
+    def set_density(cls, density, gather = True, **kwargs):
         """Set density array in real space."""
         #
         if density is None : density = np.zeros((1, 1))
@@ -784,8 +835,8 @@ class Driver(object) :
         #
         qepy.qepy_mod.qepy_set_rho(density, gather = gather)
 
-    @staticmethod
-    def switch_nlpp(nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):
+    @classmethod
+    def switch_nlpp(cls, nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):
         nhm_ = qepy.uspp_param.get_nhm()
         nbetam_ = qepy.uspp_param.get_nbetam()
         nh_ = qepy.uspp_param.get_array_nh().copy()
@@ -793,7 +844,6 @@ class Driver(object) :
 
         if nh is None: nh = nh_ * 0
 
-        print('nnn', nhm, type(nhm))
         qepy.uspp_param.set_nhm(nhm)
         qepy.uspp_param.set_nbetam(nbetam)
         qepy.uspp.set_nkb(nkb)
@@ -807,3 +857,4 @@ class Driver(object) :
         }
 
         return pp_options
+
