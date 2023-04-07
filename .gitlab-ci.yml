@@ -45,6 +45,8 @@ test:
    - cp -r $PUBLIC/* $PACKAGE
    - cd examples/test
    - bash test.sh
+   - export MPIRUN="mpirun --allow-run-as-root --oversubscribe"
+   - bash test.sh p
 
 qe65:
   stage: qe65

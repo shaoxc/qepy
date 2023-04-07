@@ -7,6 +7,13 @@ check_exit() {
 	fi
 }
 
+if [ -z "$MPIRUN" ]
+then
+	mpirun=mpirun
+else
+	mpirun=$MPIRUN
+fi
+
 serial='y'
 parallel=''
 if [ $# -gt 1 ]
@@ -34,7 +41,7 @@ if [ $parallel ]; then
 	echo "####################Test MPI version#######################"
 	for f in *py
 	do
-		mpirun -n 2 python3 -m pytest --with-mpi $f
+		$mpirun -n 2 python3 -m pytest --with-mpi $f
 		check_exit $?
 	done
 fi
