@@ -352,7 +352,7 @@
       USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
       USE mp_bands, ONLY: intra_bgrp_comm
       USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
-      USE buffers,              ONLY : get_buffer
+      USE buffers,              ONLY : get_buffer, open_buffer
 
       USE pw2blip
       !
@@ -417,6 +417,7 @@
       REAL(DP) :: ehf
       REAL(DP) :: deband_hwf
       REAL(DP), EXTERNAL :: qepy_delta_e
+      LOGICAL :: exst_mem, exst_file, opnd
       !
 
       IF( lsda )THEN
@@ -432,9 +433,11 @@
       ENDIF
 
       ALLOCATE (aux(dfftp%nnr))
-      !qepy
+      !qepy add --> fix
       if (is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
-      !
+      INQUIRE( UNIT = iunwfc, OPENED = opnd )
+      IF ( .not. opnd ) CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
+      !qepy add <-- fix
       CALL allocate_bec_type ( nkb, nbnd, becp )
 
       ek  = 0.d0
