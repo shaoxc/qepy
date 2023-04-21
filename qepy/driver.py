@@ -200,6 +200,7 @@ class Driver(object) :
                 qepy.oldxml_read_file()
             else :
                 qepy.read_file()
+            qepy.qepy_mod.qepy_open_files()
         else :
             qepy.qepy_pwscf(inputfile, commf)
             self.embed.iterative = self.iterative
@@ -453,21 +454,33 @@ class Driver(object) :
                 qepy.basis.set_starting_wfc(starting_wfc)
                 qepy.wfcinit()
 
-    def get_density(self, gather = True):
-        """Return density array in real space."""
-        nr = self.get_number_of_grid_points(gather = gather)
-        nspin = qepy.lsda_mod.get_nspin()
-        if gather :
-            if self.is_root :
-                if np.prod(nr) != self.density.shape[0] or nspin != self.density.shape[1] :
-                    self.density = np.empty((np.prod(nr), nspin), order = 'F')
+    def create_array(self, gather = True, kind = 'rho'):
+        """Return an empty array in real space."""
+        if kind == 'rho' :
+            nr = self.get_number_of_grid_points(gather = gather)
+            nspin = qepy.lsda_mod.get_nspin()
+            if gather :
+                if self.is_root :
+                    out = np.empty((np.prod(nr), nspin), order = 'F')
+                else :
+                    out = np.empty((1, nspin), order = 'F')
             else :
-                self.density = np.empty((1, nspin), order = 'F')
+                out = np.empty((np.prod(nr), nspin), order = 'F')
         else :
-            if np.prod(nr) != self.density.shape[0] or nspin != self.density.shape[1] :
-                self.density = np.empty((np.prod(nr), nspin), order = 'F')
-        qepy.qepy_mod.qepy_get_rho(self.density, gather = gather)
-        return self.density
+            raise ValueError('Only support "rho"')
+        return out
+
+    def get_density(self, gather = True, out = None):
+        """Return density array in real space."""
+        if out is None : out = self.create_array(gather=gather, kind='rho')
+        qepy.qepy_mod.qepy_get_rho(out, gather = gather)
+        return out
+
+    def get_kinetic_energy_density(self, gather = True, out = None):
+        """Return density array in real space."""
+        if out is None : out = self.create_array(gather=gather, kind='rho')
+        qepy.qepy_mod.qepy_get_tau(out, gather = gather)
+        return out
 
     def get_wave_function(self, band=None, kpt=0):
         """Return wave-function array in real space."""
@@ -858,3 +871,7 @@ class Driver(object) :
 
         return pp_options
 
+    @classmethod
+    def update_exchange_correlation(cls, xc=None, libxc=None, **kwargs):
+        if libxc : xc = None
+        qepy.qepy_mod.qepy_set_dft(xc)

@@ -674,11 +674,11 @@ CONTAINS
             CALL reset_gvectors()
          ELSE
             CALL update_pot()
-            CALL qepy_hinit1()
+            CALL hinit1()
          END IF
       ELSE IF (iflag == 1 ) THEN
          CALL set_rhoc()
-         CALL qepy_hinit1()
+         CALL hinit1()
       END IF
    END SUBROUTINE
 
@@ -717,6 +717,101 @@ CONTAINS
       ENDIF
       !
       CALL sum_band()
+      !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_get_tau(tau, gather)
+      USE kinds,                ONLY : DP
+      use scf,                  ONLY : rho
+      USE wavefunctions,        ONLY : psic
+      USE fft_base,                ONLY : dfftp
+      USE lsda_mod,             ONLY : nspin
+      USE fft_interfaces,       ONLY : invfft
+      USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(OUT) :: tau(:,:)
+      LOGICAL,INTENT(in),OPTIONAL :: gather
+      !
+      LOGICAL :: gather_
+      INTEGER :: is
+      !
+      gather_ = .true.
+      IF ( present(gather) ) gather_ = gather
+      !
+      !DO is = 1, nspin
+         !psic(:) = ( 0.D0, 0.D0 )
+         !psic(dfftp%nl(:)) = rho%kin_g(:,is)
+         !IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%kin_g(:,is) )
+         !CALL invfft ('Rho', psic, dfftp)
+         !rho%kin_r(:,is) = psic(:)
+      !END DO
+      !
+      call qepy_get_value(rho%kin_r, tau, gather = gather_)
+   END SUBROUTINE
+
+   SUBROUTINE qepy_open_files(io_level)
+      USE kinds,                ONLY : DP
+      USE io_files,             ONLY : nwordwfc, iunwfc
+      USE control_flags,        ONLY : io_level_ => io_level
+      USE buffers,              ONLY : open_buffer
+      !
+      IMPLICIT NONE
+      INTEGER,INTENT(in),OPTIONAL :: io_level
+      !
+      INTEGER                     :: level
+      LOGICAL :: exst_mem, exst_file, opnd
+      !
+      IF ( present(io_level) ) THEN
+         level = io_level
+      ELSE
+         level = io_level_
+      ENDIF
+      !
+      INQUIRE( UNIT = iunwfc, OPENED = opnd )
+      IF ( .not. opnd ) CALL open_buffer( iunwfc, 'wfc', nwordwfc, level, exst_mem, exst_file )
+      !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_set_dft(dft)
+      USE kinds,                ONLY : DP
+      USE funct,                ONLY : dft_is_meta, enforce_input_dft
+      USE fft_base,             ONLY : dffts
+      USE lsda_mod,             ONLY : nspin
+      USE gvect,                ONLY : ngm
+      USE scf,                  ONLY : rho, vnew, v, kedtau
+      !
+      IMPLICIT NONE
+      CHARACTER(LEN=*),INTENT(IN),OPTIONAL  :: dft
+      !
+      LOGICAL :: is_meta
+      !
+      is_meta = dft_is_meta()
+      IF ( present(dft) ) THEN
+         call enforce_input_dft(dft)
+      ELSE
+         call enforce_input_dft('M06L')
+      ENDIF
+      !
+      IF ( dft_is_meta() .and. (.not. is_meta) ) THEN
+         IF (ALLOCATED(kedtau)) DEALLOCATE(kedtau)
+         ALLOCATE( kedtau(dffts%nnr,nspin) )
+         !
+         IF (ALLOCATED(rho%kin_r)) DEALLOCATE(rho%kin_r)
+         IF (ALLOCATED(rho%kin_g)) DEALLOCATE(rho%kin_g)
+         ALLOCATE( rho%kin_r(dfftp%nnr,nspin) )
+         ALLOCATE( rho%kin_g(ngm,nspin) )
+         !
+         IF (ALLOCATED(v%kin_r)) DEALLOCATE(v%kin_r)
+         IF (ALLOCATED(v%kin_g)) DEALLOCATE(v%kin_g)
+         ALLOCATE( v%kin_r(dfftp%nnr,nspin) )
+         ALLOCATE( v%kin_g(ngm,nspin) )
+         !
+         IF (ALLOCATED(vnew%kin_r)) DEALLOCATE(vnew%kin_r)
+         IF (ALLOCATED(vnew%kin_g)) DEALLOCATE(vnew%kin_g)
+         ALLOCATE( vnew%kin_r(dfftp%nnr,nspin) )
+         ALLOCATE( vnew%kin_g(ngm,nspin) )
+      ENDIF
       !
    END SUBROUTINE
 

@@ -1109,6 +1109,13 @@ CONTAINS
     !qepy fix --> reset values
     dft = 'not set'
     discard_input_dft = .FALSE.
+    iexch = notset
+    icorr = notset
+    igcx  = notset
+    igcc  = notset
+    imeta = notset
+    imetac= notset
+    inlc  = notset
     !qepy fix <-- reset values
 
     CALL set_dft_from_name( dft_ )

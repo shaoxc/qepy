@@ -417,7 +417,6 @@
       REAL(DP) :: ehf
       REAL(DP) :: deband_hwf
       REAL(DP), EXTERNAL :: qepy_delta_e
-      LOGICAL :: exst_mem, exst_file, opnd
       !
 
       IF( lsda )THEN
@@ -435,8 +434,6 @@
       ALLOCATE (aux(dfftp%nnr))
       !qepy add --> fix
       if (is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
-      INQUIRE( UNIT = iunwfc, OPENED = opnd )
-      IF ( .not. opnd ) CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
       !qepy add <-- fix
       CALL allocate_bec_type ( nkb, nbnd, becp )
 
