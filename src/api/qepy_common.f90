@@ -1,5 +1,9 @@
 MODULE qepy_common
-   USE kinds,                ONLY : DP
+   USE kinds,               ONLY : DP
+   !
+   USE fft_types,           ONLY : fft_type_descriptor
+   USE scf,                 ONLY : scf_type
+   !
    IMPLICIT NONE
    PRIVATE
    !
@@ -102,6 +106,13 @@ MODULE qepy_common
       !! allow change the cell
       logical                         :: oldxml = .false.
       !! Olderversion QE (XML file name is 'data-file.xml')
+      !!
+      !!
+      type(fft_type_descriptor),pointer :: dfftp
+      type(fft_type_descriptor),pointer :: dffts
+      type(scf_type),pointer            :: rho
+      type(scf_type),pointer            :: v
+      type(scf_type),pointer            :: vnew
    CONTAINS
       !--------------------------------------------------------------------------------
       PROCEDURE :: allocate_extpot
@@ -122,10 +133,39 @@ CONTAINS
    !
    SUBROUTINE set_embed(obj)
       !
+      USE fft_base,             ONLY : dfftp, dffts
+      USE scf,                  ONLY : rho, vnew, v
       IMPLICIT NONE
-      TYPE(embed_base), INTENT(IN), TARGET :: obj
+      TYPE(embed_base), INTENT(INOUT), TARGET :: obj
       !
       embed => obj
+      call set_target_dfft(obj, dfftp, dffts)
+      call set_target_scf(obj, rho, vnew, v)
+      !
+   END SUBROUTINE
+   !
+   SUBROUTINE set_target_dfft(obj, dfftp, dffts)
+      USE fft_types,           ONLY : fft_type_descriptor
+      !
+      IMPLICIT NONE
+      TYPE(fft_type_descriptor), INTENT(IN), TARGET :: dfftp, dffts
+      TYPE(embed_base), INTENT(INOUT) :: obj
+      !
+      obj%dfftp => dfftp
+      obj%dffts => dffts
+      !
+   END SUBROUTINE
+   !
+   SUBROUTINE set_target_scf(obj, rho, v, vnew)
+      USE scf,                 ONLY : scf_type
+      !
+      IMPLICIT NONE
+      TYPE(scf_type), INTENT(IN), TARGET :: rho, v, vnew
+      TYPE(embed_base), INTENT(INOUT) :: obj
+      !
+      obj%rho => rho
+      obj%v => v
+      obj%vnew => vnew
       !
    END SUBROUTINE
    !
