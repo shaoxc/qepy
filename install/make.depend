@@ -21,6 +21,7 @@ qepy_electrons_nscf.o : qepy_common.o
 qepy_forces.o : qepy_common.o
 qepy_init_run.o : funct.o
 qepy_init_run.o : qepy_common.o
+qepy_mod.o : funct.o
 qepy_mod.o : pw_restart_new.o
 qepy_mod.o : qepy_common.o
 qepy_mod.o : qepy_scatter_mod.o
