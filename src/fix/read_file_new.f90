@@ -177,6 +177,7 @@ SUBROUTINE post_xml_init (  )
   USE input_parameters,     ONLY : dftd3_threebody, dftd3_version
   USE funct,                ONLY : get_dft_short
   USE tsvdw_module,         ONLY : tsvdw_initialize
+  USE funct,                ONLY : dft_is_meta
   !qepy fix <-- import
   IMPLICIT NONE
   !
@@ -238,6 +239,11 @@ SUBROUTINE post_xml_init (  )
   ! ... bring the charge density to real space
   !
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
+  !qepy fix --> tau to real space
+  IF  ( dft_is_meta() ) THEN
+     CALL rho_g2r (dfftp, rho%kin_g, rho%kin_r)
+  ENDIF
+  !qepy fix <-- tau to real space
   !
   ! ... re-compute the local part of the pseudopotential vltot and
   ! ... the core correction charge (if any) - from hinit0.f90
