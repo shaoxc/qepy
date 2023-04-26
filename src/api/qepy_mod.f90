@@ -1,6 +1,6 @@
 MODULE qepy_mod
    USE kinds,                   ONLY : DP
-   USE qepy_scatter_mod,        ONLY : gather_grid, scatter_grid
+   USE scatter_mod,             ONLY : gather_grid, scatter_grid
    USE qepy_common,             ONLY : embed
    USE fft_base,                ONLY : dfftp
    !

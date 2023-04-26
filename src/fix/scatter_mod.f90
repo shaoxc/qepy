@@ -13,12 +13,14 @@
 !----------------------------------------------------------------------
 !
 !=----------------------------------------------------------------------=!
-   MODULE qepy_scatter_mod
+   MODULE scatter_mod
 !=----------------------------------------------------------------------=!
 
         USE fft_types, ONLY: fft_type_descriptor
         USE fft_param
+        !qepy fix --> import 
         USE mp,                   ONLY : mp_bcast
+        !qepy fix <-- import 
 
         IMPLICIT NONE
 
@@ -719,7 +721,9 @@ SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
   ! ... otherwise f_out must be allocated on all processors even if not used
   !
   info = size( f_out ) - displs( dfft%nproc3-1 ) - recvcount( dfft%nproc3-1 )
+  !qepy --> only check root processor
   CALL mp_bcast( info, dfft%root, dfft%comm)
+  !qepy <-- only check root processor
   IF( info < 0 ) &
      CALL fftx_error__( ' gather_real_grid ', ' f_out too small ', -info )
   !
@@ -798,7 +802,9 @@ SUBROUTINE gather_complex_grid ( dfft, f_in, f_out )
   !write (*,*) 'gcgather_grid 2*size(f_out)',2*size(f_out) ; FLUSH(6)
   !write (*,*) 'gcgather_grid displ+recv',dfft%nproc3, displs(dfft%nproc3-1) + recvcount(dfft%nproc3-1); FLUSH(6)
   info = 2*size( f_out ) - displs( dfft%nproc3 - 1 ) - recvcount( dfft%nproc3-1 ) ; FLUSH(6)
+  !qepy --> only check root processor
   CALL mp_bcast( info, dfft%root, dfft%comm)
+  !qepy <-- only check root processor
   IF( info < 0 ) CALL fftx_error__( ' gather_complex_grid ', ' f_out too small ', -info )
 
   info = 0
@@ -856,7 +862,9 @@ SUBROUTINE scatter_real_grid ( dfft, f_in, f_out )
      if (proc > 0) displs(proc) = displs(proc-1) + sendcount(proc-1)
   ENDDO
   info = size( f_in ) - displs( dfft%nproc3 - 1 ) - sendcount( dfft%nproc3 - 1 )
+  !qepy --> only check root processor
   CALL mp_bcast( info, dfft%root, dfft%comm)
+  !qepy <-- only check root processor
   IF( info < 0 ) CALL fftx_error__( ' scatter_real_grid ', ' f_in too small ', -info )
   info = 0
   !write (6,*) 'scatter grid ok 1'
@@ -936,7 +944,9 @@ SUBROUTINE scatter_complex_grid ( dfft, f_in, f_out )
   !write(*,*) 'cscatter_grid 2*size(f_in) ', 2*size(f_in); FLUSH(6)
   !write(*,*) 'cscatter_grid displ+send ', dfft%nproc3, displs(dfft%nproc3-1) + sendcount(dfft%nproc3-1); FLUSH(6)
   info = 2*size( f_in ) - displs( dfft%nproc3 - 1 ) - sendcount( dfft%nproc3 - 1 )
+  !qepy --> only check root processor
   CALL mp_bcast( info, dfft%root, dfft%comm)
+  !qepy <-- only check root processor
   IF( info < 0 ) &
      CALL fftx_error__( ' scatter_complex_grid ', ' f_in too small ', -info )
   !
@@ -1289,87 +1299,87 @@ END SUBROUTINE cscatter_sym_many
 
 
 !=----------------------------------------------------------------------=!
-   END MODULE qepy_scatter_mod
+   END MODULE scatter_mod
 !=----------------------------------------------------------------------=!
 !
 !
 !---------------------------------------------------------------------
-!subroutine fftsort (n, ia)  
-  !!---------------------------------------------------------------------
-  !! sort an integer array ia(1:n) into ascending order using heapsort algorithm.
-  !! n is input, ia is replaced on output by its sorted rearrangement.
-  !! create an index table (ind) by making an exchange in the index array
-  !! whenever an exchange is made on the sorted data array (ia).
-  !! in case of equal values in the data array (ia) the values in the
-  !! index array (ind) are used to order the entries.
-  !! if on input ind(1)  = 0 then indices are initialized in the routine,
-  !! if on input ind(1) != 0 then indices are assumed to have been
-  !!                initialized before entering the routine and these
-  !!                indices are carried around during the sorting process
-  !!
-  !! no work space needed !
-  !! free us from machine-dependent sorting-routines !
-  !!
-  !! adapted from Numerical Recipes pg. 329 (new edition)
-  !!
-  !implicit none  
-  !!-input/output variables
-  !integer :: n  
-  !integer :: ia (2,n)  
-  !!-local variables
-  !integer :: i, ir, j, l
-  !integer :: iia(2)  
-  !! nothing to order
-  !if (n.lt.2) return  
-  !! initialize indices for hiring and retirement-promotion phase
-  !l = n / 2 + 1  
-  !ir = n  
-!10 continue  
-  !! still in hiring phase
-  !if (l.gt.1) then  
-     !l = l - 1  
-     !iia(:) = ia (:,l)  
-     !! in retirement-promotion phase.
-  !else  
-     !! clear a space at the end of the array
-     !iia(:) = ia (:,ir)  
-     !!
-     !! retire the top of the heap into it
-     !ia (:,ir) = ia (:,1)  
-     !!
-     !! decrease the size of the corporation
-     !ir = ir - 1  
-     !! done with the last promotion
-     !if (ir.eq.1) then  
-        !! the least competent worker at all !
-        !ia (:,1) = iia(:)  
-        !!
-        !return  
-     !endif
-  !endif
-  !! wheter in hiring or promotion phase, we
-  !i = l  
-  !! set up to place iia in its proper level
-  !j = l + l  
-  !!
-  !do while (j.le.ir)  
-     !if (j.lt.ir) then  
-        !if (ia (1,j) .lt. ia (1,j + 1) ) then  
-           !j = j + 1  
-        !endif
-     !endif
-     !! demote iia
-     !if (iia(1).lt.ia (1,j) ) then  
-        !ia (:,i) = ia (:,j)  
-        !i = j  
-        !j = j + j  
-     !else  
-        !! set j to terminate do-while loop
-        !j = ir + 1  
-     !endif
-  !enddo
-  !ia (:,i) = iia(:)  
-  !goto 10  
-  !!
-!end subroutine fftsort
+subroutine fftsort (n, ia)  
+  !---------------------------------------------------------------------
+  ! sort an integer array ia(1:n) into ascending order using heapsort algorithm.
+  ! n is input, ia is replaced on output by its sorted rearrangement.
+  ! create an index table (ind) by making an exchange in the index array
+  ! whenever an exchange is made on the sorted data array (ia).
+  ! in case of equal values in the data array (ia) the values in the
+  ! index array (ind) are used to order the entries.
+  ! if on input ind(1)  = 0 then indices are initialized in the routine,
+  ! if on input ind(1) != 0 then indices are assumed to have been
+  !                initialized before entering the routine and these
+  !                indices are carried around during the sorting process
+  !
+  ! no work space needed !
+  ! free us from machine-dependent sorting-routines !
+  !
+  ! adapted from Numerical Recipes pg. 329 (new edition)
+  !
+  implicit none  
+  !-input/output variables
+  integer :: n  
+  integer :: ia (2,n)  
+  !-local variables
+  integer :: i, ir, j, l
+  integer :: iia(2)  
+  ! nothing to order
+  if (n.lt.2) return  
+  ! initialize indices for hiring and retirement-promotion phase
+  l = n / 2 + 1  
+  ir = n  
+10 continue  
+  ! still in hiring phase
+  if (l.gt.1) then  
+     l = l - 1  
+     iia(:) = ia (:,l)  
+     ! in retirement-promotion phase.
+  else  
+     ! clear a space at the end of the array
+     iia(:) = ia (:,ir)  
+     !
+     ! retire the top of the heap into it
+     ia (:,ir) = ia (:,1)  
+     !
+     ! decrease the size of the corporation
+     ir = ir - 1  
+     ! done with the last promotion
+     if (ir.eq.1) then  
+        ! the least competent worker at all !
+        ia (:,1) = iia(:)  
+        !
+        return  
+     endif
+  endif
+  ! wheter in hiring or promotion phase, we
+  i = l  
+  ! set up to place iia in its proper level
+  j = l + l  
+  !
+  do while (j.le.ir)  
+     if (j.lt.ir) then  
+        if (ia (1,j) .lt. ia (1,j + 1) ) then  
+           j = j + 1  
+        endif
+     endif
+     ! demote iia
+     if (iia(1).lt.ia (1,j) ) then  
+        ia (:,i) = ia (:,j)  
+        i = j  
+        j = j + j  
+     else  
+        ! set j to terminate do-while loop
+        j = ir + 1  
+     endif
+  enddo
+  ia (:,i) = iia(:)  
+  goto 10  
+  !
+end subroutine fftsort
 

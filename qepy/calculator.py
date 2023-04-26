@@ -385,9 +385,9 @@ class QEpyCalculator(Calculator):
         """See :func:`qepy.driver.Driver.get_pseudo_density`"""
         return self.driver.get_pseudo_density(spin=spin, pad=pad, gather=gather) / (units['Bohr'] ** 3)
 
-    def get_effective_potential(self, spin=0, pad=True):
-        """See :func:`qepy.driver.Driver.get_effective_potential`"""
-        return self.driver.get_effective_potential(spin=spin, pad=pad)
+    # def get_effective_potential(self, spin=0, pad=True):
+        # """See :func:`qepy.driver.Driver.get_effective_potential`"""
+        # return self.driver.get_effective_potential(spin=spin, pad=pad)
 
     def get_pseudo_wave_function(self, band=None, kpt=0, spin=0, broadcast=True,
                                  pad=True):

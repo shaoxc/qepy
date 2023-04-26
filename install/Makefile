@@ -5,7 +5,7 @@ PY_SRC_DIR := ./
 PYTHON := $(or ${PYTHON}, python)
 
 QEMODS := $(wildcard ${QEDIR}/*/*.a) $(wildcard ${QEDIR}/*/*/*.a)
-QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${QEDIR}/Modules/libqemod.a, $(QEMODS))
+QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${QEDIR}/Modules/libqemod.a, $(QEMODS)) ${QEDIR}/Modules/libqemod.a 
 #$(info 'QEMODS', ${QEMODS})
 
 QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/*/Makefile)
@@ -15,9 +15,9 @@ QEINC := $(QEINC:%/Makefile=%/) -I.
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
 
-QEPY_ADD := qepy_scatter_mod.f90 qepy_common.f90 qepy_mod.f90 \
-			funct.f90 potinit.f90 wfcinit.f90 pw_restart_new.f90 read_file_new.f90 \
-			qes_read_module.f90
+QEPY_ADD := qepy_common.f90 qepy_mod.f90 \
+			scatter_mod.f90 funct.f90 potinit.f90 wfcinit.f90\
+			pw_restart_new.f90 read_file_new.f90 qes_read_module.f90
 
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
               qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \

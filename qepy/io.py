@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import numpy as np
 
 class QEInput(object):
     """Input for QE
@@ -325,3 +326,73 @@ QEOPTIONS={
     "spectrum" : OrderedDict.fromkeys(
         ["&lr_input"], {}),
     }
+
+
+class QEOutput(object):
+    def __init__(self, fh = None, nat = None, **kwargs):
+        self.fh = fh
+        self.nat = nat
+        self.kwargs = kwargs
+
+    @classmethod
+    def get_forces_all(cls, fh = None, nat = None, **kwargs):
+        if fh is None and hasattr(cls, 'fh') : fh = cls.fh
+        if fh is None : raise ValueError('Please give a output "fh"')
+        if nat is None and hasattr(cls, 'nat') : nat = cls.nat
+        if nat is None : raise ValueError('Please give number of atoms "nat"')
+        if isinstance(fh, list) : fh = iter(fh)
+        forces={}
+        lstart = False
+        for line in fh:
+            if len(line.strip())<3: continue
+            if 'Total force' in line: break
+            if 'Forces acting' in line:
+                lstart = True
+                line=next(fh)
+                key = 'total'
+            elif lstart:
+                l = list(line.split())
+                key=l[1] if l[0]=='The' else l[0]
+            if lstart:
+                fs = []
+                for i in range(nat):
+                    line=next(fh)
+                    f=list(map(float, line.split()[-3:]))
+                    fs.append(f)
+                forces[key.lower()] = np.asarray(fs)
+        return forces
+
+    @classmethod
+    def get_stress_all(cls, fh = None, **kwargs):
+        if fh is None and hasattr(cls, 'fh') : fh = cls.fh
+        if fh is None : raise ValueError('Please give a output "fh"')
+        if isinstance(fh, list) : fh = iter(fh)
+        stress ={}
+        lstart = False
+        for line in fh:
+            if len(line.strip())<3: continue
+            if lstart and 'stress' not in line: break
+            if 'total   stress' in line:
+                lstart = True
+                line=next(fh)
+                key = 'total'
+                l = list(line.split())
+            elif lstart:
+                l = list(line.split())
+                key = l[0]
+            if lstart:
+                ss = []
+                for i in range(3):
+                    s=list(map(float, line.split()[-3:]))
+                    ss.append(s)
+                    line=next(fh)
+                stress[key.lower()] = np.asarray(ss)
+        return stress
+
+    @classmethod
+    def get_forces(cls, fh = None, nat = None, **kwargs):
+        return cls.get_forces_all(fh=fh, nat=nat, **kwargs)['total']
+
+    @classmethod
+    def get_stress(cls, fh = None, **kwargs):
+        return cls.get_stress_all(fh=fh, **kwargs)['total']

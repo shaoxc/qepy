@@ -1,10 +1,34 @@
 import numpy as np
 import tempfile
 import os
+from functools import wraps
 import qepy
 from qepy.core import env
 from qepy.io import QEInput
 from qepy import constants
+
+def gathered(function):
+    @wraps(function)
+    def wrapper(self, **kwargs):
+        out = kwargs.get('out', None)
+        gather = kwargs.get('gather', True)
+        if out is None : out = self.create_array(gather=gather, kind='rho')
+        if gather and self.nproc > 1 :
+            arr = self.create_array(gather=False, kind='rho')
+        else :
+            arr = out
+        #
+        kwargs['out'] = arr
+        results = function(self, **kwargs)
+        #
+        if gather and self.nproc > 1 :
+            qepy.qepy_mod.qepy_get_value(arr, out, gather = True)
+            if isinstance(results, (tuple, list)):
+                results = out, *results[1:]
+            else :
+                results = out
+        return results
+    return wrapper
 
 class Driver(object) :
     """
@@ -69,7 +93,7 @@ class Driver(object) :
 
     def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
-             qe_options = None, prog = 'pw', progress = False, **kwargs):
+             qe_options = None, prog = 'pw', progress = False, atoms = None, **kwargs):
         if embed is None :
             embed = qepy.qepy_common.embed_base()
         self.task = task
@@ -83,6 +107,7 @@ class Driver(object) :
         self.qe_options = qe_options
         self.prog = prog
         self.progress = progress
+        self.atoms = atoms
         #
         self.embed.ldescf = ldescf
         #
@@ -134,6 +159,13 @@ class Driver(object) :
             return qepy.io_global.get_ionode()
 
     @property
+    def nproc(self):
+        if hasattr(self.comm, 'size'):
+            return self.comm.size
+        else :
+            return qepy.mp_world.get_nproc()
+
+    @property
     def qe_is_mpi(self):
         return qepy.qepy_common.get_is_mpi()
 
@@ -183,7 +215,7 @@ class Driver(object) :
         #
         if qe_options :
             inputfile, basefile = 'input_tmp.in', inputfile
-            self.qeinput.write_qe_input(inputfile, basefile=basefile, qe_options=qe_options, prog=prog)
+            self.qeinput.write_qe_input(inputfile, atoms = self.atoms, basefile=basefile, qe_options=qe_options, prog=prog)
         #
         if task == 'optical' :
             self.tddft_initialize(inputfile=inputfile, commf = commf, **kwargs)
@@ -457,15 +489,16 @@ class Driver(object) :
     def create_array(self, gather = True, kind = 'rho'):
         """Return an empty array in real space."""
         if kind == 'rho' :
-            nr = self.get_number_of_grid_points(gather = gather)
             nspin = qepy.lsda_mod.get_nspin()
-            if gather :
+            if gather and self.nproc > 1 :
+                nr = self.get_number_of_grid_points(gather = gather)
                 if self.is_root :
-                    out = np.empty((np.prod(nr), nspin), order = 'F')
+                    out = np.zeros((np.prod(nr), nspin), order = 'F')
                 else :
-                    out = np.empty((1, nspin), order = 'F')
+                    out = np.zeros((1, nspin), order = 'F')
             else :
-                out = np.empty((np.prod(nr), nspin), order = 'F')
+                nnr = self.embed.dfftp.nnr
+                out = np.zeros((nnr, nspin), order = 'F')
         else :
             raise ValueError('Only support "rho"')
         return out
@@ -501,10 +534,6 @@ class Driver(object) :
             qepy.qepy_mod.qepy_get_wf(kpt + 1, ibnd + 1, wf)
             wfs.append(wf.copy())
         return wfs
-
-    def get_number_of_k_points(self):
-        """Return the number of kpoints."""
-        return qepy.klist.get_nks()
 
     def get_dipole_tddft(self):
         """Return the total dipole of tddft task."""
@@ -573,6 +602,93 @@ class Driver(object) :
         else :
             return None
 
+    @gathered
+    def get_elf(self, gather = True, out = None, **kwargs):
+        """Return electron localization function."""
+        qepy.do_elf(out)
+        return out
+
+    @gathered
+    def get_rdg(self, gather = True, out = None, **kwargs):
+        """Return electron localization function."""
+        qepy.do_rdg(out)
+        return out
+#-----------------------------------------------------------------------
+
+    @gathered
+    def get_local_pp(self, gather = True, out = None, **kwargs):
+        """Return local component of the pseudopotential."""
+        for i in range(out.shape[1]):
+            out[:, i] = qepy.scf.get_array_vltot()
+        return out
+
+    @gathered
+    def get_hartree(self, gather = True, out = None, add=False, **kwargs):
+        """Return hartree information."""
+        if not add : out[:] = 0.0
+        ehart, charge = qepy.v_h(self.embed.rho.of_g[:,0], out)
+        return out, ehart, charge
+
+    @gathered
+    def get_exchange_correlation(self, gather = True, out = None, tau=None, **kwargs):
+        """Return exchange-correlation information.
+
+        TODO :
+            The interface will changed in the new version of QE!
+
+        Note :
+            For metaGGA, only return scattered tau
+        """
+        etxc = vtxc = 0.0
+        rho_obj = self.embed.rho
+        rho_core = qepy.scf.get_array_rho_core()
+        rhog_core = qepy.scf.get_array_rhog_core()
+        if qepy.funct.dft_is_meta():
+            if tau is None : tau = out*0.0
+            qepy.v_xc_meta(rho_obj, rho_core, rhog_core, etxc, vtxc, out, tau)
+            return out, etxc, vtxc, tau
+        else :
+            etxc, vtxc = qepy.v_xc(rho_obj, rho_core, rhog_core, out)
+            return out, etxc, vtxc
+
+    @gathered
+    def get_density_functional(self, gather = True, out = None, add = False, **kwargs):
+        """Return effective potential information.
+
+        Note :
+            Then final potential is saved in the v_obj
+        """
+        rho_obj = self.embed.rho
+        rho_core = qepy.scf.get_array_rho_core()
+        rhog_core = qepy.scf.get_array_rhog_core()
+        v_obj = self.embed.v
+        etotefield = 0.0
+        #
+        v_obj.of_r[:] = 0.0
+        ehart, etxc, vtxc, eth, charge = qepy.qepy_v_of_rho(rho_obj, rho_core, rhog_core, etotefield, v_obj)
+        info = [ehart, etxc, vtxc, eth, etotefield, charge]
+        if add :
+            out += v_obj.of_r
+        else :
+            out[:] = v_obj.of_r
+        return out, *info
+
+    def get_hartree_potential(self, gather = True, out = None, **kwargs):
+        return self.get_hartree(gather=gather, out=out, **kwargs)[0]
+
+    def get_exchange_correlation_potential(self, gather = True, out = None, **kwargs):
+        return self.get_exchange_correlation(gather=gather, out=out, **kwargs)[0]
+
+    def get_density_functional_potential(self, gather = True, out = None, **kwargs):
+        return self.get_density_functional(gather=gather, out=out, **kwargs)[0]
+
+    def get_effective_potential(self, gather = True, out = None, **kwargs):
+        out = self.get_local_pp(gather=gather, out=out, **kwargs)
+        out = self.get_density_functional_potential(gather=gather, out=out, add = True, **kwargs)
+        return out
+#-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
     #ASE Calculator
     def get_potential_energy(self, **kwargs):
         """Return the potential energy."""
@@ -669,11 +785,6 @@ class Driver(object) :
             return density[:, spin]
 
     @classmethod
-    def get_effective_potential(cls, spin=0, pad=True):
-        """Return pseudo-effective-potential array."""
-        return qepy.scf.get_array_vrs()
-
-    @classmethod
     def get_pseudo_wave_function(cls, band=None, kpt=0, spin=0, broadcast=True,
                                  pad=True):
         """Return pseudo-wave-function array."""
@@ -725,6 +836,12 @@ class Driver(object) :
         qepy.qepy_mod.qepy_get_grid(nr, gather)
         return nr
     #ASE DFTCalculator END
+#-----------------------------------------------------------------------
+
+    @classmethod
+    def get_number_of_k_points(cls):
+        """Return the number of kpoints."""
+        return qepy.klist.get_nks()
 
     @classmethod
     def get_volume(cls):
