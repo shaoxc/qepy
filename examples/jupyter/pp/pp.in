@@ -1,0 +1,11 @@
+&inputpp
+	prefix='tmp'
+	outdir='./'
+	filplot='tmp.pp'
+	plot_num=1
+/
+&plot
+	iflag = 3
+	output_format=6
+	fileout='tmp.cube'
+/
