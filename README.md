@@ -20,31 +20,32 @@
  - [Quantum ESPRESSO ](https://gitlab.com/QEF/q-e/-/releases/qe-6.5) (=6.5)
  - Compiler ([GNU](https://gcc.gnu.org/fortran/)(Recommended) or [Intel](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html))
 
-## Install
+## Installation
+### Pip
+   Using pip can easy install the release version (serial) of QEpy from [PyPI](https://pypi.org/project/qepy).
+
+```shell
+python -m pip install qepy
+```
+
+### Source
+
  - **QE**
 
-	All static libraries should be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
+	All source codes should be compiled with the `-fPIC` compuiler option. Add `-fPIC` to the configuration options. E.g.,
 
      ```shell
 	 ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90
+	  make pwall
+	  export qedir=`pwd`
      ```
-
-	Intel compiler:
-
-
-     ```shell
-	 ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpiifort
-	 ```
-
-   + `make pw` or `make pwlibs`.
 
  - **QEpy**
 
      ```shell
 	 git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-     qedir=${QE} oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
+     oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
 	 ```
 
 ## Manual and Tutorials
-
   See [QEpy's website](http://qepy.rutgers.edu) for details.

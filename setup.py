@@ -101,7 +101,7 @@ class MakeBuild(build_ext):
                 subprocess.run(["cat", "install/config.log"], cwd=qedir, env = env, check = False)
                 print(stderr)
                 exit()
-            subprocess.check_call(["make", "pwlibs"] + build_args, cwd=qedir, env = env)
+            subprocess.check_call(["make", "pwall"] + build_args, cwd=qedir, env = env)
             env['qedir'] = os.path.abspath(qedir)
 
         if env.get('tddft', 'no').lower() == 'yes' :
