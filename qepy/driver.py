@@ -72,6 +72,10 @@ class Driver(object) :
         The name of QE program, default is `pw` which is pw.x in QE.
     progress : bool
         If True, will continue run the QE without clean the workspace, most times used for TDDFT after scf.
+    atoms : object
+        An ase Atoms to generate input file.
+    needwf : bool
+        If False, will not read wavefunctions and skip wavefunction-related initialization.
     kwargs : dict
         Other options
 
@@ -93,7 +97,8 @@ class Driver(object) :
 
     def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
-             qe_options = None, prog = 'pw', progress = False, atoms = None, **kwargs):
+             qe_options = None, prog = 'pw', progress = False, atoms = None, needwf = True,
+             **kwargs):
         if embed is None :
             embed = qepy.qepy_common.embed_base()
         self.task = task
@@ -108,6 +113,7 @@ class Driver(object) :
         self.prog = prog
         self.progress = progress
         self.atoms = atoms
+        self.needwf = needwf
         #
         self.embed.ldescf = ldescf
         #
@@ -231,8 +237,12 @@ class Driver(object) :
                     raise AttributeError("Please reinstall the QEpy with 'oldxml=yes'.")
                 qepy.oldxml_read_file()
             else :
-                qepy.read_file()
-            qepy.qepy_mod.qepy_open_files()
+                if self.needwf :
+                    qepy.read_file()
+                else :
+                    qepy.read_file_new(False)
+            if self.needwf :
+                qepy.qepy_mod.qepy_open_files()
         else :
             qepy.qepy_pwscf(inputfile, commf)
             self.embed.iterative = self.iterative
