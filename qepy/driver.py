@@ -681,7 +681,7 @@ class Driver(object) :
             out += v_obj.of_r
         else :
             out[:] = v_obj.of_r
-        return out, *info
+        return out, info
 
     def get_hartree_potential(self, gather = True, out = None, **kwargs):
         return self.get_hartree(gather=gather, out=out, **kwargs)[0]
