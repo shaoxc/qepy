@@ -1,0 +1,74 @@
+name: Build wheels on Macos-arm64
+
+on:
+  push:
+    branches:
+      - action
+  pull_request:
+    branches:
+      - action
+
+jobs:
+  build_wheels_macos_arm64:
+    name: Build wheel for ${{ matrix.python }}-${{ matrix.buildplat[1] }}-${{ matrix.buildplat[2] }}
+    runs-on: ${{ matrix.buildplat[0] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        buildplat:
+        - [macos-12, macosx, arm64]
+        python: ["cp39"]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+
+      - name: Build wheels on macos_arm64
+        if: ${{ matrix.buildplat[1] == 'macosx' && matrix.buildplat[2] == 'arm64' }}
+        uses: pypa/cibuildwheel@v2.12.3
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' oldxml=yes SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 LDFLAGS='-L/usr/local/lib/libdir -Wl,-rpath,/usr/local/lib/libdir -arch x86_64' SDKROOT=/Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64'
+          CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS oldxml SETUPTOOLS_USE_DISTUTILS QE_INSTALL_FLAGS NPY_DISTUTILS_APPEND_FLAGS MACOSX_DEPLOYMENT_TARGET SDKROOT LDFLAGS build_alias host_alias CFLAGS
+          CIBW_ARCHS_MACOS: "arm64"
+          CIBW_BEFORE_BUILD: |
+            #
+            brew install openblas lapack
+            #
+            curl -L -O https://github.com/isuruf/gcc/releases/download/gcc-10-arm-20210728/gfortran-darwin-arm64.tar.gz
+            export GFORTRAN_SHA=4a1354e61294d5163609e83b6b2b082bd9a9bbdf
+            if [[ "$(shasum gfortran-darwin-arm64.tar.gz)" != "${GFORTRAN_SHA}  gfortran-darwin-arm64.tar.gz" ]]; then
+                echo "shasum mismatch for gfortran-darwin-arm64"
+                exit 1
+            fi
+            sudo mkdir -p /opt/
+            sudo cp "gfortran-darwin-arm64.tar.gz" /opt/gfortran-darwin-arm64.tar.gz
+            pushd /opt
+                sudo tar -xvf gfortran-darwin-arm64.tar.gz
+                sudo rm gfortran-darwin-arm64.tar.gz
+            popd
+            FC_ARM64="$(find /opt/gfortran-darwin-arm64/bin -name "*-gfortran")"
+            libgfortran="$(find /opt/gfortran-darwin-arm64/lib -name "libgfortran.dylib")"
+            libdir=$(dirname $libgfortran)
+            FC_ARM64_LDFLAGS="-L$libdir -Wl,-rpath,$libdir"
+            #
+            sudo ln -s $FC_ARM64 /usr/local/bin/gfortran
+            sudo ln -s $libdir /usr/local/lib/libdir
+            echo ${SDKROOT:-$(xcrun --show-sdk-path)}
+            #
+            #gfortran -v
+            #export FFLAGS='-fPIC -fallow-argument-mismatch' oldxml=yes SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 LDFLAGS='-L/usr/local/lib/libdir -Wl,-rpath,/usr/local/lib/libdir -arch x86_64' SDKROOT=${SDKROOT:-$(xcrun --show-sdk-path)} build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64'
+            #python -m pip install setuptools==59.8.0 f90wrap==0.2.11 oldest-supported-numpy
+            #ls *
+            #python setup.py build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: qepy-wheels
+          path: ./wheelhouse/*.whl
