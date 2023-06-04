@@ -3,7 +3,7 @@ requires = [
 	'setuptools<=59.8.0',
 	'setuptools_scm',
 	'wheel',
-	'f90wrap>=0.2.8',
+	'f90wrap>=0.2.8, <0.2.12',
 	"numpy==1.19.2; python_version<='3.7'",
 	"oldest-supported-numpy; python_version>'3.8'",
 ]
