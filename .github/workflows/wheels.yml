@@ -61,18 +61,18 @@ jobs:
 
       - name: Build wheels on macos_arm64
         if: ${{ matrix.buildplat[1] == 'macosx' && matrix.buildplat[2] == 'arm64' }}
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
-          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' oldxml=yes SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 LDFLAGS='-L/usr/local/lib/libdir -Wl,-rpath,/usr/local/lib/libdir -arch x86_64' SDKROOT=/Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64'
+          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' oldxml=yes SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 LDFLAGS='-L/usr/local/lib/libdir -Wl,-rpath,/usr/local/lib/libdir -arch x86_64' SDKROOT=/Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64'
           CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS oldxml SETUPTOOLS_USE_DISTUTILS QE_INSTALL_FLAGS NPY_DISTUTILS_APPEND_FLAGS MACOSX_DEPLOYMENT_TARGET SDKROOT LDFLAGS build_alias host_alias CFLAGS
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_BEFORE_BUILD: |
             #
             brew install openblas lapack
             #
-            curl -L -O https://github.com/isuruf/gcc/releases/download/gcc-10-arm-20210228/gfortran-darwin-arm64.tar.gz
-            export GFORTRAN_SHA=f26990f6f08e19b2ec150b9da9d59bd0558261dd
+            curl -L -O https://github.com/isuruf/gcc/releases/download/gcc-10-arm-20210728/gfortran-darwin-arm64.tar.gz
+            export GFORTRAN_SHA=4a1354e61294d5163609e83b6b2b082bd9a9bbdf
             if [[ "$(shasum gfortran-darwin-arm64.tar.gz)" != "${GFORTRAN_SHA}  gfortran-darwin-arm64.tar.gz" ]]; then
                 echo "shasum mismatch for gfortran-darwin-arm64"
                 exit 1
@@ -84,12 +84,13 @@ jobs:
                 sudo rm gfortran-darwin-arm64.tar.gz
             popd
             FC_ARM64="$(find /opt/gfortran-darwin-arm64/bin -name "*-gfortran")"
-            libgfortran="$(find /opt/gfortran-darwin-arm64/lib -name libgfortran.dylib)"
+            libgfortran="$(find /opt/gfortran-darwin-arm64/lib -name "libgfortran.dylib")"
             libdir=$(dirname $libgfortran)
             FC_ARM64_LDFLAGS="-L$libdir -Wl,-rpath,$libdir"
             #
             sudo ln -s $FC_ARM64 /usr/local/bin/gfortran
             sudo ln -s $libdir /usr/local/lib/libdir
+            echo ${SDKROOT:-$(xcrun --show-sdk-path)}
             #
       - uses: actions/upload-artifact@v3
         with:
