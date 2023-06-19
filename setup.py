@@ -134,25 +134,33 @@ extensions_qepy = Extension(
 
 ext_modules = [extensions_qepy, ]
 
+release = 0
+if release :
+    VERSION = {'version' : __version__}
+else :
+    VERSION = {
+            'use_scm_version': {'version_scheme': 'post-release'},
+            'setup_requires': [
+                'setuptools_scm',
+                'importlib-metadata>=0.12;python_version<"3.8"'],
+            }
+
 if __name__ == "__main__":
     setup(
             name=name,
             url='https://gitlab.com/shaoxc/qepy',
             description=description,
-            version=__version__,
-            # use_scm_version={'version_scheme': 'post-release'},
             author=__author__,
             author_email=__contact__,
             license=__license__,
+            **VERSION,
             long_description=long_description,
             long_description_content_type='text/markdown',
             python_requires = '>=3.7',
             install_requires=[
-                'setuptools_scm',
                 'setuptools<=59.8.0',
                 'numpy>=1.18.0',
                 'f90wrap>=0.2.8',
-                'importlib-metadata>=0.12;python_version<"3.8"'
                 ],
             extras_require={
                 'mpi': [
