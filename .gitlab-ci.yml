@@ -50,9 +50,8 @@ test:
 
 qe65:
   stage: qe65
-  except:
-    - github
-    - action
+  only:
+    - master
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - cp -r $PUBLIC/* $PACKAGE
