@@ -20,7 +20,7 @@ build:
     - action
   image: $CONTAINER_IMAGE:$QTAG
   script:
-   - git clone https://github.com/dceresoli/ce-tddft.git src/ce-tddft
+   - git submodule update --init --recursive
    - qedir=$QEDIR oldxml=yes tddft=yes python -m pip install .
    - mkdir $PUBLIC
    - cd $PUBLIC
