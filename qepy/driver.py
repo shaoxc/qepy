@@ -116,6 +116,8 @@ class Driver(object) :
         self.needwf = needwf
         #
         self.embed.ldescf = ldescf
+        self.embed.iterative = iterative
+        self.embed.tddft.iterative = iterative
         #
         self.comm = comm
         self.qepy = qepy
@@ -192,8 +194,6 @@ class Driver(object) :
             Name of QE input file
         commf : object
             Parallel communicator (Fortran)
-        iterative : bool
-            Iteratively run the scf or tddft
         task : str
             Task of the driver :
 
@@ -245,7 +245,6 @@ class Driver(object) :
                 qepy.qepy_mod.qepy_open_files()
         else :
             qepy.qepy_pwscf(inputfile, commf)
-            self.embed.iterative = self.iterative
             if self.embed.iterative :
                 qepy.control_flags.set_niter(1)
         #
@@ -272,9 +271,8 @@ class Driver(object) :
             qepy.qepy_tddft_main_initial(inputfile, commf)
             qepy.read_file()
         qepy.qepy_tddft_main_setup()
-        self.embed.tddft.iterative = self.iterative
 
-    def diagonalize(self, print_level = 2, **kwargs):
+    def diagonalize(self, print_level = 2, nscf = False, **kwargs):
         """Diagonalize the hamiltonian
 
         Parameters
@@ -282,9 +280,12 @@ class Driver(object) :
         print_level :
             The level of output of QE
         """
+        self.embed.lmovecell = False
         self.iter += 1
         if self.task == 'optical' :
             qepy.qepy_molecule_optical_absorption()
+        elif nscf :
+            qepy.qepy_electrons_nscf(print_level, 0)
         else :
             self.embed.mix_coef = -1.0
             qepy.qepy_electrons_scf(print_level, 0)
@@ -321,7 +322,7 @@ class Driver(object) :
         else :
             return qepy.control_flags.get_n_scf_steps()
 
-    def scf(self, print_level = 2, maxiter = None, original = False, **kwargs):
+    def scf(self, print_level = 2, maxiter = None, original = False, nscf = False, **kwargs):
         """Run the scf/tddft until converged or maximum number of iterations"""
         if maxiter is not None and not self.embed.iterative :
             qepy.control_flags.set_niter(maxiter)
@@ -330,6 +331,8 @@ class Driver(object) :
         elif not self.embed.iterative and self.embed.exttype < 2 :
             # Use electrons to support hybrid xc functional
             return self.electrons(original=original)
+        elif nscf :
+            qepy.qepy_electrons_nscf(print_level, 0)
         else :
             qepy.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
@@ -351,11 +354,18 @@ class Driver(object) :
             qepy.qepy_electrons()
         return qepy.ener.get_etot()
 
-    def end_scf(self, **kwargs):
+    def end_scf(self, nscf = False, **kwargs):
         """End the scf and clean the scf workspace. Only need run it in iterative mode"""
         if self.embed.iterative :
-            self.embed.finish = True
-            qepy.qepy_electrons_scf(0, 0)
+            if self.task == 'optical' :
+                self.embed.tddft.finish = True
+                qepy.qepy_molecule_optical_absorption()
+            elif nscf :
+                self.embed.finish = True
+                qepy.qepy_electrons_nscf(0, 0)
+            else :
+                self.embed.finish = True
+                qepy.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
         """stop.
@@ -372,6 +382,7 @@ class Driver(object) :
         if self.task == 'optical' :
             self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
+            if not self.embed.initial : self.end_scf()
             qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
 
         if hasattr(self.fileobj, 'close'): self.fileobj.close()
@@ -379,7 +390,6 @@ class Driver(object) :
         #
         env['DRIVER'] = None
         env['STDOUT'] = None
-        #
 
     def tddft_restart(self, istep=None, **kwargs):
         """Restart the tddft from previous interrupted run.
@@ -394,9 +404,7 @@ class Driver(object) :
             self.embed.tddft.istep = istep
 
     def tddft_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
-        if self.embed.tddft.iterative :
-            self.embed.tddft.finish = True
-            qepy.qepy_molecule_optical_absorption()
+        if not self.embed.tddft.initial : self.end_scf()
         #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
         qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
         qepy.qepy_stop_tddft(exit_status)
@@ -423,6 +431,7 @@ class Driver(object) :
           see PW/src/punch.f90
         """
         qepy.punch(what)
+        # qepy.close_files(False)
 
     def update_run_options(self, qe_options = {}, **kwargs):
         pass
@@ -517,6 +526,12 @@ class Driver(object) :
         """Return density array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
         qepy.qepy_mod.qepy_get_rho(out, gather = gather)
+        return out
+
+    def get_core_density(self, gather = True, out = None):
+        """Return density array in real space."""
+        if out is None : out = self.create_array(gather=gather, kind='rho')
+        qepy.qepy_mod.qepy_get_rho_core(out, gather = gather)
         return out
 
     def get_kinetic_energy_density(self, gather = True, out = None):
@@ -808,12 +823,12 @@ class Driver(object) :
     @classmethod
     def get_eigenvalues(cls, kpt=0, spin=0):
         """Return eigenvalue array."""
-        return qepy.wvfct.get_array_et()[:, kpt]
+        return qepy.wvfct.get_array_et().T[kpt]
 
     @classmethod
     def get_occupation_numbers(cls, kpt=0, spin=0):
         """Return occupation number array."""
-        return qepy.wvfct.get_array_wg()[:, kpt]
+        return qepy.wvfct.get_array_wg().T[kpt]
 
     @classmethod
     def get_fermi_level(cls):
@@ -851,7 +866,7 @@ class Driver(object) :
     @classmethod
     def get_number_of_k_points(cls):
         """Return the number of kpoints."""
-        return qepy.klist.get_nks()
+        return qepy.klist.get_nkstot()
 
     @classmethod
     def get_volume(cls):
@@ -1002,3 +1017,7 @@ class Driver(object) :
     def update_exchange_correlation(cls, xc=None, libxc=None, **kwargs):
         if libxc : xc = None
         qepy.qepy_mod.qepy_set_dft(xc)
+
+    @classmethod
+    def sum_band(cls, occupations = None, **kwargs):
+        qepy.qepy_mod.qepy_sum_band(occupations)

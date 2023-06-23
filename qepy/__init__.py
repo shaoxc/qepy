@@ -37,3 +37,5 @@ try:
     __version__ = version("qepy")
 except Exception :
     pass
+
+from qepy.driver import Driver
