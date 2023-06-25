@@ -64,7 +64,7 @@ Example on Ubuntu 20.04
   tar -xzvf q-e-qe-6.5.tar.gz
   cd q-e-qe-6.5
   ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90 --with-scalapack=no BLAS_LIBS='-lblas' LAPACK_LIBS='-llapack'
-  make pw -j 4
+  make pwall -j 4
   cd ..
   git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
   qedir=`pwd`/q-e-qe-6.5/ python -m pip install -U ./qepy
@@ -109,7 +109,7 @@ Install the QE
 
    .. code:: shell
 
-      make pw
+      make pwall
       export qedir=`pwd`
 
 
