@@ -134,7 +134,7 @@ extensions_qepy = Extension(
 
 ext_modules = [extensions_qepy, ]
 
-release = 0
+release = 1
 if release :
     VERSION = {'version' : __version__}
 else :
