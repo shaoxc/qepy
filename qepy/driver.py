@@ -94,6 +94,8 @@ class Driver(object) :
              + density : 1.0/Bohr**3
 
     """
+    POTNAMES = {'external' : 0, 'localpp' : 1, 'hartree' : 2, 'xc' : 4}
+    FORCENAMES = {'ewald' : 1, 'localpp' : 2, 'nlcc' : 4}
 
     def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
@@ -368,7 +370,7 @@ class Driver(object) :
                 qepy.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
-        """stop.
+        """stop the driver.
 
         Parameters
         ----------
@@ -573,24 +575,22 @@ class Driver(object) :
         ----------
         potential : (nnr, nspin)
             The external potential
-        exttype : int
-            The type of external potential
+        exttype : list or int
+            The type of external potential. It can be a list of name or a integer.
+            e.g.  `exttype = ('localpp', 'xc')` or `exttype = 5`
 
                  ==== ============================== ===
                  type potential                      bin
                  ==== ============================== ===
                   0   external                       000
-                  1   pseudo                         001
+                  1   localpp                        001
                   2   hartree                        010
-                  3   pseudo + hartree               011
                   4   xc                             100
-                  5   pseudo + xc                    101
-                  6   hartree + xc                   110
-                  7   pseudo + hartree + xc          111
                  ==== ============================== ===
 
         """
         if exttype is not None :
+            if not isinstance(exttype, int): exttype = self.potname2type(exttype)
             self.embed.exttype = exttype
         if extene is not None :
             self.embed.extene = extene
@@ -719,7 +719,7 @@ class Driver(object) :
         """Return the potential energy."""
         return self.get_energy()
 
-    def get_forces(self, icalc = 0, **kwargs):
+    def get_forces(self, icalc = 0, ignore = (), **kwargs):
         """Return the total forces. (n, 3)
 
         Parameters
@@ -731,14 +731,17 @@ class Driver(object) :
             ===== ============================= ===
               0   all                           000
               1   no ewald                      001
-              2   no local                      010
-              3   no ewald + local              011
+              2   no localpp                    010
               4   no nlcc                       100
-              5   no ewald + nlcc               101
-              6   no local + nlcc               110
-              7   no ewald + local + nlcc       111
             ===== ============================= ===
+        ignore : list
+            ignore some forces, which does same job as `icalc`.
+
+              - ewald (1)
+              - localpp (2)
+              - nlcc (4)
         """
+        if len(ignore) > 0 : icalc = self.forcename2type(ignore)
         qepy.qepy_forces(icalc)
         forces = qepy.force_mod.get_array_force().T
         return forces
@@ -1021,3 +1024,28 @@ class Driver(object) :
     @classmethod
     def sum_band(cls, occupations = None, **kwargs):
         qepy.qepy_mod.qepy_sum_band(occupations)
+
+    @staticmethod
+    def name2type(dictionary, name):
+        if isinstance(name, int):
+            value = []
+            for k, v in dictionary.items():
+                if name & v == v : value.append(k)
+        else :
+            if isinstance(name, str): name = [name]
+            value = 0
+            for key in name :
+                i = dictionary.get(key, None)
+                if i is None :
+                    raise AttributeError(f"The key '{key}' not in the given dictionary.")
+                value += i
+            return value
+        return value
+
+    @classmethod
+    def potname2type(cls, name):
+        return cls.name2type(cls.POTNAMES, name)
+
+    @classmethod
+    def forcename2type(cls, name = None):
+        return cls.name2type(cls.FORCENAMES, name)
