@@ -18,7 +18,9 @@ Requirements
 Optional (highly recommended):
 ------------------------------
 
--  `mpi4py <https://bitbucket.org/mpi4py/mpi4py>`__ MPI for python
+-  `mpi4py <https://mpi4py.readthedocs.io/en/stable/index.html>`__ MPI for python
+-  `ASE <https://wiki.fysik.dtu.dk/ase/index.html>`__ for atomic simulation
+-  `DFTpy <http://dftpy.rutgers.edu>`__ for density functional
 
 
 Installation
