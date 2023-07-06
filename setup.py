@@ -158,7 +158,7 @@ if __name__ == "__main__":
             long_description_content_type='text/markdown',
             python_requires = '>=3.7',
             install_requires=[
-                'setuptools<=59.8.0',
+                'setuptools',
                 'numpy>=1.18.0',
                 'f90wrap>=0.2.8',
                 ],
