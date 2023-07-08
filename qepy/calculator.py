@@ -263,9 +263,9 @@ class QEpyCalculator(Calculator):
 
     def get_forces(self, atoms = None, icalc = 0):
         """See :func:`qepy.driver.Driver.get_forces`"""
-        if self.update_optimizer(atoms) or self._forces is None:
-            self._forces = self.driver.get_forces(icalc=icalc)* units['Ry'] / units['Bohr']
-        return self._forces
+        if self.update_optimizer(atoms) or 'forces' not in self.results :
+            self.results['forces'] = self.driver.get_forces(icalc=icalc)* units['Ry'] / units['Bohr']
+        return self.results['forces']
 
     def get_dos(self, qe_options = None, spin = None, inputfile = None, **kwargs):
         """ calculate density of states (DOS) and return the tuple (energies, dos)
@@ -343,12 +343,12 @@ class QEpyCalculator(Calculator):
 
     def get_stress(self, atoms = None):
         """Return the stress tensor in the Voigt order (xx, yy, zz, yz, xz, xy)"""
-        if self.update_optimizer(atoms) or self._stress is None:
+        if self.update_optimizer(atoms) or 'stress' not in self.results :
             stress = self.driver.get_stress()
-            self._stress = np.array(
+            self.results['stress'] = np.array(
                 [stress[0, 0], stress[1, 1], stress[2, 2],
                  stress[1, 2], stress[0, 2], stress[0, 1]]) * -1 * units['Ry'] / (units['Bohr'] ** 3)
-        return self._stress
+        return self.results['stress']
 
     def get_number_of_bands(self):
         """See :func:`qepy.driver.Driver.get_number_of_bands`"""

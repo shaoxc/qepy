@@ -17,7 +17,8 @@ TDDFT_FILES = ${TDDFT_SOURCES}
 
 QEPY_ADD := qepy_common.f90 qepy_mod.f90 \
 			scatter_mod.f90 funct.f90 potinit.f90 wfcinit.f90\
-			pw_restart_new.f90 read_file_new.f90 qes_read_module.f90
+			pw_restart_new.f90 read_file_new.f90 qes_read_module.f90 \
+			pwscf.f90 command_line_options.f90
 
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
               qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \

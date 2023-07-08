@@ -72,6 +72,10 @@ class Driver(object) :
         The name of QE program, default is `pw` which is pw.x in QE.
     progress : bool
         If True, will continue run the QE without clean the workspace, most times used for TDDFT after scf.
+    atoms : object
+        An ase Atoms to generate input file.
+    needwf : bool
+        If False, will not read wavefunctions and skip wavefunction-related initialization.
     kwargs : dict
         Other options
 
@@ -90,10 +94,13 @@ class Driver(object) :
              + density : 1.0/Bohr**3
 
     """
+    POTNAMES = {'external' : 0, 'localpp' : 1, 'hartree' : 2, 'xc' : 4}
+    FORCENAMES = {'ewald' : 1, 'localpp' : 2, 'nlcc' : 4}
 
     def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
-             qe_options = None, prog = 'pw', progress = False, atoms = None, **kwargs):
+             qe_options = None, prog = 'pw', progress = False, atoms = None, needwf = True,
+             **kwargs):
         if embed is None :
             embed = qepy.qepy_common.embed_base()
         self.task = task
@@ -108,8 +115,11 @@ class Driver(object) :
         self.prog = prog
         self.progress = progress
         self.atoms = atoms
+        self.needwf = needwf
         #
         self.embed.ldescf = ldescf
+        self.embed.iterative = iterative
+        self.embed.tddft.iterative = iterative
         #
         self.comm = comm
         self.qepy = qepy
@@ -186,8 +196,6 @@ class Driver(object) :
             Name of QE input file
         commf : object
             Parallel communicator (Fortran)
-        iterative : bool
-            Iteratively run the scf or tddft
         task : str
             Task of the driver :
 
@@ -231,11 +239,14 @@ class Driver(object) :
                     raise AttributeError("Please reinstall the QEpy with 'oldxml=yes'.")
                 qepy.oldxml_read_file()
             else :
-                qepy.read_file()
-            qepy.qepy_mod.qepy_open_files()
+                if self.needwf :
+                    qepy.read_file()
+                else :
+                    qepy.read_file_new(False)
+            if self.needwf :
+                qepy.qepy_mod.qepy_open_files()
         else :
             qepy.qepy_pwscf(inputfile, commf)
-            self.embed.iterative = self.iterative
             if self.embed.iterative :
                 qepy.control_flags.set_niter(1)
         #
@@ -262,9 +273,8 @@ class Driver(object) :
             qepy.qepy_tddft_main_initial(inputfile, commf)
             qepy.read_file()
         qepy.qepy_tddft_main_setup()
-        self.embed.tddft.iterative = self.iterative
 
-    def diagonalize(self, print_level = 2, **kwargs):
+    def diagonalize(self, print_level = 2, nscf = False, **kwargs):
         """Diagonalize the hamiltonian
 
         Parameters
@@ -272,9 +282,12 @@ class Driver(object) :
         print_level :
             The level of output of QE
         """
+        self.embed.lmovecell = False
         self.iter += 1
         if self.task == 'optical' :
             qepy.qepy_molecule_optical_absorption()
+        elif nscf :
+            qepy.qepy_electrons_nscf(print_level, 0)
         else :
             self.embed.mix_coef = -1.0
             qepy.qepy_electrons_scf(print_level, 0)
@@ -311,7 +324,7 @@ class Driver(object) :
         else :
             return qepy.control_flags.get_n_scf_steps()
 
-    def scf(self, print_level = 2, maxiter = None, original = False, **kwargs):
+    def scf(self, print_level = 2, maxiter = None, original = False, nscf = False, **kwargs):
         """Run the scf/tddft until converged or maximum number of iterations"""
         if maxiter is not None and not self.embed.iterative :
             qepy.control_flags.set_niter(maxiter)
@@ -320,6 +333,8 @@ class Driver(object) :
         elif not self.embed.iterative and self.embed.exttype < 2 :
             # Use electrons to support hybrid xc functional
             return self.electrons(original=original)
+        elif nscf :
+            qepy.qepy_electrons_nscf(print_level, 0)
         else :
             qepy.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
@@ -341,14 +356,21 @@ class Driver(object) :
             qepy.qepy_electrons()
         return qepy.ener.get_etot()
 
-    def end_scf(self, **kwargs):
+    def end_scf(self, nscf = False, **kwargs):
         """End the scf and clean the scf workspace. Only need run it in iterative mode"""
         if self.embed.iterative :
-            self.embed.finish = True
-            qepy.qepy_electrons_scf(0, 0)
+            if self.task == 'optical' :
+                self.embed.tddft.finish = True
+                qepy.qepy_molecule_optical_absorption()
+            elif nscf :
+                self.embed.finish = True
+                qepy.qepy_electrons_nscf(0, 0)
+            else :
+                self.embed.finish = True
+                qepy.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
-        """stop.
+        """stop the driver.
 
         Parameters
         ----------
@@ -362,6 +384,7 @@ class Driver(object) :
         if self.task == 'optical' :
             self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
+            if not self.embed.initial : self.end_scf()
             qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
 
         if hasattr(self.fileobj, 'close'): self.fileobj.close()
@@ -369,7 +392,6 @@ class Driver(object) :
         #
         env['DRIVER'] = None
         env['STDOUT'] = None
-        #
 
     def tddft_restart(self, istep=None, **kwargs):
         """Restart the tddft from previous interrupted run.
@@ -384,9 +406,7 @@ class Driver(object) :
             self.embed.tddft.istep = istep
 
     def tddft_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
-        if self.embed.tddft.iterative :
-            self.embed.tddft.finish = True
-            qepy.qepy_molecule_optical_absorption()
+        if not self.embed.tddft.initial : self.end_scf()
         #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
         qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
         qepy.qepy_stop_tddft(exit_status)
@@ -413,6 +433,7 @@ class Driver(object) :
           see PW/src/punch.f90
         """
         qepy.punch(what)
+        # qepy.close_files(False)
 
     def update_run_options(self, qe_options = {}, **kwargs):
         pass
@@ -509,6 +530,12 @@ class Driver(object) :
         qepy.qepy_mod.qepy_get_rho(out, gather = gather)
         return out
 
+    def get_core_density(self, gather = True, out = None):
+        """Return density array in real space."""
+        if out is None : out = self.create_array(gather=gather, kind='rho')
+        qepy.qepy_mod.qepy_get_rho_core(out, gather = gather)
+        return out
+
     def get_kinetic_energy_density(self, gather = True, out = None):
         """Return density array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
@@ -548,24 +575,22 @@ class Driver(object) :
         ----------
         potential : (nnr, nspin)
             The external potential
-        exttype : int
-            The type of external potential
+        exttype : list or int
+            The type of external potential. It can be a list of name or a integer.
+            e.g.  `exttype = ('localpp', 'xc')` or `exttype = 5`
 
                  ==== ============================== ===
                  type potential                      bin
                  ==== ============================== ===
                   0   external                       000
-                  1   pseudo                         001
+                  1   localpp                        001
                   2   hartree                        010
-                  3   pseudo + hartree               011
                   4   xc                             100
-                  5   pseudo + xc                    101
-                  6   hartree + xc                   110
-                  7   pseudo + hartree + xc          111
                  ==== ============================== ===
 
         """
         if exttype is not None :
+            if not isinstance(exttype, int): exttype = self.potname2type(exttype)
             self.embed.exttype = exttype
         if extene is not None :
             self.embed.extene = extene
@@ -671,7 +696,7 @@ class Driver(object) :
             out += v_obj.of_r
         else :
             out[:] = v_obj.of_r
-        return out, *info
+        return out, info
 
     def get_hartree_potential(self, gather = True, out = None, **kwargs):
         return self.get_hartree(gather=gather, out=out, **kwargs)[0]
@@ -694,7 +719,7 @@ class Driver(object) :
         """Return the potential energy."""
         return self.get_energy()
 
-    def get_forces(self, icalc = 0, **kwargs):
+    def get_forces(self, icalc = 0, ignore = (), **kwargs):
         """Return the total forces. (n, 3)
 
         Parameters
@@ -706,14 +731,17 @@ class Driver(object) :
             ===== ============================= ===
               0   all                           000
               1   no ewald                      001
-              2   no local                      010
-              3   no ewald + local              011
+              2   no localpp                    010
               4   no nlcc                       100
-              5   no ewald + nlcc               101
-              6   no local + nlcc               110
-              7   no ewald + local + nlcc       111
             ===== ============================= ===
+        ignore : list
+            ignore some forces, which does same job as `icalc`.
+
+              - ewald (1)
+              - localpp (2)
+              - nlcc (4)
         """
+        if len(ignore) > 0 : icalc = self.forcename2type(ignore)
         qepy.qepy_forces(icalc)
         forces = qepy.force_mod.get_array_force().T
         return forces
@@ -798,12 +826,12 @@ class Driver(object) :
     @classmethod
     def get_eigenvalues(cls, kpt=0, spin=0):
         """Return eigenvalue array."""
-        return qepy.wvfct.get_array_et()[:, kpt]
+        return qepy.wvfct.get_array_et().T[kpt]
 
     @classmethod
     def get_occupation_numbers(cls, kpt=0, spin=0):
         """Return occupation number array."""
-        return qepy.wvfct.get_array_wg()[:, kpt]
+        return qepy.wvfct.get_array_wg().T[kpt]
 
     @classmethod
     def get_fermi_level(cls):
@@ -841,7 +869,7 @@ class Driver(object) :
     @classmethod
     def get_number_of_k_points(cls):
         """Return the number of kpoints."""
-        return qepy.klist.get_nks()
+        return qepy.klist.get_nkstot()
 
     @classmethod
     def get_volume(cls):
@@ -992,3 +1020,32 @@ class Driver(object) :
     def update_exchange_correlation(cls, xc=None, libxc=None, **kwargs):
         if libxc : xc = None
         qepy.qepy_mod.qepy_set_dft(xc)
+
+    @classmethod
+    def sum_band(cls, occupations = None, **kwargs):
+        qepy.qepy_mod.qepy_sum_band(occupations)
+
+    @staticmethod
+    def name2type(dictionary, name):
+        if isinstance(name, int):
+            value = []
+            for k, v in dictionary.items():
+                if name & v == v : value.append(k)
+        else :
+            if isinstance(name, str): name = [name]
+            value = 0
+            for key in name :
+                i = dictionary.get(key, None)
+                if i is None :
+                    raise AttributeError(f"The key '{key}' not in the given dictionary.")
+                value += i
+            return value
+        return value
+
+    @classmethod
+    def potname2type(cls, name):
+        return cls.name2type(cls.POTNAMES, name)
+
+    @classmethod
+    def forcename2type(cls, name = None):
+        return cls.name2type(cls.FORCENAMES, name)

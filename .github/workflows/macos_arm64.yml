@@ -3,10 +3,10 @@ name: Build wheels on Macos-arm64
 on:
   push:
     branches:
-      - macos_arm64
+      - action
   pull_request:
     branches:
-      - macos_arm64
+      - action
 
 jobs:
   build_wheels_macos_arm64:
