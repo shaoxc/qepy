@@ -28,6 +28,7 @@ class Test(unittest.TestCase):
         self.assertTrue(np.isclose(etotal, -552.93477389, atol = 1E-6))
 
         qepy.qepy_stop_run(0, what = 'all')
+        qepy.qepy_clean_saved()
 
     def test_1_read(self):
         inputobj = qepy.qepy_common.input_base()
@@ -43,6 +44,7 @@ class Test(unittest.TestCase):
         qepy.qepy_calc_energies()
         self.assertTrue(np.isclose(embed.etotal, -552.93477389, atol = 1E-6))
         qepy.qepy_stop_run(0, what = 'no')
+        qepy.qepy_clean_saved()
 
     def test_2_read_pw(self):
         qepy.qepy_pwscf(inputfile, commf)
@@ -60,6 +62,7 @@ class Test(unittest.TestCase):
         qepy.qepy_calc_energies()
         self.assertTrue(np.isclose(embed.etotal, -552.93477389, atol = 1E-6))
         qepy.qepy_stop_run(0, what = 'no')
+        qepy.qepy_clean_saved()
 
     @classmethod
     def tearDownClass(cls):
