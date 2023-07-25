@@ -39,10 +39,10 @@ CONTAINS
 
       CHARACTER(LEN=1) :: previous, current
       INTEGER :: i
-      IF (LEN_TRIM(command_line) == 0) THEN
-         qepy_my_iargc = COMMAND_ARGUMENT_COUNT()
-         RETURN
-      ENDIF
+      !IF (LEN_TRIM(command_line) == 0) THEN
+         !qepy_my_iargc = COMMAND_ARGUMENT_COUNT()
+         !RETURN
+      !ENDIF
 
       qepy_my_iargc = 0
       previous = ' '
@@ -61,10 +61,10 @@ CONTAINS
       CHARACTER(LEN=1) :: previous, current
       INTEGER :: iarg, i, indx
 
-      IF (LEN_TRIM(command_line) == 0) THEN
-         CALL GET_COMMAND_ARGUMENT(narg, arg)
-         RETURN
-      ENDIF
+      !IF (LEN_TRIM(command_line) == 0) THEN
+         !CALL GET_COMMAND_ARGUMENT(narg, arg)
+         !RETURN
+      !ENDIF
 
       iarg = 0
       previous = ' '
