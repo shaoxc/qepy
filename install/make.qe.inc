@@ -5,7 +5,8 @@ include ${QEDIR}/make.inc
 MODULES_SOURCES = constants.f90 cell_base.f90 ions_base.f90 wavefunctions.f90 \
 				  recvec.f90 control_flags.f90 io_global.f90 check_stop.f90 \
 				  deviatoric.f90 qexsd.f90 environment.f90 read_input.f90 \
-				  mp_pools.f90 mp_bands.f90 mp_global.f90 mp_world.f90 uspp.f90
+				  mp_pools.f90 mp_bands.f90 mp_global.f90 mp_world.f90 uspp.f90 \
+				  command_line_options.f90
 MODULES_FILES = $(addprefix ${QEDIR}/Modules/,${MODULES_SOURCES})
 
 PW_SOURCES = pwcom.f90 scf_mod.f90 punch.f90 \
