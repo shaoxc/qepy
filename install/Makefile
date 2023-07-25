@@ -21,11 +21,12 @@ QEINC := $(QEINC:%/Makefile=%/) -I.
 TDDFT_SOURCES = tddft_module.f90
 TDDFT_FILES = ${TDDFT_SOURCES}
 
-QEPY_ADD := qepy_common.f90 qepy_mod.f90 \
+QEPY_ADD := qepy_sys.f90 qepy_common.f90 qepy_mod.f90 \
 			scatter_mod.f90 funct.f90 potinit.f90 wfcinit.f90\
 			pw_restart_new.f90 read_file_new.f90 qes_read_module.f90
 
-QEPY_QEX := alpha2f.f90 average.f90 bands.f90 benchmark_libxc.f90 cell2ibrav.f90 condmain.f90 dos.f90 dynmat.f90 epa.f90 epsilon.f90 ev.f90 fd.f90 fd_ef.f90 fd_ifc.f90 fermi_proj.f90 fermi_velocity.f90 fermisurface.f90 fqha.f90 gww.f90 gww_fit.f90 hp_main.f90 ibrav2cell.f90 initial_state.f90 kpoints.f90 lambda.f90 ld1.f90 lr_dav_main.f90 lr_eels_main.f90 lr_main.f90 matdyn.f90 molecularpdos.f90 neb.f90 open_grid.f90 path_interpolation.f90 phonon.f90 plan_avg.f90 plotband.f90 plotproj.f90 plotrho.f90 poormanwannier.f90 postproc.f90 ppacf.f90 projwfc.f90 pw2bgw.f90 pw2critic.f90 pw2gw.f90 pw2wannier90.f90 pw4gww.f90 pwscf.f90 q2qstar.f90 q2r.f90 q2trans.f90 q2trans_fd.f90 simple.f90 simple_bse.f90 simple_ip.f90 sumpdos.f90 tddfpt_calculate_spectrum.f90 wannier_ham.f90 wannier_plot.f90 wfck2r.f90
+QEPY_QEX := command_line_options.f90 plugin_arguments.f90 path_io_tools.f90 inpfile.f90 \
+			alpha2f.f90 average.f90 bands.f90 benchmark_libxc.f90 cell2ibrav.f90 condmain.f90 dos.f90 dynmat.f90 epa.f90 epsilon.f90 ev.f90 fd.f90 fd_ef.f90 fd_ifc.f90 fermi_proj.f90 fermi_velocity.f90 fermisurface.f90 fqha.f90 gww.f90 gww_fit.f90 hp_main.f90 ibrav2cell.f90 initial_state.f90 kpoints.f90 lambda.f90 ld1.f90 lr_dav_main.f90 lr_eels_main.f90 lr_main.f90 matdyn.f90 molecularpdos.f90 neb.f90 open_grid.f90 path_interpolation.f90 phonon.f90 plan_avg.f90 plotband.f90 plotproj.f90 plotrho.f90 poormanwannier.f90 postproc.f90 ppacf.f90 projwfc.f90 pw2bgw.f90 pw2critic.f90 pw2gw.f90 pw2wannier90.f90 pw4gww.f90 pwscf.f90 q2qstar.f90 q2r.f90 q2trans.f90 q2trans_fd.f90 simple.f90 simple_bse.f90 simple_ip.f90 sumpdos.f90 tddfpt_calculate_spectrum.f90 wannier_ham.f90 wannier_plot.f90 wfck2r.f90
 
 
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
@@ -44,7 +45,7 @@ QEPY_TDDFT_SOURCES := qepy_tddft_common.f90 \
 
 QEPY_LDAU := tabd.f90 set_hubbard_l.f90 set_hubbard_n.f90
 
-QEPY_SOURCES += ${QEPY_QEX}
+QE_FILES := $(filter-out ${QEPY_ADD} ${QEPY_QEX}, ${QE_FILES})
 
 ifeq ($(ldau), yes)
    QEPY_ADD += ${QEPY_LDAU}
@@ -60,7 +61,8 @@ ifeq ($(original), yes)
 else
    QEPY_SOURCES += ${QEPY_ADD}
 endif
-#QEPY_SOURCES := ${QEPY_QEX}
+
+QEPY_SOURCES += ${QEPY_QEX}
 
 ifeq ($(oldxml), yes)
    QEPY_SOURCES := ${OLDXML_SOURCES} ${QEPY_SOURCES}

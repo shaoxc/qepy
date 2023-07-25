@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
 import argparse
-
-commands = {
-        '--pw.x' : 'qepy.cui.pwx',
-        }
+from qepy.cui import qex
 
 def get_args():
-    parser = argparse.ArgumentParser(description='pw.x')
+    parser = argparse.ArgumentParser(description='QEpy tasks :')
     #-----------------------------------------------------------------------
-    parser.description = 'QEpy tasks :\n' + '\n\t'.join(commands.keys())
-    parser.add_argument('--pw.x', dest='pw.x', action='store_true',
-            default=False, help='Same as regular pw.x in QE.')
+    for prog in qex.QEBINS :
+        parser = qex.get_parse(prog=prog, parser=parser)
     #-----------------------------------------------------------------------
     args = parser.parse_args()
     return args
 
-
 def main():
     import sys
-    from importlib import import_module
-    for job in commands :
-        if job in sys.argv :
-            module = import_module(commands[job])
-            command = getattr(module, 'main')
-            return command()
+    for prog in qex.QEBINS :
+        key = '--' + prog
+        if key in sys.argv :
+            return qex.main(prog)
     else :
         get_args()
