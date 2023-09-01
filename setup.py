@@ -67,19 +67,6 @@ class MakeBuild(build_ext):
         makefiles = list(pathlib.Path(self.build_temp).glob('**/*.f90'))
         for f in makefiles : shutil.copy2(f, self.build_temp)
 
-        cwd = os.getcwd()
-        os.chdir(self.build_temp)
-        #
-        sys.path.insert(0, './')
-        from cmdx.qepy_cmd_patch import ini2files_qex
-        ini2files_qex('cmdx/qepy_qex.ini')
-        #
-        if env.get('ldau', 'no').lower() == 'yes' :
-            from ldau.qepy_ldau_patch import ini2files
-            ini2files('ldau/qepy_econf.ini')
-        #
-        os.chdir(cwd)
-
         env['PYTHON'] = sys.executable
 
         # install the QE
@@ -106,11 +93,24 @@ class MakeBuild(build_ext):
                 subprocess.run(["cat", "install/config.log"], cwd=qedir, env = env, check = False)
                 print(stderr)
                 exit()
-            subprocess.check_call(["make", "pwall"] + build_args, cwd=qedir, env = env)
+            subprocess.check_call(["make", "all"] + build_args, cwd=qedir, env = env)
             env['qedir'] = os.path.abspath(qedir)
 
         if env.get('tddft', 'no').lower() == 'yes' :
             subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
+
+        cwd = os.getcwd()
+        os.chdir(self.build_temp)
+        #
+        sys.path.insert(0, './')
+        from cmdx.qepy_cmd_patch import ini2files_qex
+        ini2files_qex('cmdx/qepy_qex.ini')
+        #
+        if env.get('ldau', 'no').lower() == 'yes' :
+            from ldau.qepy_ldau_patch import ini2files
+            ini2files('ldau/qepy_econf.ini')
+        #
+        os.chdir(cwd)
 
         subprocess.check_call(['make', '-f', 'Makefile'] + build_args, cwd=self.build_temp, env = env)
 

@@ -36,7 +36,7 @@ python -m pip install qepy
 
      ```shell
 	 ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90
-	  make pwall
+	  make all
 	  export qedir=`pwd`
      ```
 
