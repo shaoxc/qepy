@@ -68,6 +68,12 @@ jobs:
             #python -m pip install setuptools==59.8.0 f90wrap==0.2.11 oldest-supported-numpy
             #ls *
             #python setup.py build
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+
       - uses: actions/upload-artifact@v3
         with:
           name: qepy-wheels

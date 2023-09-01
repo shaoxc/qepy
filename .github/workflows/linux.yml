@@ -40,6 +40,12 @@ jobs:
           CIBW_BEFORE_BUILD: |
             yum install -y blas-devel lapack-devel fftw-devel
 
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+
+
       - uses: actions/upload-artifact@v3
         with:
           name: qepy-wheels
