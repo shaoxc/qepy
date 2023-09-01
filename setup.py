@@ -69,10 +69,15 @@ class MakeBuild(build_ext):
 
         cwd = os.getcwd()
         os.chdir(self.build_temp)
+        #
+        sys.path.insert(0, './')
+        from cmdx.qepy_cmd_patch import ini2files_qex
+        ini2files_qex('cmdx/qepy_qex.ini')
+        #
         if env.get('ldau', 'no').lower() == 'yes' :
-            sys.path.insert(0, './')
             from ldau.qepy_ldau_patch import ini2files
             ini2files('ldau/qepy_econf.ini')
+        #
         os.chdir(cwd)
 
         env['PYTHON'] = sys.executable

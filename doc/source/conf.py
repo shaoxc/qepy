@@ -3,7 +3,7 @@ import sphinx_rtd_theme
 project = 'QEpy'
 copyright = '2019, Pavanello Research Group'
 author = 'Pavanello Research Group'
-release = '0.0.1'
+release = '0.0.4'
 
 source_suffix = '.rst'
 master_doc = 'index'
