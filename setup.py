@@ -32,7 +32,7 @@ class MakeBuild(build_ext):
     def build_extension(self, ext):
         topdir = './'
         build_args = []
-        env = os.environ.copy()
+        env = os.environ
         self.build_name = self.build_lib+ os.sep + name
 
         try:
