@@ -48,5 +48,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: qepy-wheels
+          name: ${{ matrix.python }}-${{ matrix.buildplat[1] }}-${{ matrix.buildplat[2] }}
           path: ./wheelhouse/*.whl
