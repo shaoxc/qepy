@@ -1,9 +1,19 @@
 import sys
 import sphinx_rtd_theme
+import os
 project = 'QEpy'
 copyright = '2019, Pavanello Research Group'
 author = 'Pavanello Research Group'
-release = '0.0.4'
+release = '6.5.0'
+
+header = '../../qepy/__init__.py'
+if os.path.isfile(header):
+    with open(header, 'r') as fh:
+        for line in fh :
+            if '__version__' in line:
+                release = line.split('=')[1]
+                break
+
 
 source_suffix = '.rst'
 master_doc = 'index'
