@@ -9,11 +9,12 @@
     ibrav = 0
     nat = 1
     ntyp = 1
-    ecutwfc = 2
+    ecutwfc = 2.2
     occupations = 'smearing'
     smearing = 'gaussian'
     degauss = 0.001
     nosym = .true.
+    nbnd = 6
 /
 &electrons
     conv_thr = 1e-8

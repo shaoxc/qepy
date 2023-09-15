@@ -5,10 +5,10 @@ stages:
   - deploy
 
 variables:
-  PACKAGE: '/usr/local/lib/python3.8/site-packages'
+  PACKAGE: '/usr/local/lib/python3.9/site-packages'
   CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
-  QTAG: 'qe-6.5g'
-  QTAGNEW: 'qepy-6.5g-dev'
+  QTAG: 'qe-7.2g'
+  QTAGNEW: 'qepy-7.2g-dev'
   QEDIR: '/usr/src/app/q-e/'
   PUBLIC: 'package'
 

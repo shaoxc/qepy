@@ -20,8 +20,10 @@
   - atomic/src/green.o:green.f90:green and XSpectra/src/xspectra.o:xspectra.f90
   - GWW/head/lanczos_k.o:lanczos_k.f90:h_psi_scissor and GWW/pw4gww/libpw4gww.a:pola_lanczos.f90
   - GWW/head/* and PHonon/PH/libph.a (bcast_ph_input, close_phq, openfilq, phq_readin)
+  - GWW/pw4gww/libpw4gww.a:lanczos_chains.f90:lanczos and GWW/gww/libgww.a:lanczos_polarization.f90
 
 ### Ignore library
   - CPV/src/libcp.a
   - GWW/bse/libbse.a
   - PHonon/Gamma/libphcg.a
+  - GWW/gww/libgww.a

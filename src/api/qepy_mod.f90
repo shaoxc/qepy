@@ -436,6 +436,7 @@ CONTAINS
       USE fft_base,             ONLY : dfftp, dffts
       USE fft_interfaces,       ONLY : invfft
       USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+      USE uspp_init,            ONLY : init_us_2
       !
       IMPLICIT NONE
       INTEGER,INTENT(IN) :: ik
@@ -609,7 +610,7 @@ CONTAINS
       USE control_flags,        ONLY : treinit_gvecs
       USE cell_base,            ONLY : alat, at, bg, omega, cell_force, &
                                      fix_volume, fix_area, ibrav, enforce_ibrav
-      USE cellmd,               ONLY : omega_old, at_old, press, lmovecell, calc, cell_factor
+      USE cellmd,               ONLY : omega_old, at_old, lmovecell, calc, cell_factor
       !
       !
       INTEGER                  :: ierr
@@ -775,7 +776,8 @@ CONTAINS
 
    SUBROUTINE qepy_set_dft(dft)
       USE kinds,                ONLY : DP
-      USE funct,                ONLY : dft_is_meta, enforce_input_dft
+      USE funct,                ONLY : enforce_input_dft
+      USE xc_lib,               ONLY : xclib_dft_is
       USE fft_base,             ONLY : dffts
       USE lsda_mod,             ONLY : nspin
       USE gvect,                ONLY : ngm
@@ -786,14 +788,14 @@ CONTAINS
       !
       LOGICAL :: is_meta
       !
-      is_meta = dft_is_meta()
+      is_meta = xclib_dft_is('meta')
       IF ( present(dft) ) THEN
          call enforce_input_dft(dft)
       ELSE
          call enforce_input_dft('M06L')
       ENDIF
       !
-      IF ( dft_is_meta() .and. (.not. is_meta) ) THEN
+      IF ( xclib_dft_is('meta') .and. (.not. is_meta) ) THEN
          IF (ALLOCATED(kedtau)) DEALLOCATE(kedtau)
          ALLOCATE( kedtau(dffts%nnr,nspin) )
          !

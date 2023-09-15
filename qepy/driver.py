@@ -668,7 +668,11 @@ class Driver(object) :
         rho_obj = self.embed.rho
         rho_core = qepy.scf.get_array_rho_core()
         rhog_core = qepy.scf.get_array_rhog_core()
-        if qepy.funct.dft_is_meta():
+        try:
+            is_meta = qepy.funct.dft_is_meta()
+        except Exception:
+            is_meta = qepy.dft_setting_routines.xclib_dft_is('meta')
+        if is_meta:
             if tau is None : tau = out*0.0
             qepy.v_xc_meta(rho_obj, rho_core, rhog_core, etxc, vtxc, out, tau)
             return out, etxc, vtxc, tau
@@ -900,8 +904,7 @@ class Driver(object) :
         """Return the symbols of ions."""
         ityp = qepy.ions_base.get_array_ityp() - 1
         nat = qepy.ions_base.get_nat()
-        ntyp = qepy.ions_base.get_nsp()
-        label = qepy.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')[:ntyp]
+        label = qepy.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')
         label = [x.strip() for x in label]
         symbols = []
         for i in range(nat):

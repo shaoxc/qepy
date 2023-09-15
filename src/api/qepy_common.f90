@@ -62,8 +62,14 @@ MODULE qepy_common
       real(kind=dp)                   :: etotefield     !'electric field correction'
       real(kind=dp)                   :: etotgatefield  !'gate field correction'
       real(kind=dp)                   :: eth            !'Hubbard energy'
+      real(kind=dp)                   :: en_el          !'electric field contribution'
       real(kind=dp)                   :: epaw           !'one-center paw contrib.'
-      real(kind=dp)                   :: ept            !'potentiostat contribution'
+      real(kind=dp)                   :: egrand         !'one-center paw contrib.'
+      real(kind=dp)                   :: ept            !'pot.stat. contrib.'
+      real(kind=dp)                   :: esol           !'solvation energy (RISM)'
+      real(kind=dp)                   :: evsol          !'level-shifting contrib.'
+      real(kind=dp)                   :: esic           !'the sic energy'
+      real(kind=dp)                   :: esci           !'the scissor energy'
       !
       real(kind=dp)                   :: extene         !'External energy0'
       real(kind=dp)                   :: ehf            !'Harris-Foulkes estimate'
@@ -104,7 +110,7 @@ MODULE qepy_common
       !! add correction for variational energy
       logical                         :: lmovecell = .false.
       !! allow change the cell
-      logical                         :: oldxml = .false.
+      !logical                         :: oldxml = .false.
       !! Olderversion QE (XML file name is 'data-file.xml')
       !!
       !!

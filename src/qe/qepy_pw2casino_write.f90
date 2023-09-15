@@ -15,7 +15,7 @@
    !USE constants, ONLY: tpi, e2, eps6
    !USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    !USE fft_base,  ONLY: dfftp
-   !USE fft_interfaces, ONLY : fwfft
+   !USE fft_rho, ONLY: rho_r2g
    !USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
    !USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
    !USE lsda_mod, ONLY: lsda, nspin
@@ -28,13 +28,14 @@
    !USE uspp, ONLY: nkb, vkb, dvan
    !USE uspp_param, ONLY: nh
    !USE io_global, ONLY: stdout, ionode, ionode_id
-   !USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc, prefix, tmp_dir, seqopn
+   !USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
    !USE wavefunctions, ONLY : evc
-   !USE funct, ONLY : dft_is_meta
    !USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    !USE mp_bands, ONLY: intra_bgrp_comm
    !USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
-   !USE buffers,              ONLY : get_buffer
+   !USE buffers,            ONLY : get_buffer
+   !USE wavefunctions_gpum, ONLY : using_evc
+   !USE wvfct_gpum,         ONLY : using_et
 
    !USE pw2blip
 
@@ -79,6 +80,8 @@
    !INTEGER,PARAMETER :: Nran=1009,Nkeep=100 ! See comment on p. 188 of Knuth.
    !INTEGER,SAVE :: ran_array_idx=-1
    !REAL(DP),SAVE :: ran_array(Nran)
+
+   !CALL using_evc(0)
 
    !dowrite=ionode.or..not.(gather.or.blip)
 
@@ -209,11 +212,14 @@
    !iorb = 0
    !norb = nk*nspin*nbnd
 
+   !CALL using_evc(0)
+
    !DO ik = 1, nk
       !DO ispin = 1, nspin
          !ikk = ik + nk*(ispin-1)
          !npw = ngk(ikk)
          !IF( nks > 1 ) CALL get_buffer(evc,nwordwfc,iunwfc,ikk)
+         !IF( nks > 1 ) CALL using_evc(2)
          !DO ibnd = 1, nbnd
             !evc_l(:) = (0.d0, 0d0)
             !evc_l(gtoig(igk_k(1:npw,ikk))) = evc(1:npw,ibnd)
@@ -320,82 +326,120 @@
 
 !CONTAINS
 
-   SUBROUTINE qepy_calc_energies()
-      USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type, is_allocated_bec_type
+   SUBROUTINE qepy_calc_energies
+      USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
-      USE funct,  ONLY : dft_is_hybrid
-      USE kinds, ONLY: DP,sgl
-      USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
-      USE cell_base, ONLY: omega, alat, tpiba2, at, bg
-      USE run_info,  ONLY: title    ! title of the run
-      USE constants, ONLY: tpi, e2, eps6
-      !qepy --> 
-      !USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
-      !qepy <-- 
-      USE fft_base,  ONLY: dfftp
-      USE fft_interfaces, ONLY : fwfft
-      USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
-      USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
-      USE lsda_mod, ONLY: lsda, nspin
-      USE scf, ONLY: rho, rho_core, rhog_core, v, vnew, vrs
-      USE ldaU, ONLY : eth
-      USE vlocal, ONLY: vloc, strf
-      USE wvfct, ONLY: npwx, nbnd, wg, et
-      USE gvecw, ONLY: ecutwfc
-      USE control_flags, ONLY : gamma_only
-      USE uspp, ONLY: nkb, vkb, dvan
-      USE uspp_param, ONLY: nh
-      USE io_global, ONLY: stdout, ionode, ionode_id
-      USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc, prefix, tmp_dir, seqopn
-      USE wavefunctions, ONLY : evc
-      USE funct, ONLY : dft_is_meta
-      USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
-      USE mp_bands, ONLY: intra_bgrp_comm
-      USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
-      USE buffers,              ONLY : get_buffer, open_buffer
+      USE xc_lib, ONLY : xclib_dft_is
+      !
+      USE becmod_subs_gpum, ONLY : using_becp_auto
+      USE uspp_init,        ONLY : init_us_2
+   USE kinds, ONLY: DP,sgl
+   !USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
+   USE cell_base, ONLY: omega, alat, tpiba2, at, bg
+   USE run_info,  ONLY: title    ! title of the run
+   USE constants, ONLY: tpi, e2, eps6
+   !USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
+   USE fft_base,  ONLY: dfftp
+   USE fft_rho, ONLY: rho_r2g
+   USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
+   USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
+   USE lsda_mod, ONLY: lsda, nspin
+   USE scf, ONLY: rho, rho_core, rhog_core, v
+   USE ldaU, ONLY : eth
+   USE vlocal, ONLY: vloc, strf
+   USE wvfct, ONLY: npwx, nbnd, wg, et
+   USE gvecw, ONLY: ecutwfc
+   USE control_flags, ONLY : gamma_only
+   USE uspp, ONLY: nkb, vkb, dvan
+   USE uspp_param, ONLY: nh
+   USE io_global, ONLY: stdout, ionode, ionode_id
+   USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
+   USE wavefunctions, ONLY : evc
+   USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
+   USE mp_bands, ONLY: intra_bgrp_comm
+   USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
+   USE buffers,            ONLY : get_buffer
+   USE wavefunctions_gpum, ONLY : using_evc
+   USE wvfct_gpum,         ONLY : using_et
 
-      USE pw2blip
-      !
-      !qepy --> import more
-      USE qepy_common,          ONLY : embed
-      USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
-                                       vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                       elondon, edftd3, ef_up, ef_dw, exdm, ef
-      USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                       iprint, conv_elec, &
-                                       restart, io_level, do_makov_payne,  &
-                                       iverbosity, textfor,     &
-                                       llondon, ldftd3, scf_must_converge, lxdm, ts_vdw
-    
-      USE ldaU,                 ONLY : lda_plus_u
-      USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
-      USE london_module,        ONLY : energy_london
-      USE dftd3_api,            ONLY : dftd3_pbc_dispersion, &
-                                       dftd3_init, dftd3_set_functional, &
-                                       get_atomic_number, dftd3_input, &
-                                       dftd3_calc
-      USE dftd3_qe,             ONLY : dftd3, dftd3_in, energy_dftd3, dftd3_xc, dftd3_printout
-      USE xdm_module,           ONLY : energy_xdm
-      USE tsvdw_module,         ONLY : EtsvdW
-      !
-      USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
-      USE paw_onecenter,        ONLY : PAW_potential
-      USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
-      USE dfunct,               ONLY : newd
-      USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
-      USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
-      USE ions_base,            ONLY : compute_eextfor
-      USE bp,                   ONLY : lelfield
-      USE klist,                ONLY : tot_charge
-      USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
-                                       lambda, report
-      USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
-      USE spin_orb,             ONLY : domag
+   USE pw2blip
+   !qepy --> import more
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm, &
+                                   ntyp => nsp
+  USE basis,                ONLY : starting_pot
+  USE bp,                   ONLY : lelfield
+  USE fft_base,             ONLY : dfftp
+  USE gvect,                ONLY : ngm, gstart, g, gg, gcutm
+  USE gvecs,                ONLY : doublegrid, ngms
+  USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss, &
+                                   two_fermi_energies, tot_charge
+  USE fixed_occ,            ONLY : one_atom_occupations
+  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
+  USE vlocal,               ONLY : strf
+  USE wvfct,                ONLY : nbnd, et
+  USE gvecw,                ONLY : ecutwfc
+  USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
+                                   vtxc, etxc, etxcc, ewld, demet, epaw, &
+                                   elondon, edftd3, ef_up, ef_dw, exdm, ef, &
+                                   egrand, vsol, esol, esic, esci
+  USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
+                                   create_scf_type, destroy_scf_type, &
+                                   open_mix_file, close_mix_file, &
+                                   rho, rho_core, rhog_core, v, vltot, vrs, &
+                                   kedtau, vnew
+  USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
+                                   iprint, conv_elec, sic, &
+                                   restart, io_level, do_makov_payne,  &
+                                   gamma_only, iverbosity, textfor,     &
+                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
+                                   mbd_vdw, use_gpu
+  USE control_flags,        ONLY : n_scf_steps, scf_error, scissor
+  USE sci_mod,              ONLY : sci_iter
+
+  USE io_files,             ONLY : iunmix, output_drho
+  USE ldaU,                 ONLY : eth, lda_plus_u, lda_plus_u_kind, &
+                                   niter_with_fixed_ns, hub_pot_fix, &
+                                   nsg, nsgnew, v_nsg, at_sc, neighood, &
+                                   ldim_u, is_hubbard_back
+  USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
+  USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
+                                   lambda, report, domag, nspin_mag
+  USE io_rho_xml,           ONLY : write_scf
+  USE uspp,                 ONLY : okvan
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_pools,             ONLY : root_pool, me_pool, my_pool_id, &
+                                   inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum, mp_bcast
+  !
+  USE london_module,        ONLY : energy_london
+  USE dftd3_api,            ONLY : dftd3_pbc_dispersion, get_atomic_number
+  USE dftd3_qe,             ONLY : dftd3
+  USE xdm_module,           ONLY : energy_xdm
+  USE tsvdw_module,         ONLY : EtsvdW
+  !
+  USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
+  USE paw_onecenter,        ONLY : PAW_potential
+  USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
+  USE dfunct,               ONLY : newd
+  USE dfunct_gpum,          ONLY : newd_gpu
+  USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
+  USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
+  USE clib_wrappers,        ONLY : memstat
+  USE fcp_module,           ONLY : lfcp, fcp_mu
+  USE rism_module,          ONLY : lrism, rism_calc3d, rism_printpot
+  USE iso_c_binding,        ONLY : c_int
+  !
+  USE plugin_variables,     ONLY : plugin_etot
+  USE libmbd_interface,     ONLY : EmbdvdW
+  !
+  USE qepy_common,          ONLY : embed
+  USE constants,            ONLY : eps8
+  USE becmod,               ONLY : is_allocated_bec_type
       !qepy <-- import more
       !
       IMPLICIT NONE
-      !
-      COMPLEX(DP), ALLOCATABLE :: aux(:)
+
+      COMPLEX(DP), ALLOCATABLE :: aux(:,:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)
       !qepy --> remove etotefield
@@ -431,11 +475,12 @@
          !     nspin = 1
       ENDIF
 
-      ALLOCATE (aux(dfftp%nnr))
+      ALLOCATE (aux(dfftp%nnr,1))
       !qepy add --> fix
       if (is_allocated_bec_type(becp)) call deallocate_bec_type(becp)
       !qepy add <-- fix
       CALL allocate_bec_type ( nkb, nbnd, becp )
+      CALL using_becp_auto(2)
 
       ek  = 0.d0
       eloc= 0.d0
@@ -451,26 +496,28 @@
          !      bring rho to G-space
          !
          if (iand(embed%exttype,1) == 0) then ! 
-         aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-         CALL fwfft ('Rho', aux, dfftp)
+         CALL rho_r2g( dfftp, rho%of_r(:,ispin), aux )
          !
-         DO nt=1,ntyp
+         DO nt = 1, ntyp
             DO ig = 1, ngm
-               elocg = vloc(igtongl(ig),nt) * &
-                       dble ( strf(ig,nt) * conjg(aux(dfftp%nl(ig))) )
+               elocg = vloc(igtongl(ig),nt) * dble( strf(ig,nt) * conjg(aux(ig,1)) )
                eloc = eloc + elocg
                IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
             ENDDO
          ENDDO
          end if
 
+         CALL using_evc(0); CALL using_et(0)
+
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
             npw = ngk(ikk)
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
+            IF( nks > 1 ) CALL using_evc(2)
+            !
             IF ( nkb > 0 ) THEN
-               CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
-               CALL calbec ( npw, vkb, evc, becp )
+            CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
+            CALL calbec ( npw, vkb, evc, becp )
             ENDIF
             !
             ! -TS term for metals (if any)
@@ -540,9 +587,16 @@
       ENDDO
 
       DEALLOCATE ( g2kin )
-      extene=0.0_DP
-      IF (ALLOCATED(embed%extpot)) THEN
-         extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+      extene = embed%extene
+      IF (abs(extene)<1.D-15) THEN
+         IF (ALLOCATED(embed%extpot)) THEN
+            extene = sum(embed%extpot(:,:)*rho%of_r(:,:)) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+         ELSE
+            extene = 0.0_DP
+         ENDIF
+#if defined(__MPI)
+         CALL mp_sum( extene,  intra_bgrp_comm )
+#endif
       ENDIF
       !
       deband_hwf = qepy_delta_e(vrs)
@@ -553,7 +607,6 @@
       CALL mp_sum( ek,    inter_pool_comm )
       CALL mp_sum( enl,   inter_pool_comm )
       CALL mp_sum( demet, inter_pool_comm )
-      CALL mp_sum( extene,  intra_bgrp_comm )
 #endif
       eloc = eloc * omega
       !
@@ -573,17 +626,16 @@
       ! compute hartree and xc contribution
       !
       !qepy --> also paw
-      call qepy_v_of_rho_all( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, embed)
+      CALL qepy_v_of_rho_all( rho, rho_core, rhog_core, &
+                     ehart, etxc, vtxc, eth, etotefield, charge, v )
       !qepy <-- also paw
       !
       ! compute exact exchange contribution (if present)
       !
-      IF(dft_is_hybrid()) fock2 = 0.5_DP * exxenergy2()
+      IF(xclib_dft_is('hybrid')) fock2 = 0.5_DP * exxenergy2()
       !
-      etot_=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
-      !
-      !
+      !etot_=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
+      !!
       !IF ( ABS(etot-etot_) > ABS(eps6*etot) ) THEN
          !WRITE (stdout,'(5X,"Etot: ",f15.8," Ry from PWscf vs ", &
                 !& f15.8," Ry from pw2casino!")') etot, etot_
@@ -592,76 +644,106 @@
          !etot = etot_
       !END IF
       !
+      etot_=etot
+      etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
       !qepy --> additional energies (electrons_scf)
-      IF ( llondon ) THEN
-         elondon = energy_london( alat , nat , ityp , at ,bg , tau )
-      ELSE
-         elondon = 0.d0
-      ENDIF
-      !
-      ! Grimme-D3 correction to the energy
-      !
-      IF (ldftd3) THEN
-         latvecs(:,:)=at(:,:)*alat
-         tau(:,:)=tau(:,:)*alat
-         DO na = 1, nat
-            atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
-         ENDDO
-         call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,energy_dftd3)
-         edftd3=energy_dftd3*2.d0
-         tau(:,:)=tau(:,:)/alat
-      ELSE
-         edftd3= 0.0
-      ENDIF
-      !
-      IF (okpaw) etot_ = etot_ + epaw
-      IF ( lda_plus_u ) etot_ = etot_ + eth
-      !
-      !IF ( lelfield ) en_el =  calc_pol ( )
-      !IF ( lelfield ) etot_ = etot_ + en_el
-      ! not sure about the HWF functional in the above case
-      IF( textfor ) THEN
-         eext = alat*compute_eextfor()
-         etot_ = etot_ + eext
-      ENDIF
-      IF (llondon) THEN
-         etot_ = etot_ + elondon
-      ENDIF
-      !
-      ! grimme-d3 dispersion energy
-      IF (ldftd3) THEN
-         etot_ = etot_ + edftd3
-      ENDIF
-      !
-      ! calculate the xdm energy contribution with converged density
-      !IF (lxdm .and. conv_elec) THEN
-      IF (lxdm) THEN
-         exdm = energy_xdm()  
-         etot_ = etot_ + exdm
-      ENDIF
-      IF (ts_vdw) THEN
-         ! factor 2 converts from Ha to Ry units
-         etot_ = etot_ + 2.0d0*EtsvdW
-      ENDIF
-      !
-      IF ( tefield ) THEN
-         etot_ = etot_ + etotefield
-      ENDIF
-      ! TB gate energy
-      IF ( gate) THEN
-         etot_ = etot_ + etotgatefield
-      ENDIF
-      !
-      IF ( lfcpopt .or. lfcpdyn ) THEN
-         etot_ = etot_ + ef * tot_charge
-      ENDIF
-      !
-      !deband_hwf = deband
+  IF ( llondon ) THEN
+     elondon = energy_london( alat , nat , ityp , at ,bg , tau )
+  ELSE
+     elondon = 0.d0
+  ENDIF
+  !
+  ! Grimme-D3 correction to the energy
+  !
+  IF (ldftd3) THEN
+     CALL start_clock('energy_dftd3')
+     latvecs(:,:)=at(:,:)*alat
+     tau(:,:)=tau(:,:)*alat
+     DO na = 1, nat
+        atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
+     ENDDO
+     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,edftd3)
+     edftd3=edftd3*2.d0
+     tau(:,:)=tau(:,:)/alat
+     CALL stop_clock('energy_dftd3')
+  ELSE
+     edftd3= 0.0
+  ENDIF
+     !
+     IF (okpaw) etot = etot + epaw
+     IF ( lda_plus_u ) etot = etot + eth
+     !
+     !IF ( lelfield ) etot = etot + en_el
+     ! not sure about the HWF functional in the above case
+     IF( textfor ) THEN
+        eext = alat*compute_eextfor()
+        etot = etot + eext
+        hwf_energy = hwf_energy + eext
+     ENDIF
+     IF (llondon) THEN
+        etot = etot + elondon
+        hwf_energy = hwf_energy + elondon
+     ENDIF
+     !
+     ! grimme-d3 dispersion energy
+     IF (ldftd3) THEN
+        etot = etot + edftd3
+        hwf_energy = hwf_energy + edftd3
+     ENDIF
+     !
+     ! calculate the xdm energy contribution with converged density
+     IF (lxdm .and. conv_elec) THEN
+        exdm = energy_xdm()  
+        etot = etot + exdm
+        hwf_energy = hwf_energy + exdm
+     ENDIF
+     IF (mbd_vdw) THEN
+        ! factor 2 converts from Hartree to Ry units
+        etot = etot + 2.0d0*EmbdvdW
+        hwf_energy = hwf_energy + 2.0d0*EmbdvdW
+     ELSE IF (ts_vdw) THEN
+        ! factor 2 converts from Hartree to Ry units
+        etot = etot + 2.0d0*EtsvdW
+        hwf_energy = hwf_energy + 2.0d0*EtsvdW
+     ENDIF
+     !
+     IF ( tefield ) THEN
+        etot = etot + etotefield
+        hwf_energy = hwf_energy + etotefield
+     ENDIF
+     ! TB gate energy
+     IF ( gate ) THEN
+        etot = etot + etotgatefield
+        hwf_energy = hwf_energy + etotgatefield
+     ENDIF
+     !
+     IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
+        etot = etot + egrand
+        hwf_energy = hwf_energy + egrand
+     END IF
+     !
+     IF ( lfcp ) THEN
+        etot = etot + fcp_mu * tot_charge
+        hwf_energy = hwf_energy + fcp_mu * tot_charge
+     END IF
+     !
+     IF ( lrism ) THEN
+        etot = etot + esol + vsol
+        hwf_energy = hwf_energy + esol + vsol
+     END IF
+     !
+     IF (sic) etot = etot + esic
+     IF (scissor) etot = etot + esci
+     !
+      ehf = etot
+      etot = etot_
+      etot_ = ehf
       !ehf = etot_ + eband + deband_hwf - eloc - enl - ek
       ehf = etot_ + eband + deband_hwf - enl - ek
       !qepy <-- additional energies (electrons_scf)
       !
       CALL deallocate_bec_type (becp)
+      CALL using_becp_auto(2)
       DEALLOCATE (aux)
 
       WRITE (stdout,*)
@@ -673,57 +755,74 @@
       WRITE (stdout,*) 'Ewald energy     ', ewld/e2, ' au  =  ', ewld, ' Ry'
       WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2, ' au  =  ', etxc-etxcc, ' Ry'
       WRITE (stdout,*) 'hartree energy   ', ehart/e2, ' au  =  ', ehart, ' Ry'
-      IF(dft_is_hybrid()) & 
-      WRITE (stdout,*) 'EXX energy       ', fock2/e2, ' au  =  ', fock2, ' Ry' 
+      IF(xclib_dft_is('hybrid')) & 
+           WRITE (stdout,*) 'EXX energy       ', fock2/e2, ' au  =  ', fock2, ' Ry' 
       IF( degauss > 0.0_dp ) &
-      WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
+         WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
       WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
       WRITE (stdout,*) '-------------------------------------'
       WRITE (stdout,*) 'Total energy0    ', etot_/e2, ' au  =  ', etot_, ' Ry'
       WRITE (stdout,*) 'External energy0 ', extene/e2, ' au  =  ', extene, ' Ry'
-      IF ( llondon    ) WRITE( stdout, 9074 ) elondon
-      IF ( ldftd3     ) WRITE( stdout, 9078 ) edftd3
-      IF ( lxdm       ) WRITE( stdout, 9075 ) exdm
-      IF ( ts_vdw     ) WRITE( stdout, 9076 ) 2.0d0*EtsvdW
-      IF ( textfor    ) WRITE( stdout, 9077 ) eext
-      IF ( tefield    ) WRITE( stdout, 9061 ) etotefield
-      IF ( gate       ) WRITE( stdout, 9062 ) etotgatefield  ! TB
-      IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
-      IF ( okpaw ) THEN
-        WRITE( stdout, 9067 ) epaw
-        ! Detailed printout of PAW energy components, if verbosity is high
-        !IF(iverbosity>0)THEN
-        WRITE( stdout, 9068) SUM(etot_cmp_paw(:,1,1)), &
-                             SUM(etot_cmp_paw(:,1,2)), &
-                             SUM(etot_cmp_paw(:,2,1)), &
-                             SUM(etot_cmp_paw(:,2,2)), &
-        SUM(etot_cmp_paw(:,1,1))+SUM(etot_cmp_paw(:,1,2))+ehart, &
-        SUM(etot_cmp_paw(:,2,1))+SUM(etot_cmp_paw(:,2,2))+etxc-etxcc
-        !ENDIF
-      ENDIF
-      IF ( lfcpopt .OR. lfcpdyn ) WRITE( stdout, 9072 ) ef*tot_charge
-      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
-      IF ( noncolin .AND. domag ) &
-           WRITE( stdout, 9018 ) magtot_nc(1:3), absmag
-      IF ( i_cons == 3 .OR. i_cons == 4 )  &
-           WRITE( stdout, 9071 ) bfield(1), bfield(2), bfield(3)
-      IF ( i_cons /= 0 .AND. i_cons < 4 ) &
-           WRITE( stdout, 9073 ) lambda
-      !
-      FLUSH( stdout )
+          IF ( llondon ) WRITE ( stdout , 9074 ) elondon
+          IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
+          IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
+          IF ( mbd_vdw ) THEN
+             WRITE ( stdout , 9076 ) 2.0d0*Embdvdw
+          ELSEIF ( ts_vdw ) THEN
+             WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
+          ENDIF
+          IF ( textfor)  WRITE ( stdout , 9077 ) eext
+          IF ( tefield )            WRITE( stdout, 9064 ) etotefield
+          IF ( gate )               WRITE( stdout, 9065 ) etotgatefield
+          IF ( lda_plus_u )         WRITE( stdout, 9066 ) eth
+          !IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
+          IF ( okpaw ) THEN
+            WRITE( stdout, 9067 ) epaw
+            ! Detailed printout of PAW energy components, if verbosity is high
+            !IF(iverbosity>0)THEN
+            WRITE( stdout, 9068) SUM(etot_cmp_paw(:,1,1)), &
+                                 SUM(etot_cmp_paw(:,1,2)), &
+                                 SUM(etot_cmp_paw(:,2,1)), &
+                                 SUM(etot_cmp_paw(:,2,2)), &
+            SUM(etot_cmp_paw(:,1,1))+SUM(etot_cmp_paw(:,1,2))+ehart, &
+            SUM(etot_cmp_paw(:,2,1))+SUM(etot_cmp_paw(:,2,2))+etxc-etxcc
+            !ENDIF
+          ENDIF
+          !
+          IF ( lrism ) THEN
+             WRITE( stdout, 9902 ) esol
+             IF ( ABS( vsol ) > eps8 ) WRITE( stdout, 9903 ) vsol
+          END IF
+          !
+          ! ... With Grandcanonical-SCF (GC-SCF) or Fictitious charge particle (FCP),
+          ! ... etot is the grand potential energy Omega = E - muN, where -muN is
+          ! ... the potentiostat contribution.
+          !
+          IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
+             WRITE( stdout, 9072 ) egrand
+          END IF
+          !
+          IF ( lfcp ) WRITE( stdout, 9072 ) fcp_mu*tot_charge
+          !
 9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
             /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9018 FORMAT(/'     total magnetization       =',3F9.2,' Bohr mag/cell' &
        &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
-9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
-9062 FORMAT( '     gate field correction     =',F17.8,' Ry' ) ! TB
-9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
+9060 FORMAT(/'     The total energy is the sum of the following terms:' )
+9061 FORMAT(/'     The total energy is F=E-TS. E is the sum of the following terms:' )
+9062 FORMAT( '     one-electron contribution =',F17.8,' Ry' &
+            /'     hartree contribution      =',F17.8,' Ry' &
+            /'     xc contribution           =',F17.8,' Ry' &
+            /'     ewald contribution        =',F17.8,' Ry' )
+9064 FORMAT( '     electric field correction =',F17.8,' Ry' )
+9065 FORMAT( '     gate field correction     =',F17.8,' Ry' ) ! TB
+9066 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
 9068 FORMAT( '      -> PAW hartree energy AE =',F17.8,' Ry' &
             /'      -> PAW hartree energy PS =',F17.8,' Ry' &
             /'      -> PAW xc energy AE      =',F17.8,' Ry' &
             /'      -> PAW xc energy PS      =',F17.8,' Ry' &
-            /'      -> total E_H with PAW    =',F17.8,' Ry'& 
+            /'      -> total E_H with PAW    =',F17.8,' Ry' &
             /'      -> total E_XC with PAW   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
@@ -732,9 +831,26 @@
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
 9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )
-9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
+9076 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9077 FORMAT( '     External forces energy    =',F17.8,' Ry' )
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
+9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' )
+9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' )
+9082 FORMAT( '     Harris-Foulkes estimate   =',0PF17.8,' Ry' )
+9083 FORMAT( '     estimated scf accuracy    <',0PF17.8,' Ry' )
+9084 FORMAT( '     estimated scf accuracy    <',1PE17.1,' Ry' )
+9085 FORMAT( '     total all-electron energy =',0PF17.6,' Ry' )
+9170 FORMAT( '     internal energy E=F+TS    =',0PF17.8,' Ry' )
+9181 FORMAT(                                                  &
+            /'!    total charge of GC-SCF    =',0PF17.8,' e' )
+9182 FORMAT(                                                  &
+            /'     total charge of GC-SCF    =',0PF17.8,' e'  &
+            /'     the Fermi energy          =',0PF17.8,' eV' &
+            /'                        (error :',0PF17.8,' eV)')
+9301 FORMAT( '     band energy (sum(wg*et))  =',F17.8,' Ry' )
+
+9902 FORMAT( '     solvation energy (RISM)   =',F17.8,' Ry' )
+9903 FORMAT( '     level-shifting contrib.   =',F17.8,' Ry' )
       WRITE (stdout,*) '-------------------------------------'
       WRITE (stdout,*)
       embed%etotal=etot_
@@ -753,36 +869,21 @@
       !
       embed%energies%ehf              = ehf
       !
-      IF (llondon) THEN
-         embed%energies%elondon       = elondon                    !'Dispersion Correction'
-      ENDIF
-      IF (ldftd3) THEN
-         embed%energies%edftd3        = edftd3                     !'DFT-D3 Dispersion'
-      ENDIF
-      IF (lxdm) THEN
-         embed%energies%exdm          = exdm                       !'Dispersion XDM Correction'
-      ENDIF
-      IF (ts_vdw) THEN
-         embed%energies%etsvdw        = 2.0d0*EtsvdW               !'Dispersion T-S Correction'
-      ENDIF
-      IF( textfor ) THEN
-         embed%energies%eext          = eext                       !'External forces energy'
-      ENDIF
-      IF ( tefield ) THEN
-         embed%energies%etotefield    = etotefield                 !'electric field correction'
-      ENDIF
-      IF ( gate) THEN
-         embed%energies%etotgatefield = etotgatefield              !'gate field correction'
-      ENDIF
-      IF ( lda_plus_u ) THEN
-         embed%energies%eth           = eth                        !'Hubbard energy'
-      ENDIF
-      IF (okpaw) THEN
-         embed%energies%epaw          = epaw                       !'one-center paw contrib.'
-      ENDIF
-      IF ( lfcpopt .or. lfcpdyn ) THEN
-         embed%energies%ept           = ef * tot_charge            !'potentiostat contribution'
-      ENDIF
+      IF (llondon) embed%energies%elondon                                = elondon              !'Dispersion Correction'
+      IF (ldftd3) embed%energies%edftd3                                  = edftd3               !'DFT-D3 Dispersion'
+      IF (lxdm) embed%energies%exdm                                      = exdm                 !'Dispersion XDM Correction'
+      IF (ts_vdw) embed%energies%etsvdw                                  = 2.0d0*EtsvdW         !'Dispersion T-S Correction'
+      IF ( textfor ) embed%energies%eext                                 = eext                 !'External forces energy'
+      IF ( tefield ) embed%energies%etotefield                           = etotefield           !'electric field correction'
+      IF ( gate) embed%energies%etotgatefield                            = etotgatefield        !'gate field correction'
+      IF ( lda_plus_u ) embed%energies%eth                               = eth                  !'Hubbard energy'
+      IF (okpaw) embed%energies%epaw                                     = epaw                 !'one-center paw contrib.'
+      IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) embed%energies%egrand = egrand               !'one-center paw contrib.'
+      IF ( lfcp ) embed%energies%ept                                     = fcp_mu * tot_charge  !'pot.stat. contrib.'
+      IF ( lrism ) embed%energies%esol                                   = esol                 !'solvation energy (RISM)'
+      IF ( lrism ) embed%energies%evsol                                  = vsol                 !'level-shifting contrib.'
+      IF (sic) embed%energies%esic                                       = esic                 !'the sic energy'
+      IF (scissor) embed%energies%esci                                   = esci                 !'the scissor energy'
       !
       embed%energies%extene           = extene                     !'External energy0'
       ! some energies details -->
@@ -1020,6 +1121,7 @@
          !kprod(6,:)=kvec(2,:)*kvec(3,:)
          !ksq(:)=kprod(1,:)+kprod(2,:)+kprod(3,:)
 
+         !CALL using_et(0)
          !WRITE(iob)&
             !kvec                                          ,&
             !ksq                                           ,&
@@ -1174,6 +1276,8 @@
 
       !IF(binwrite)RETURN
 
+      !CALL using_et(0)
+
       !ikk = ik + nk*(ispin-1)
       !IF(ispin==1.and.ibnd==1)THEN
          !WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
@@ -1199,6 +1303,8 @@
    !SUBROUTINE write_bwfn_data(ik,ispin,ibnd)
       !INTEGER,INTENT(in) :: ik,ispin,ibnd
       !INTEGER lx,ly,lz,ikk,j,l1,l2,l3
+
+      !CALL using_et(0)
 
       !IF(binwrite)THEN
          !DO l3=1,blipgrid(3)
@@ -1244,6 +1350,8 @@
    !SUBROUTINE write_bwfn_data_gamma(re_im,ik,ispin,ibnd)
       !INTEGER,INTENT(in) :: ik,ispin,ibnd,re_im
       !INTEGER lx,ly,lz,ikk,j,l1,l2,l3
+
+      !CALL using_et(0)
 
       !IF(binwrite)THEN
          !IF(re_im==1)THEN

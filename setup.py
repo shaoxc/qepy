@@ -104,11 +104,10 @@ class MakeBuild(build_ext):
         #
         sys.path.insert(0, './')
         from cmdx.qepy_cmd_patch import ini2files_qex
-        ini2files_qex('cmdx/qepy_qex.ini')
-        #
-        if env.get('ldau', 'no').lower() == 'yes' :
-            from ldau.qepy_ldau_patch import ini2files
-            ini2files('ldau/qepy_econf.ini')
+        if env.get('cmdx', 'no').lower() == 'yes' :
+            ini2files_qex('cmdx/qepy_qex.ini')
+        else:
+            ini2files_qex()
         #
         os.chdir(cwd)
 

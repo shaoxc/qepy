@@ -1,4 +1,5 @@
 include make.qe.inc
+include make.cmdx.inc
 
 SRC_DIRS := ./
 PY_SRC_DIR := ./
@@ -11,8 +12,8 @@ QE_ATOMIC := $(filter-out ${QEDIR}/atomic/src/ld1.o, $(wildcard ${QEDIR}/atomic/
 QE_PWCOND:= $(filter-out ${QEDIR}/PWCOND/src/condmain.o, $(wildcard ${QEDIR}/PWCOND/src/*.o))
 QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${IGNOREMODS}, $(QEMODS))
 QEMODS += ${QE_ATOMIC} ${QE_PWCOND}
-QEMODS += ${QEDIR}/LR_Modules/liblrmod.a ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a
-#$(info 'QEMODS', ${QEMODS})
+QEMODS += ${QEDIR}/LR_Modules/liblrmod.a ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/upflib/libupf.a
+$(info 'QEMODS', ${QEMODS})
 
 QEINC := $(wildcard ${QEDIR}/*/Makefile) $(wildcard ${QEDIR}/*/*/Makefile)
 QEINC := $(addprefix -I, ${QEINC})
@@ -23,51 +24,31 @@ TDDFT_FILES = ${TDDFT_SOURCES}
 
 QEPY_ADD := qepy_sys.f90 qepy_common.f90 qepy_mod.f90 \
 			scatter_mod.f90 funct.f90 potinit.f90 wfcinit.f90\
-			pw_restart_new.f90 read_file_new.f90 qes_read_module.f90
-
-QEPY_QEX := command_line_options.f90 plugin_arguments.f90 path_io_tools.f90 inpfile.f90 \
-			alpha2f.f90 average.f90 bands.f90 benchmark_libxc.f90 cell2ibrav.f90 condmain.f90 dos.f90 dynmat.f90 epa.f90 epsilon.f90 ev.f90 fd.f90 fd_ef.f90 fd_ifc.f90 fermi_proj.f90 fermi_velocity.f90 fermisurface.f90 fqha.f90 gww.f90 gww_fit.f90 hp_main.f90 ibrav2cell.f90 initial_state.f90 kpoints.f90 lambda.f90 ld1.f90 lr_dav_main.f90 lr_eels_main.f90 lr_main.f90 matdyn.f90 molecularpdos.f90 neb.f90 open_grid.f90 path_interpolation.f90 phonon.f90 plan_avg.f90 plotband.f90 plotproj.f90 plotrho.f90 poormanwannier.f90 postproc.f90 ppacf.f90 projwfc.f90 pw2bgw.f90 pw2critic.f90 pw2gw.f90 pw2wannier90.f90 pw4gww.f90 pwscf.f90 q2qstar.f90 q2r.f90 q2trans.f90 q2trans_fd.f90 simple.f90 simple_bse.f90 simple_ip.f90 sumpdos.f90 tddfpt_calculate_spectrum.f90 wannier_ham.f90 wannier_plot.f90 wfck2r.f90
+			pw_restart_new.f90 read_file_new.f90 set_para_diag.f90 setup.f90
 
 
 QEPY_SOURCES := qepy_setlocal.f90 qepy_v_of_rho.f90 qepy_pw2casino_write.f90 \
-              qepy_init_run.f90 qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
-              qepy_electrons_nscf.f90 qepy_hinit1.f90 qepy_forces.f90 qepy_stop_run.f90 \
-              qepy_stress.f90
-
-OLDXML_SOURCES := oldxml_qexml.f90 oldxml_xml_io_base.f90 \
-                oldxml_io_rho_xml.f90 oldxml_pw_restart.f90 \
-                oldxml_wfcinit.f90 oldxml_potinit.f90 oldxml_read_file.f90
+              qepy_pwscf.f90 qepy_run_pwscf.f90 qepy_electrons.f90 \
+              qepy_hinit1.f90 qepy_forces.f90 qepy_stop_run.f90 qepy_stress.f90 \
+			  qepy_v_of_rho_all.f90 qepy_delta_e.f90
 
 QEPY_TDDFT_SOURCES := qepy_tddft_common.f90 \
                     qepy_molecule_optical_absorption.f90 qepy_tddft_main.f90 \
                     qepy_tddft_routines.f90 qepy_tddft_setup.f90 qepy_update_ham.f90 \
                     qepy_tddft_mod.f90
 
-QEPY_LDAU := tabd.f90 set_hubbard_l.f90 set_hubbard_n.f90
-
 QE_FILES := $(filter-out ${QEPY_ADD} ${QEPY_QEX}, ${QE_FILES})
 
-ifeq ($(ldau), yes)
-   QEPY_ADD += ${QEPY_LDAU}
-endif
-
-FOLDXML =
 EXT_FILES=
 
 ifeq ($(original), yes)
    QEPY_SOURCES := ${QEPY_ADD}
-   oldxml = no
    tddft = no
 else
    QEPY_SOURCES += ${QEPY_ADD}
 endif
 
 QEPY_SOURCES += ${QEPY_QEX}
-
-ifeq ($(oldxml), yes)
-   QEPY_SOURCES := ${OLDXML_SOURCES} ${QEPY_SOURCES}
-   FOLDXML = -D__OLDXML
-endif
 
 ifeq ($(tddft), yes)
    QEPY_SOURCES := ${QEPY_TDDFT_SOURCES} ${QEPY_SOURCES}
@@ -89,7 +70,7 @@ F90WRAP_FILES = f90wrap_*.f90
 WRAP_FPP_FILES = $(notdir $(WRAP_FILES:%.f90=%.fpp))
 
 $(info 'F90FLAGS', ${F90FLAGS})
-F2FLAGS = $(F90FLAGS) $(QEINC) $(FOLDXML)
+F2FLAGS = $(F90FLAGS) $(QEINC)
 #$(info 'F2FLAGS', ${F2FLAGS})
 export LDFLAGS := ${LDFLAGS}
 # For the old version numpy (e.g 1.17.3)
@@ -126,7 +107,7 @@ ${WRAP_FPP_FILES}: ${WRAP_FILES}
 	@for f in ${WRAP_FILES}; do $(FPP) $$f > $$(basename $${f%.*}).fpp; done
 
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	@${PYTHON} -m f90wrap --f90wrap -v -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json \
+	@${PYTHON} -m f90wrap --f90wrap -m qepy ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json \
 		--init-file $(PY_SRC_DIR)/__init__.py -P
 
 .PHONY: serial mpi clean install help

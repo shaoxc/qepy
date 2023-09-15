@@ -47,7 +47,7 @@ if len(sys.argv) > 1 :
 else :
     path = Path.cwd()
 
-ignore_folder=['GUI', 'S3DE', 'Doc', 'test-suite', 'external']
+ignore_folder=['GUI', 'S3DE', 'Doc', 'test-suite', 'external', 'W90']
 
 cmds = dict.fromkeys([item.name for item in (path/'bin').glob('*.x')])
 
@@ -76,10 +76,15 @@ if not_found:
     print(f'!WARN: {len(not_found)} files not found: "{" ".join(not_found)}"')
 
 # remove path
-for k, v in cmds.items():
+for k in list(cmds.keys()):
+    v = cmds[k]
+    if v is None:
+        print(f'!WARN: {k} not found')
+        cmds.pop(k)
+        continue
     cmds[k] = v.relative_to(path)
 
 config = configparser.ConfigParser()
-config['DEFAULT'] = dict(sorted(cmds.items(), key=lambda x:x[1]))
+config['CMD'] = dict(sorted(cmds.items(), key=lambda x:x[1]))
 with open('qepy_qex.ini', 'w') as fh:
     config.write(fh)

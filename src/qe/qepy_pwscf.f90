@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
+SUBROUTINE qepy_pwscf(infile, my_world_comm, embed)
   !! Author: Paolo Giannozzi
   !
   !! Version: v6.1
@@ -39,110 +39,51 @@ SUBROUTINE qepy_pwscf(infile, my_world_comm, oldxml, embed)
   !!
   USE environment,          ONLY : environment_start
   USE mp_global,            ONLY : mp_startup
-  USE mp_world,             ONLY : world_comm
-  USE mp_pools,             ONLY : intra_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_diag,              ONLY : mp_start_diag
-  USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
-  USE command_line_options, ONLY : input_file_, command_line, ndiag_
+  USE command_line_options, ONLY : input_file_, command_line, nimage_
+  !
   USE qepy_common,          ONLY : embed_base, set_embed, messenger, p_embed => embed
   !
   IMPLICIT NONE
   !
-  CHARACTER(len=*) :: infile
-  INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
-  LOGICAL, INTENT(IN), OPTIONAL :: oldxml
-  type(embed_base), intent(inout), optional :: embed
-  !
-  LOGICAL               :: oldver
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
   CHARACTER(len=256) :: get_server_address
   !! Get the address of the server 
   INTEGER :: exit_status
   !! Status at exit
-  LOGICAL :: use_images, do_diag_in_band_group = .TRUE.
+  LOGICAL :: use_images
   !! true if running "manypw.x"
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
   !
-  if (present(oldxml)) then
-     oldver = oldxml
-  else
-     oldver = .FALSE.
-  endif
+  CHARACTER(len=*) :: infile
+  INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
+  type(embed_base), intent(inout), optional :: embed
   !
   if (present(embed)) call set_embed(embed)
   if (.not. associated(p_embed)) call set_embed(messenger)
   !
   IF ( PRESENT(my_world_comm)) THEN
-     CALL mp_startup(my_world_comm=my_world_comm, start_images=.TRUE. )
+  CALL mp_startup(my_world_comm=my_world_comm, start_images=.TRUE., images_only=.TRUE. )
   ELSE
-     CALL mp_startup( start_images=.TRUE. )
+  CALL mp_startup( start_images=.TRUE., images_only=.TRUE. )
   ENDIF
   !
-  IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
-     ! used to be the default : one diag group per bgrp
-     ! with strict hierarchy: POOL > BAND > DIAG
-     ! if using exx groups from mp_exx still use this diag method
-     CALL mp_start_diag( ndiag_, world_comm, intra_bgrp_comm, &
-                         do_distr_diag_inside_bgrp_ = .TRUE. )
-  ELSE
-     ! new default: one diag group per pool ( individual k-point level )
-     ! with band group and diag group both being children of POOL comm
-     CALL mp_start_diag( ndiag_, world_comm, intra_pool_comm, &
-                         do_distr_diag_inside_bgrp_ = .FALSE. )
-  ENDIF
-  !
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-                               inter_bgrp_comm )
   !
   CALL environment_start( 'PWSCF' )
-  !
-  ! ... Check if running standalone or in "driver" mode
-  !
-  !srvaddress = get_server_address( command_line ) 
-  !
-  ! ... Check if running standalone or in "manypw" mode
-  !
-  !use_images = matches( 'manypw.x', command_line )
-  !
-  ! ... Perform actual calculation
-  !
-  !IF ( TRIM(srvaddress) == ' ' ) THEN
-    !! When running standalone:
-    !IF ( use_images ) THEN
-       !! as manypw.x
-       !CALL run_manypw( )
-       !CALL run_pwscf( exit_status )
-       !!
-     !ELSE
-       !! as pw.x
-       !CALL read_input_file( 'PW', input_file_ )
-       !CALL run_pwscf( exit_status )
-       !!
-    !ENDIF
-  !ELSE
-     !! When running as library
-     !!
-     !CALL read_input_file('PW+iPi', input_file_ )
-     !CALL run_driver( srvaddress, exit_status )
-     !!
-  !ENDIF
-  !
   input_file_=trim(infile)
   CALL read_input_file( 'PW', input_file_ )
-  call qepy_run_pwscf(exit_status, oldver)
+  CALL qepy_run_pwscf(exit_status)
 END SUBROUTINE qepy_pwscf
-   !
+
 SUBROUTINE qepy_pwscf_finalise()
    IMPLICIT NONE
    INTEGER :: exit_status
 
-   CALL laxlib_free_ortho_group()
-   CALL qepy_stop_run( exit_status )
-   !CALL do_stop( exit_status )
+  CALL laxlib_end()
+  CALL qepy_stop_run( exit_status )
+  !CALL do_stop( exit_status )
 END SUBROUTINE qepy_pwscf_finalise
 
 SUBROUTINE qepy_initial(input, embed)
@@ -161,20 +102,21 @@ SUBROUTINE qepy_initial(input, embed)
   type(embed_base), intent(inout), optional :: embed
   !
   LOGICAL            :: start_images = .false.
-  !CHARACTER(len=256) :: code = 'QEPY'
+  LOGICAL            :: images_only = .false.
   !
   if (present(embed)) call set_embed(embed)
   if (.not. associated(p_embed)) call set_embed(messenger)
   !
   IF (PRESENT(input)) THEN
      start_images = input%start_images
+     images_only = input%start_images
   ENDIF
   !
   IF ( PRESENT(input)) THEN
      IF (input%my_world_comm /= 0 ) THEN
-        CALL mp_startup(my_world_comm=input%my_world_comm, start_images=start_images )
+        CALL mp_startup(my_world_comm=input%my_world_comm, start_images=start_images, images_only=images_only )
      ELSE
-        CALL mp_startup(start_images=start_images )
+        CALL mp_startup(start_images=start_images, images_only=images_only )
      ENDIF
   ELSE
      CALL mp_startup(start_images=start_images )

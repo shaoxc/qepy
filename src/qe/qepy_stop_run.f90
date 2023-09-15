@@ -20,11 +20,11 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   ! Also add some from pwscf and run_pwscf
   ! Merge and modify the mp_global.mp_global_end
   !qepy <-- 
-  !
   USE io_global,          ONLY : stdout, ionode
   USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
   USE io_files,           ONLY : iuntmp, seqopn
+  !qepy --> more import
   USE qmmm,               ONLY : qmmm_shutdown
   USE qexsd_module,       ONLY : qexsd_set_status
   USE mp,                 ONLY : mp_comm_free, mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes
@@ -34,26 +34,31 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   USE mp_exx,             ONLY : inter_egrp_comm, intra_egrp_comm
   USE mp_images,          ONLY : inter_image_comm, intra_image_comm
   USE mp_orthopools,      ONLY : mp_stop_orthopools
-  USE mp_diag,            ONLY : ortho_comm
+  USE laxlib_processors_grid,            ONLY : ortho_comm
+  USE control_flags,      ONLY : lensemb
+  USE beef,               ONLY : beef_energies
+  !qepy <-- more import
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: exit_status
+  LOGICAL             :: exst, opnd, lflag
+  !
   INTEGER, INTENT(IN), OPTIONAL :: print_flag
   CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: what
   LOGICAL, OPTIONAL   :: finalize
   CHARACTER(LEN=256)  :: what_ ='config-nowf'
   INTEGER             :: iprint = 0
-  LOGICAL             :: exst, opnd, lflag
-#if defined(__MPI)
   INTEGER :: ierr
-#endif
   !
-  !qepy --> pwscf and run_pwscf
+  !qepy --> run_pwscf
   CALL qexsd_set_status( exit_status )
+  IF ( lensemb ) CALL beef_energies( )
   CALL qmmm_shutdown()
-  if ( ortho_comm  /= 0 .and. ortho_comm  /= world_comm ) CALL laxlib_free_ortho_group()
-  !qepy <-- pwscf and run_pwscf
+  !qepy <-- run_pwscf
+  !qepy --> pwscf
+  if ( ortho_comm  /= 0 .and. ortho_comm  /= world_comm ) CALL laxlib_end()
+  !qepy <-- pwscf
   !
   IF ( PRESENT(what)) THEN
      IF (len_trim(what)>1) what_= trim(what)
@@ -90,26 +95,50 @@ SUBROUTINE qepy_stop_run( exit_status, print_flag, what, finalize )
   CALL close_files( lflag )
   !
   IF ( iprint > 0 .and. iprint<10 ) THEN
-     CALL print_clock_pw()
+  CALL print_clock_pw()
   ENDIF
   !
   CALL clean_pw( .TRUE. )
   !
   IF ( iprint > 0 .and. iprint<10 ) THEN
-     CALL environment_end( 'PWSCF' )
+  CALL environment_end( 'PWSCF' )
   ENDIF
   !
   !CALL mp_global_end()
   !-----------------------------------------------------------------------
   !qepy --> add mp_global_end
-  if ( intra_egrp_comm  /= 0 .and. intra_egrp_comm  /= world_comm ) CALL mp_comm_free ( intra_egrp_comm )
-  if ( inter_egrp_comm  /= 0 .and. inter_egrp_comm  /= world_comm ) CALL mp_comm_free ( inter_egrp_comm )
-  if ( intra_bgrp_comm  /= 0 .and. intra_bgrp_comm  /= world_comm ) CALL mp_comm_free ( intra_bgrp_comm )
-  if ( inter_bgrp_comm  /= 0 .and. inter_bgrp_comm  /= world_comm ) CALL mp_comm_free ( inter_bgrp_comm )
-  if ( intra_pool_comm  /= 0 .and. intra_pool_comm  /= world_comm ) CALL mp_comm_free ( intra_pool_comm )
-  if ( inter_pool_comm  /= 0 .and. inter_pool_comm  /= world_comm ) CALL mp_comm_free ( inter_pool_comm )
-  if ( intra_image_comm /= 0 .and. intra_image_comm /= world_comm ) CALL mp_comm_free ( intra_image_comm )
-  if ( inter_image_comm /= 0 .and. inter_image_comm /= world_comm ) CALL mp_comm_free ( inter_image_comm )
+  if ( intra_egrp_comm  /= 0 .and. intra_egrp_comm  /= world_comm ) then
+     CALL mp_comm_free ( intra_egrp_comm )
+     intra_egrp_comm = 0
+  endif
+  if ( inter_egrp_comm  /= 0 .and. inter_egrp_comm  /= world_comm ) then
+     CALL mp_comm_free ( inter_egrp_comm )
+     inter_egrp_comm = 0
+  endif
+  if ( intra_bgrp_comm  /= 0 .and. intra_bgrp_comm  /= world_comm ) then
+     CALL mp_comm_free ( intra_bgrp_comm )
+     intra_bgrp_comm = 0
+  endif
+  if ( inter_bgrp_comm  /= 0 .and. inter_bgrp_comm  /= world_comm ) then
+     CALL mp_comm_free ( inter_bgrp_comm )
+     inter_bgrp_comm = 0
+  endif
+  if ( intra_pool_comm  /= 0 .and. intra_pool_comm  /= world_comm ) then
+     CALL mp_comm_free ( intra_pool_comm )
+     intra_pool_comm = 0
+  endif
+  if ( inter_pool_comm  /= 0 .and. inter_pool_comm  /= world_comm ) then
+     CALL mp_comm_free ( inter_pool_comm )
+     inter_pool_comm = 0
+  endif
+  if ( intra_image_comm /= 0 .and. intra_image_comm /= world_comm ) then
+     CALL mp_comm_free ( intra_image_comm )
+     intra_image_comm = 0
+  endif
+  if ( inter_image_comm /= 0 .and. inter_image_comm /= world_comm ) then
+     CALL mp_comm_free ( inter_image_comm )
+     inter_image_comm = 0
+  endif
   CALL mp_stop_orthopools( ) ! cleans orthopools if used in exx
   CALL mp_barrier( world_comm )
   CALL mp_end ( world_comm )
@@ -149,6 +178,10 @@ END SUBROUTINE qepy_stop_run
      !STOP 3
   !ELSEIF ( exit_status == 4 ) THEN
      !STOP 4
+  !ELSEIF ( exit_status == 130) THEN
+     !STOP
+  !ELSEIF ( exit_status == 131) THEN
+     !STOP
   !ELSEIF ( exit_status == 255 ) THEN
      !STOP 255
   !ELSEIF ( exit_status == 254 ) THEN
