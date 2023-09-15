@@ -21,7 +21,7 @@ build:
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - git submodule update --init --recursive
-   - qedir=$QEDIR oldxml=yes tddft=yes python -m pip install .
+   - qedir=$QEDIR tddft=no python -m pip install .
    - mkdir $PUBLIC
    - cd $PUBLIC
    - PACKAGE=$(python -c 'import qepy, os; print(os.path.split(qepy.__path__[0])[0])')
