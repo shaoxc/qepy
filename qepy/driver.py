@@ -67,7 +67,7 @@ class Driver(object) :
     outdir : str
         The output directory of QE
     qe_options : dict
-        A dictionary with input parameters for QE to generate QE input file. 
+        A dictionary with input parameters for QE to generate QE input file.
         See class QEInput
     prog : str
         The name of QE program, default is `pw` which is pw.x in QE.
@@ -78,7 +78,7 @@ class Driver(object) :
     needwf : bool
         If False, will not read wavefunctions and skip wavefunction-related initialization.
     kwargs : dict
-        Other options 
+        Other options
 
     .. note::
 
@@ -150,7 +150,7 @@ class Driver(object) :
 
     @comm.setter
     def comm(self, value):
-        """Sets the MPI comunicator with value given by mpi4py"""
+        """Sets the MPI communicator with value given by mpi4py"""
         self._comm = value
         if self.comm is not None and hasattr(self.comm, 'py2f') :
             self.commf = self.comm.py2f()
@@ -277,7 +277,7 @@ class Driver(object) :
         qepy.qepy_tddft_main_setup()
 
     def diagonalize(self, print_level = 2, nscf = False, **kwargs):
-        """Diagonalize the hamiltonian
+        """Diagonalize the Hamiltonian
 
         Parameters
         ----------
@@ -342,7 +342,7 @@ class Driver(object) :
         return self.embed.etotal
 
     def non_scf(self, **kwargs):
-        """Single "non-selfconsistent" diagonalization"""
+        """Single "non-selfconsistent" calculation"""
         # fix some saved variables from last scf calculations
         qepy.control_flags.set_lscf(0)
         qepy.control_flags.set_lbfgs(0)
@@ -374,7 +374,7 @@ class Driver(object) :
                 qepy.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
-        """Stop the driver. This must be done anytime a new driver is created. 
+        """Stop the driver. This must be done anytime a new driver is created.
         This method is invoked automatically if a running driver is detected. Only
         one driver can run at any given time.
 
@@ -420,7 +420,7 @@ class Driver(object) :
 
     def save(self, what = 'all', **kwargs):
         """
-        Save the QE data to the disk in original QE files that can be accessed via postprocessing 
+        Save the QE data to the disk in original QE files that can be accessed via post-processing
         or read with a QEpy driver
 
         Parameters
@@ -519,7 +519,7 @@ class Driver(object) :
                 qepy.wfcinit()
 
     def create_array(self, gather = True, kind = 'rho'):
-        """Returns an empty array in real space. 
+        """Returns an empty array in real space.
         Nota bene: this is for real-space arrays like the density (rho) and potentials."""
         if kind == 'rho' :
             nspin = qepy.lsda_mod.get_nspin()
@@ -591,7 +591,7 @@ class Driver(object) :
             The external potential
         exttype : list or int
             The type of external potential. It can be a list of name or a integer.
-            e.g.  `exttype = ('localpp', 'xc')` or `exttype = 5`. `external` stands for an 
+            e.g.  `exttype = ('localpp', 'xc')` or `exttype = 5`. `external` stands for an
             additional external potential.
 
                  ==== ============================== ===
@@ -1045,7 +1045,11 @@ class Driver(object) :
     @classmethod
     def sum_band(cls, occupations = None, **kwargs):
         """Same as sum_band of QE with input occupations:
-         - occupations: array of size nbnd,nk
+
+        Parameters
+        ----------
+        occupations: np.ndarray (nbnd, nk)
+            occupation numbers
         """
         qepy.qepy_mod.qepy_sum_band(occupations)
 
