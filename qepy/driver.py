@@ -41,18 +41,18 @@ class Driver(object) :
     comm : object
         Parallel communicator
     ldescf : bool
-        If True, also print the scf correction term in the iteratively mode
+        If True, also print the SCF correction term for each SCF cycle
     iterative : bool
-        Iteratively run the scf or tddft
+        Run SCF or real-time TDDFT one iteration at a time
     task : str
-        Task of the driver :
+        Task to be performed by the driver :
 
-          - 'scf' : scf task
-          - 'optical' : Optical absorption spectrum (TDDFT)
-          - 'nscf' : read file from scf
+          - 'scf' : Self consistent field
+          - 'nscf' : initialization of Driver from previous SCF calculation
+          - 'optical' : Optical absorption spectrum (real-time TDDFT with ce-tddft of Davide Ceresoli)
 
     embed : object (Fortran)
-        embed object for QE
+        embed object itialized in the Fortran side of QEpy needed to communicate with QE.
     prefix : str
         prefix of QE input/output
     outdir : str
@@ -67,23 +67,23 @@ class Driver(object) :
     outdir : str
         The output directory of QE
     qe_options : dict
-        A dictionary with input parameters for QE to generate QE input file.
+        A dictionary with input parameters for QE to generate QE input file. 
+        See class QEInput
     prog : str
         The name of QE program, default is `pw` which is pw.x in QE.
     progress : bool
-        If True, will continue run the QE without clean the workspace, most times used for TDDFT after scf.
+        If True, will continue run the QE without cleaning the workspace. Most times used for running TDDFT after scf.
     atoms : object
-        An ase Atoms to generate input file.
+        An ase Atoms to generate the input file.
     needwf : bool
         If False, will not read wavefunctions and skip wavefunction-related initialization.
     kwargs : dict
-        Other options
-
+        Other options 
 
     .. note::
 
-         - The bool `gather` parameter in functions means the data is gathered in root or distributed in all cpus.
-         - Also contains some interface of ASE calculator, but the units are different.
+         - The bool `gather` parameter in functions means the data is gathered on root or distributed on all cpus.
+         - Units in QEpy are Bohr and Rydberg. These differ from ASE's units. Please, be careful!
 
              + positions : Bohr
              + lattice : Bohr
@@ -150,6 +150,7 @@ class Driver(object) :
 
     @comm.setter
     def comm(self, value):
+        """Sets the MPI comunicator with value given by mpi4py"""
         self._comm = value
         if self.comm is not None and hasattr(self.comm, 'py2f') :
             self.commf = self.comm.py2f()
@@ -161,7 +162,7 @@ class Driver(object) :
         """Whether it is the root.
 
         If the comm is set, root is rank == 0.
-        Otherwise root is ionode of QE.
+        If comm not set, root is ionode of QE.
         """
         if hasattr(self.comm, 'rank'):
             return self.comm.rank == 0
@@ -184,6 +185,7 @@ class Driver(object) :
         return qepy.qepy_common.get_is_openmp()
 
     def restart(self, prog=None, **kwargs):
+        """Restart the driver losing all information about the previous driver"""
         prog = prog or self.prog
         self.driver_initialize()
 
@@ -195,13 +197,13 @@ class Driver(object) :
         inputfile : str
             Name of QE input file
         commf : object
-            Parallel communicator (Fortran)
+            mpi4py parallel communicator to be sent to Fortran
         task : str
-            Task of the driver :
+            Task to be performed by the driver :
 
-              - 'scf' : scf task
-              - 'optical' : Optical absorption spectrum (TDDFT)
-              - 'nscf' : read file from scf
+             - 'scf' : Self consistent field
+             - 'nscf' : initialization of Driver from previous SCF calculation
+             - 'optical' : Optical absorption spectrum (real-time TDDFT with ce-tddft of Davide Ceresoli)
 
         qe_options: dict
             A dictionary with input parameters for QE to generate QE input file.
@@ -261,7 +263,7 @@ class Driver(object) :
         inputfile : str
             Name of QE input file, which also contains `&inputtddft` section.
         commf : object
-            Parallel communicator (Fortran)
+            mpi4py parallel communicator to be sent to Fortran
         """
         if inputfile is None : inputfile = self.inputfile
         if commf is None : commf = self.commf
@@ -293,7 +295,7 @@ class Driver(object) :
             qepy.qepy_electrons_scf(print_level, 0)
 
     def mix(self, mix_coef = 0.7, print_level = 2):
-        """Mixing the density
+        """Mix the density with the QE density mixing
 
         Parameters
         ----------
@@ -311,21 +313,21 @@ class Driver(object) :
         return converged
 
     def get_scf_error(self, **kwargs):
-        """Return the error of the scf"""
+        """Return the error of the SCF compared to previous cycle"""
         if self.embed.iterative :
             return self.embed.dnorm
         else :
             return qepy.control_flags.get_scf_error()
 
     def get_scf_steps(self, **kwargs):
-        """Return the number of steps of scf"""
+        """Return the number of SCF steps"""
         if self.embed.iterative :
             return self.iter
         else :
             return qepy.control_flags.get_n_scf_steps()
 
     def scf(self, print_level = 2, maxiter = None, original = False, nscf = False, **kwargs):
-        """Run the scf/tddft until converged or maximum number of iterations"""
+        """Run the scf/tddft until converged or reached the maximum number of iterations"""
         if maxiter is not None and not self.embed.iterative :
             qepy.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
@@ -340,6 +342,7 @@ class Driver(object) :
         return self.embed.etotal
 
     def non_scf(self, **kwargs):
+        """Single "non-selfconsistent" diagonalization"""
         # fix some saved variables from last scf calculations
         qepy.control_flags.set_lscf(0)
         qepy.control_flags.set_lbfgs(0)
@@ -350,6 +353,7 @@ class Driver(object) :
         return qepy.ener.get_etot()
 
     def electrons(self, original = False, **kwargs):
+        """Execute original QE routine "electrons" """
         if original :
             qepy.electrons()
         else :
@@ -357,7 +361,7 @@ class Driver(object) :
         return qepy.ener.get_etot()
 
     def end_scf(self, nscf = False, **kwargs):
-        """End the scf and clean the scf workspace. Only need run it in iterative mode"""
+        """Ends the SCF and cleans the SCF workspace. Only run when in iterative mode (i.e., one cycle at a time)"""
         if self.embed.iterative :
             if self.task == 'optical' :
                 self.embed.tddft.finish = True
@@ -370,7 +374,9 @@ class Driver(object) :
                 qepy.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
-        """stop the driver.
+        """Stop the driver. This must be done anytime a new driver is created. 
+        This method is invoked automatically if a running driver is detected. Only
+        one driver can run at any given time.
 
         Parameters
         ----------
@@ -394,7 +400,7 @@ class Driver(object) :
         env['STDOUT'] = None
 
     def tddft_restart(self, istep=None, **kwargs):
-        """Restart the tddft from previous interrupted run.
+        """Restarts the TDDFT from previous interrupted run.
 
         Parameters
         ----------
@@ -406,6 +412,7 @@ class Driver(object) :
             self.embed.tddft.istep = istep
 
     def tddft_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
+        """Stops TDDFT run"""
         if not self.embed.tddft.initial : self.end_scf()
         #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
         qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
@@ -413,7 +420,8 @@ class Driver(object) :
 
     def save(self, what = 'all', **kwargs):
         """
-        Save the QE data to the disk
+        Save the QE data to the disk in original QE files that can be accessed via postprocessing 
+        or read with a QEpy driver
 
         Parameters
         ----------
@@ -439,7 +447,8 @@ class Driver(object) :
         pass
 
     def get_energy(self, **kwargs):
-        """Return the total energy."""
+        """Return the total energy.
+        Nota bene: Only use for regular QE runs (i.e., not when doing embedding)."""
         if abs(qepy.ener.get_etot()) > 1E-16 :
             energy = qepy.ener.get_etot()
         elif abs(self.embed.etotal) > 1E-16 :
@@ -449,12 +458,14 @@ class Driver(object) :
         return energy
 
     def calc_energy(self, **kwargs):
-        """Calculate the energy with the pw2casino of QE."""
+        """Calculate the energy with PW2CASINO of QE.
+        Use this only if you have a good reason to use it! For example
+        embedding calculations."""
         qepy.qepy_calc_energies()
         return self.embed.etotal
 
     def update_ions(self, positions = None, lattice = None, update = 0, **kwargs):
-        """update the ions of QE
+        """update the ions of QE. This is used for dynamic runs.
 
         Parameters
         ----------
@@ -508,7 +519,8 @@ class Driver(object) :
                 qepy.wfcinit()
 
     def create_array(self, gather = True, kind = 'rho'):
-        """Return an empty array in real space."""
+        """Returns an empty array in real space. 
+        Nota bene: this is for real-space arrays like the density (rho) and potentials."""
         if kind == 'rho' :
             nspin = qepy.lsda_mod.get_nspin()
             if gather and self.nproc > 1 :
@@ -525,25 +537,25 @@ class Driver(object) :
         return out
 
     def get_density(self, gather = True, out = None):
-        """Return density array in real space."""
+        """Returns valence pseudodensity array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
         qepy.qepy_mod.qepy_get_rho(out, gather = gather)
         return out
 
     def get_core_density(self, gather = True, out = None):
-        """Return density array in real space."""
+        """Returns core density array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
         qepy.qepy_mod.qepy_get_rho_core(out, gather = gather)
         return out
 
     def get_kinetic_energy_density(self, gather = True, out = None):
-        """Return density array in real space."""
+        """Returns KS kinetic energy density array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
         qepy.qepy_mod.qepy_get_tau(out, gather = gather)
         return out
 
     def get_wave_function(self, band=None, kpt=0):
-        """Return wave-function array in real space."""
+        """Returns wave-function array in real space."""
         qepy.qepy_mod.qepy_get_evc(kpt + 1)
         nrs = np.zeros(3, dtype = 'int32')
         qepy.qepy_mod.qepy_get_grid_smooth(nrs)
@@ -563,13 +575,15 @@ class Driver(object) :
         return wfs
 
     def get_dipole_tddft(self):
-        """Return the total dipole of tddft task."""
+        """Return the total dipole computed by a TDDFT run.
+        Nota bene: only available during TDDFT runs."""
         # dipole = qepy.qepy_tddft_common.get_array_dipole().copy()
         dipole = self.embed.tddft.dipole
         return dipole
 
     def set_external_potential(self, potential, exttype = None, gather = True, extene  = None, **kwargs):
-        """Set the external potential.
+        """Set an external potential in addition to the ones already included in the QEpy run
+        according to the logic enumerated below.
 
         Parameters
         ----------
@@ -577,7 +591,8 @@ class Driver(object) :
             The external potential
         exttype : list or int
             The type of external potential. It can be a list of name or a integer.
-            e.g.  `exttype = ('localpp', 'xc')` or `exttype = 5`
+            e.g.  `exttype = ('localpp', 'xc')` or `exttype = 5`. `external` stands for an 
+            additional external potential.
 
                  ==== ============================== ===
                  type potential                      bin
@@ -635,7 +650,7 @@ class Driver(object) :
 
     @gathered
     def get_rdg(self, gather = True, out = None, **kwargs):
-        """Return electron localization function."""
+        """Return reduced density gradient."""
         qepy.do_rdg(out)
         return out
 #-----------------------------------------------------------------------
@@ -649,14 +664,18 @@ class Driver(object) :
 
     @gathered
     def get_hartree(self, gather = True, out = None, add=False, **kwargs):
-        """Return hartree information."""
+        """Return information about Hartree energy:
+            tuple (potential, energy, total charge)
+        """
         if not add : out[:] = 0.0
         ehart, charge = qepy.v_h(self.embed.rho.of_g[:,0], out)
         return out, ehart, charge
 
     @gathered
     def get_exchange_correlation(self, gather = True, out = None, tau=None, **kwargs):
-        """Return exchange-correlation information.
+        """Return information about the exchange-correlation:
+        LDA, GGA: tuple (potential, energy, v*rho)
+        MGGA:     tuple (potential, energy, v*rho, tau)
 
         TODO :
             The interface will changed in the new version of QE!
@@ -883,14 +902,14 @@ class Driver(object) :
 
     @classmethod
     def get_ions_lattice(cls):
-        """Return the lattice of ions."""
+        """Return the matrix of the lattice vectors in Bohrs."""
         alat = qepy.cell_base.get_alat()
         lattice = qepy.cell_base.get_array_at() * alat
         return lattice.T
 
     @classmethod
     def get_ions_positions(cls):
-        """Return the cartesian positions of ions."""
+        """Return the cartesian positions of ions in Bohrs."""
         alat = qepy.cell_base.get_alat()
         pos = qepy.ions_base.get_array_tau().T * alat
         return pos
@@ -910,7 +929,7 @@ class Driver(object) :
 
     @classmethod
     def data2field(cls, data, cell = None, grid = None, rank = None):
-        """QE data to dftpy DirectField.
+        """QE data to DFTpy DirectField.
         If data is None or small temporary array will return np.zeros(1).
         """
         from dftpy.field import DirectField
@@ -932,7 +951,7 @@ class Driver(object) :
 
     @classmethod
     def field2data(cls, field, data = None):
-        """dftpy DirectField to QE data.
+        """DFTpy DirectField to QE data.
         If the input field is not 3d array, will return np.zeros((1, 1)).
         """
         #
@@ -954,7 +973,7 @@ class Driver(object) :
 
     @classmethod
     def get_dftpy_grid(cls, nr = None, cell = None, mp = None, **kwargs):
-        """Return the dftpy DirectGrid from QE."""
+        """Return the DFTpy DirectGrid from QE."""
         from dftpy.grid import DirectGrid
         if cell is None : cell = cls.get_ions_lattice()
         if nr is None :
@@ -967,7 +986,7 @@ class Driver(object) :
 
     @classmethod
     def get_ase_atoms(cls):
-        """Return the atom.Atoms from QE."""
+        """Return the atom.Atoms from QE to ASE (using ASE units)."""
         from ase.atoms import Atoms
         units_Bohr = constants.BOHR_RADIUS_SI * 1E10
         #
@@ -979,7 +998,7 @@ class Driver(object) :
 
     @classmethod
     def get_dftpy_ions(cls):
-        """Return the dftpy.Ions from QE."""
+        """Return the DFTpy.Ions from QE. (with DFTpy units)"""
         from dftpy.ions import Ions
         atoms = cls.get_ase_atoms()
         return Ions.from_ase(atoms)
@@ -995,6 +1014,7 @@ class Driver(object) :
 
     @classmethod
     def switch_nlpp(cls, nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):
+        """Switch on/off the nonlocal part of the pseudopotential"""
         nhm_ = qepy.uspp_param.get_nhm()
         nbetam_ = qepy.uspp_param.get_nbetam()
         nh_ = qepy.uspp_param.get_array_nh().copy()
@@ -1018,11 +1038,15 @@ class Driver(object) :
 
     @classmethod
     def update_exchange_correlation(cls, xc=None, libxc=None, **kwargs):
+        """Switch XC on the fly"""
         if libxc : xc = None
         qepy.qepy_mod.qepy_set_dft(xc)
 
     @classmethod
     def sum_band(cls, occupations = None, **kwargs):
+        """Same as sum_band of QE with input occupations:
+         - occupations: array of size nbnd,nk
+        """
         qepy.qepy_mod.qepy_sum_band(occupations)
 
     @staticmethod

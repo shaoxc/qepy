@@ -1,8 +1,6 @@
 # QEpy - Quantum ESPRESSO in Python
    `QEpy` turns Quantum ESPRESSO (QE) into a Python DFT engine for nonstandard workflows.
 
-   <!--Check out a [YouTube video](https://www.youtube.com/watch?v=cWt0BVQs-_U) with additional information (installation and examples).-->
-
 ## Contributors and funding
  - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
  - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers)
