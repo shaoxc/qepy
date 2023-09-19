@@ -54,7 +54,7 @@ class MakeBuild(build_ext):
             list(pathlib.Path(topdir + '/install/').glob('*')) + \
             list(pathlib.Path(topdir + '/src/').glob('*'))
 
-        qeversion = 'qe-' + env.get('qeversion', '6.5')
+        qeversion = 'qe-' + env.get('qeversion', '7.2')
 
         for f in makefiles :
             if f.is_file():
@@ -73,7 +73,7 @@ class MakeBuild(build_ext):
         qedir = env.get('qedir', '')
         if not qedir :
             qedir = self.build_temp + '/q-e'
-            qe_download = ["git", "clone", "-b", "qe-6.5", "--depth=1", "https://gitlab.com/QEF/q-e.git", qedir]
+            qe_download = ["git", "clone", "-b", "qe-7.2", "--depth=1", "https://gitlab.com/QEF/q-e.git", qedir]
             subprocess.check_call(qe_download, env = env)
             if '-fPIC' not in env.get('CFLAGS', ''):
                 env['CFLAGS'] = '-fPIC ' + env.get('CFLAGS', '')

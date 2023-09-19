@@ -23,7 +23,9 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm, embed)
   USE check_stop,      ONLY : check_stop_init
   USE control_flags,   ONLY : io_level, gamma_only, use_para_diag
   USE mp_global,       ONLY : mp_startup
+  USE mp_bands,        ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE mp_bands,        ONLY : nbgrp
+  USE mp_pools,        ONLY : intra_pool_comm
   USE mp_world,        ONLY : world_comm
   USE environment,     ONLY : environment_start, environment_end
   USE wvfct,           ONLY : nbnd
@@ -37,7 +39,6 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm, embed)
   USE cell_base,        ONLY : ibrav
   !USE tddft_version
   USE qepy_common,      ONLY : embed_base, set_embed, messenger, p_embed => embed
-  USE iotk_module  
   !------------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER (LEN=9)   :: code = 'TDDFT'
@@ -66,6 +67,7 @@ SUBROUTINE qepy_tddft_main_initial(infile, my_world_comm, embed)
      CALL mp_startup( start_images=.false. )
   ENDIF
 #endif
+  call set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm)
   call environment_start (code)
 
   ! read plugin command line arguments, if any
@@ -109,7 +111,9 @@ SUBROUTINE qepy_tddft_main_setup()
   USE check_stop,      ONLY : check_stop_init
   USE control_flags,   ONLY : io_level, gamma_only, use_para_diag
   USE mp_global,       ONLY : mp_startup
+  USE mp_bands,        ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE mp_bands,        ONLY : nbgrp
+  USE mp_pools,        ONLY : intra_pool_comm
   USE mp_world,        ONLY : world_comm
   USE environment,     ONLY : environment_start, environment_end
   USE wvfct,           ONLY : nbnd
@@ -122,7 +126,6 @@ SUBROUTINE qepy_tddft_main_setup()
   USE ions_base,        ONLY : nat, ntyp => nsp
   USE cell_base,        ONLY : ibrav
   !USE tddft_version
-  USE iotk_module  
   !
   !------------------------------------------------------------------------
   IMPLICIT NONE
@@ -130,11 +133,6 @@ SUBROUTINE qepy_tddft_main_setup()
   LOGICAL, EXTERNAL  :: check_para_diag
   !
   !------------------------------------------------------------------------
-#ifdef __MPI
-  use_para_diag = check_para_diag(nbnd)
-#else
-  use_para_diag = .false.
-#endif
 
   io_level = 1
 
@@ -151,6 +149,7 @@ SUBROUTINE qepy_tddft_main_setup()
   ntyp_ = ntyp
   ibrav_ = ibrav
   assume_isolated_ = 'none'
+
   call plugin_read_input()
   call qepy_tddft_allocate()
   call qepy_tddft_setup()

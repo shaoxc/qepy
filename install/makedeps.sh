@@ -11,3 +11,5 @@ ${QEDIR}/install/includedep.sh >> make.depend
 
 # handle special cases
 sed -i '/@/d'                 make.depend
+grep -v -x -f make.depend.cetddft make.depend > make.depend.tmp
+mv make.depend.tmp make.depend

@@ -7,7 +7,7 @@ PYTHON := $(or ${PYTHON}, python)
 
 QEMODS := $(wildcard ${QEDIR}/*/*.a) $(wildcard ${QEDIR}/*/*/*.a)
 IGNOREMODS := ${QEDIR}/LR_Modules/liblrmod.a ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a
-IGNOREMODS += ${QEDIR}/CPV/src/libcp.a ${QEDIR}/PHonon/Gamma/libphcg.a ${QEDIR}/GWW/bse/libbse.a
+IGNOREMODS += ${QEDIR}/CPV/src/libcp.a ${QEDIR}/PHonon/Gamma/libphcg.a ${QEDIR}/GWW/bse/libbse.a ${QEDIR}/GWW/gww/libgww.a
 QE_ATOMIC := $(filter-out ${QEDIR}/atomic/src/ld1.o, $(wildcard ${QEDIR}/atomic/src/*.o))
 QE_PWCOND:= $(filter-out ${QEDIR}/PWCOND/src/condmain.o, $(wildcard ${QEDIR}/PWCOND/src/*.o))
 QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${IGNOREMODS}, $(QEMODS))
