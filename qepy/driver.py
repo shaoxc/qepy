@@ -97,7 +97,7 @@ class Driver(object) :
     POTNAMES = {'external' : 0, 'localpp' : 1, 'hartree' : 2, 'xc' : 4}
     FORCENAMES = {'ewald' : 1, 'localpp' : 2, 'nlcc' : 4}
 
-    def __init__(self, inputfile = None, comm = None, ldescf = False, iterative = False,
+    def __init__(self, inputfile = None, comm = None, ldescf = True, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
              qe_options = None, prog = 'pw', progress = False, atoms = None, needwf = True,
              **kwargs):
@@ -130,7 +130,9 @@ class Driver(object) :
     def _init_log(self):
         """_initialize the QE output."""
         self.fileobj_interact = False
-        if self.logfile is not None :
+        if self.logfile in [None, False]:
+            self.fileobj = None
+        else :
             # qepy.qepy_mod.qepy_set_stdout(self.logfile)
             if isinstance(self.logfile, bool) and self.logfile :
                 self.fileobj_interact = True
@@ -139,8 +141,6 @@ class Driver(object) :
                 self.fileobj = self.logfile
             else :
                 self.fileobj = open(self.logfile, 'w+')
-        else :
-            self.fileobj = None
         env['STDOUT'] = self.fileobj
         return self.fileobj
 
@@ -287,7 +287,8 @@ class Driver(object) :
         if self.task == 'optical' :
             qepy.qepy_molecule_optical_absorption()
         elif nscf :
-            qepy.qepy_electrons_nscf(print_level, 0)
+            self.embed.task = 'nscf'
+            qepy.qepy_electrons_scf(print_level, 0)
         else :
             self.embed.mix_coef = -1.0
             qepy.qepy_electrons_scf(print_level, 0)
@@ -334,7 +335,8 @@ class Driver(object) :
             # Use electrons to support hybrid xc functional
             return self.electrons(original=original)
         elif nscf :
-            qepy.qepy_electrons_nscf(print_level, 0)
+            self.embed.task = 'nscf'
+            qepy.qepy_electrons_scf(print_level, 0)
         else :
             qepy.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
@@ -356,15 +358,12 @@ class Driver(object) :
             qepy.qepy_electrons()
         return qepy.ener.get_etot()
 
-    def end_scf(self, nscf = False, **kwargs):
+    def end_scf(self, **kwargs):
         """End the scf and clean the scf workspace. Only need run it in iterative mode"""
         if self.embed.iterative :
             if self.task == 'optical' :
                 self.embed.tddft.finish = True
                 qepy.qepy_molecule_optical_absorption()
-            elif nscf :
-                self.embed.finish = True
-                qepy.qepy_electrons_nscf(0, 0)
             else :
                 self.embed.finish = True
                 qepy.qepy_electrons_scf(0, 0)

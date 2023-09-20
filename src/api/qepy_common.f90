@@ -91,14 +91,15 @@ MODULE qepy_common
       type(input_base)                :: input
       type(tddft_base)                :: tddft
       type(energies_base)             :: energies
+      CHARACTER(len=256)              :: task = 'scf'
       real(kind=dp), allocatable      :: extpot(:,:)
       real(kind=dp)                   :: extene = 0.d0
       integer                         :: exttype = 0
       real(kind=dp), allocatable      :: extforces(:,:)
       real(kind=dp)                   :: extstress(3,3) = 0.d0
       logical                         :: initial = .true.
-      real(kind=dp)                   :: mix_coef = -1.d0
       logical                         :: finish = .false.
+      real(kind=dp)                   :: mix_coef = -1.d0
       real(kind=dp)                   :: etotal = 0.d0
       real(kind=dp)                   :: dnorm = 1.d0
       logical                         :: lewald = .true.

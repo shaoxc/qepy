@@ -760,6 +760,8 @@ SUBROUTINE qepy_electrons_scf ( printout, exxen )
             WRITE( stdout, '(5X,"WARNING: electron_maxstep > 1 not recommended for dmft = .true.")')
         END IF
         !
+        IF ( embed%task == 'nscf') RETURN
+        !
         IF (.not. use_gpu) CALL sum_band()
         IF (      use_gpu) CALL sum_band_gpu()
         !
