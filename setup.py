@@ -8,6 +8,9 @@ import shutil
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
+# setuptools > 59.8.0
+os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
+
 with open('qepy/__init__.py') as fh :
     lines = fh.read()
     __version__ = re.search('__version__ = "(.*)"', lines).group(1)
