@@ -7,11 +7,14 @@ PYTHON := $(or ${PYTHON}, python)
 
 QEMODS := $(wildcard ${QEDIR}/*/*.a) $(wildcard ${QEDIR}/*/*/*.a)
 IGNOREMODS := ${QEDIR}/LR_Modules/liblrmod.a ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a
-IGNOREMODS += ${QEDIR}/CPV/src/libcp.a ${QEDIR}/PHonon/Gamma/libphcg.a ${QEDIR}/GWW/bse/libbse.a ${QEDIR}/GWW/gww/libgww.a
-QE_ATOMIC := $(filter-out ${QEDIR}/atomic/src/ld1.o, $(wildcard ${QEDIR}/atomic/src/*.o))
-QE_PWCOND:= $(filter-out ${QEDIR}/PWCOND/src/condmain.o, $(wildcard ${QEDIR}/PWCOND/src/*.o))
+IGNOREMODS += ${QEDIR}/CPV/src/libcp.a ${QEDIR}/PHonon/Gamma/libphcg.a ${QEDIR}/GWW/bse/libbse.a ${QEDIR}/GWW/pw4gww/libpw4gww.a
+
+QE_OBJS := $(filter-out ${QEDIR}/atomic/src/ld1.o, $(wildcard ${QEDIR}/atomic/src/*.o))
+QE_OBJS += $(filter-out ${QEDIR}/PWCOND/src/condmain.o, $(wildcard ${QEDIR}/PWCOND/src/*.o))
+QE_OBJS += $(filter-out $(addprefix ${QEDIR}/KCW/PP/, compute_self_hartree.o interp_r_to_k.o ups.o), $(wildcard ${QEDIR}/KCW/PP/*.o))
+
 QEMODS := ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a $(filter-out ${IGNOREMODS}, $(QEMODS))
-QEMODS += ${QE_ATOMIC} ${QE_PWCOND}
+QEMODS += ${QE_OBJS}
 QEMODS += ${QEDIR}/LR_Modules/liblrmod.a ${QEDIR}/PW/src/libpw.a ${QEDIR}/Modules/libqemod.a ${QEDIR}/upflib/libupf.a
 $(info 'QEMODS', ${QEMODS})
 

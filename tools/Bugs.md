@@ -26,4 +26,4 @@
   - CPV/src/libcp.a
   - GWW/bse/libbse.a
   - PHonon/Gamma/libphcg.a
-  - GWW/gww/libgww.a
+  - GWW/pw4gww/libpw4gww.a
