@@ -42,7 +42,7 @@ python -m pip install qepy
 
      ```shell
 	 git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-     oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
+     python -m pip install -U ./qepy
 	 ```
 
 ## Manual and Tutorials
