@@ -1,6 +1,5 @@
 import numpy as np
 import tempfile
-import os
 from functools import wraps
 import qepy
 from qepy.core import env
@@ -235,16 +234,11 @@ class Driver(object) :
             if self.outdir : inputobj.tmp_dir = str(self.outdir) + '/'
             if commf : inputobj.my_world_comm = commf
             qepy.qepy_initial(inputobj)
-            tmpdir = inputobj.tmp_dir.decode().strip() + inputobj.prefix.decode().strip() + '.save' + '/'
-            if os.path.isfile(tmpdir + 'data-file.xml'): # only works for qe-6.5 !
-                if not hasattr(qepy, 'oldxml_read_file') :
-                    raise AttributeError("Please reinstall the QEpy with 'oldxml=yes'.")
-                qepy.oldxml_read_file()
+            # tmpdir = inputobj.tmp_dir.decode().strip() + inputobj.prefix.decode().strip() + '.save' + '/'
+            if self.needwf :
+                qepy.read_file()
             else :
-                if self.needwf :
-                    qepy.read_file()
-                else :
-                    qepy.read_file_new(False)
+                qepy.read_file_new(False)
             if self.needwf :
                 qepy.qepy_mod.qepy_open_files()
         else :
@@ -486,36 +480,19 @@ class Driver(object) :
         else :
             qepy.qepy_mod.qepy_update_ions(positions, update)
 
-    def pwscf_restart(self, oldxml=False, starting_pot='file', starting_wfc='file'):
+    def pwscf_restart(self, starting_pot='file', starting_wfc='file'):
         """Read PW ouput/restart files.
 
         Parameters
         ----------
-        oldxml : bool
-             - True : read the old format xml file (qe<6.4)
-             - False : read the new format xml file (qe>6.3)
         """
-        if oldxml :
-            if not hasattr(qepy, 'oldxml_pw_restart') :
-                raise AttributeError("Please reinstall the QEpy with 'oldxml=yes'.")
-            qepy.oldxml_pw_restart.pw_readfile('header')
-            qepy.oldxml_pw_restart.pw_readfile('reset')
-            qepy.oldxml_pw_restart.pw_readfile('dim')
-            qepy.oldxml_pw_restart.pw_readfile('bs')
-            if qepy.basis.get_starting_pot().strip() != starting_pot :
-                qepy.basis.set_starting_pot(starting_pot)
-                qepy.oldxml_potinit()
-            if qepy.basis.get_starting_wfc().strip() != starting_wfc :
-                qepy.basis.set_starting_wfc(starting_wfc)
-                qepy.oldxml_wfcinit()
-        else :
-            qepy.qepy_mod.qepy_restart_from_xml()
-            if qepy.basis.get_starting_pot().strip() != starting_pot :
-                qepy.basis.set_starting_pot(starting_pot)
-                qepy.potinit()
-            if qepy.basis.get_starting_wfc().strip() != starting_wfc :
-                qepy.basis.set_starting_wfc(starting_wfc)
-                qepy.wfcinit()
+        qepy.qepy_mod.qepy_restart_from_xml()
+        if qepy.basis.get_starting_pot().strip() != starting_pot :
+            qepy.basis.set_starting_pot(starting_pot)
+            qepy.potinit()
+        if qepy.basis.get_starting_wfc().strip() != starting_wfc :
+            qepy.basis.set_starting_wfc(starting_wfc)
+            qepy.wfcinit()
 
     def create_array(self, gather = True, kind = 'rho'):
         """Returns an empty array in real space.
@@ -686,10 +663,7 @@ class Driver(object) :
         rho_obj = self.embed.rho
         rho_core = qepy.scf.get_array_rho_core()
         rhog_core = qepy.scf.get_array_rhog_core()
-        try:
-            is_meta = qepy.funct.dft_is_meta()
-        except Exception:
-            is_meta = qepy.dft_setting_routines.xclib_dft_is('meta')
+        is_meta = qepy.dft_setting_routines.xclib_dft_is('meta')
         if is_meta:
             if tau is None : tau = out*0.0
             qepy.v_xc_meta(rho_obj, rho_core, rhog_core, etxc, vtxc, out, tau)
