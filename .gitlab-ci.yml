@@ -1,7 +1,7 @@
 stages:
   - build
   - test
-  - qe65
+  - qe
   - deploy
 
 variables:
@@ -48,14 +48,14 @@ test:
    - export MPIRUN="mpirun --allow-run-as-root --oversubscribe"
    - bash test.sh p
 
-qe65:
-  stage: qe65
+qe:
+  stage: qe
   only:
-    - master
+    - docker
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - cp -r $PUBLIC/* $PACKAGE
-   - cd examples/test/qe-6.5
+   - cd examples/test/qe
    - bash test.sh
 
 

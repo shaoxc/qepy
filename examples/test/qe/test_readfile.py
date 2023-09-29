@@ -61,8 +61,8 @@ class Test(unittest.TestCase):
 
         qepy.qepy_calc_energies()
         self.assertTrue(np.isclose(embed.etotal, -552.93477389, atol = 1E-6))
-        qepy.qepy_stop_run(0, what = 'no')
-        qepy.qepy_clean_saved()
+        # qepy.qepy_stop_run(0, what = 'no')
+        # qepy.qepy_clean_saved()
 
     @classmethod
     def tearDownClass(cls):

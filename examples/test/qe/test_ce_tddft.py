@@ -3,6 +3,7 @@ import qepy
 import unittest
 import pathlib
 import shutil
+import pytest
 
 try:
     from mpi4py import MPI
@@ -17,6 +18,7 @@ inputfile = path / 'qe_in.in'
 
 
 class Test(unittest.TestCase):
+    @pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
     def test_0_scf(self):
         qepy.qepy_pwscf(inputfile, commf)
         qepy.electrons()
@@ -29,6 +31,7 @@ class Test(unittest.TestCase):
 
         qepy.punch('all')
 
+    @pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
     def test_1_tddft_continue(self):
         qepy.qepy_tddft_readin(inputfile)
         qepy.qepy_tddft_main_setup()
@@ -36,6 +39,7 @@ class Test(unittest.TestCase):
         qepy.qepy_stop_run(0, print_flag=0, what='no', finalize=False)
         qepy.qepy_stop_tddft(0)
 
+    @pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
     def test_2_tddft_iterative(self):
         embed = qepy.qepy_common.embed_base()
         qepy.qepy_tddft_main_initial(inputfile, commf, embed = embed)
