@@ -1,14 +1,14 @@
 stages:
   - build
   - test
-  - qe65
+  - qe
   - deploy
 
 variables:
-  PACKAGE: '/usr/local/lib/python3.8/site-packages'
+  PACKAGE: '/usr/local/lib/python3.9/site-packages'
   CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
-  QTAG: 'qe-6.5g'
-  QTAGNEW: 'qepy-6.5g-dev'
+  QTAG: 'qe-7.2g'
+  QTAGNEW: 'qepy-7.2g-dev'
   QEDIR: '/usr/src/app/q-e/'
   PUBLIC: 'package'
 
@@ -21,12 +21,11 @@ build:
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - git submodule update --init --recursive
-   - qedir=$QEDIR oldxml=yes tddft=yes python -m pip install .
+   - qedir=$QEDIR tddft=yes python -m pip install .
    - mkdir $PUBLIC
    - cd $PUBLIC
    - PACKAGE=$(python -c 'import qepy, os; print(os.path.split(qepy.__path__[0])[0])')
    - cp -r $PACKAGE/qepy* .
-   - cp $PACKAGE/_qepy* .
    - ls *
 
   artifacts:
@@ -48,14 +47,14 @@ test:
    - export MPIRUN="mpirun --allow-run-as-root --oversubscribe"
    - bash test.sh p
 
-qe65:
-  stage: qe65
+qe:
+  stage: qe
   only:
-    - master
+    - docker
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - cp -r $PUBLIC/* $PACKAGE
-   - cd examples/test/qe-6.5
+   - cd examples/test/qe
    - bash test.sh
 
 
@@ -78,6 +77,5 @@ docker_image:
     - docker run -t -d --name qepy_con $CONTAINER_IMAGE:$QTAG
     - docker cp $PUBLIC/qepy qepy_con:$PACKAGE
     - docker cp $PUBLIC/qepy-* qepy_con:$PACKAGE
-    - docker cp $PUBLIC/_qepy* qepy_con:$PACKAGE
     - docker commit qepy_con $CONTAINER_IMAGE:$QTAGNEW
     - docker push $CONTAINER_IMAGE:$QTAGNEW

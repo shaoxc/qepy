@@ -1,0 +1,37 @@
+#module
+command_line_options.o : qepy_sys.o
+open_close_input_file.o : qepy_sys.o
+plugin_arguments.o : qepy_sys.o
+
+#pw
+qepy_electrons.o : qepy_common.o
+qepy_forces.o : qepy_common.o
+qepy_mod.o : qepy_common.o
+qepy_molecule_optical_absorption.o : qepy_tddft_common.o
+qepy_pw2casino_write.o : qepy_common.o
+qepy_pwscf.o : qepy_common.o
+qepy_run_pwscf.o : qepy_common.o
+qepy_setlocal.o : qepy_common.o
+qepy_stress.o : qepy_common.o
+qepy_v_of_rho.o : qepy_common.o
+
+#ce-tddft
+apply_efield.o : tddft_module.o
+molecule_operators.o : tddft_module.o
+molecule_optical_absorption.o : tddft_module.o
+tddft_ch_psi_all.o : tddft_module.o
+tddft_main.o : tddft_module.o
+tddft_main.o : tddft_version.o
+tddft_routines.o : tddft_module.o
+tddft_setup.o : tddft_module.o
+update_ham.o : tddft_module.o
+wavepacket.o : tddft_module.o
+
+#cetddft
+qepy_molecule_optical_absorption.o : qepy_tddft_common.o
+qepy_molecule_optical_absorption.o : tddft_module.o
+qepy_tddft_main.o : tddft_module.o
+qepy_tddft_mod.o : tddft_module.o
+qepy_tddft_routines.o : tddft_module.o
+qepy_tddft_setup.o : tddft_module.o
+qepy_update_ham.o : tddft_module.o

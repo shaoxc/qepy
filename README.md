@@ -1,8 +1,6 @@
 # QEpy - Quantum ESPRESSO in Python
    `QEpy` turns Quantum ESPRESSO (QE) into a Python DFT engine for nonstandard workflows.
 
-   <!--Check out a [YouTube video](https://www.youtube.com/watch?v=cWt0BVQs-_U) with additional information (installation and examples).-->
-
 ## Contributors and funding
  - [The Quantum-Multiscale collaboration](http://www.quantum-multiscale.org/)
  - Main author: [Xuecheng Shao](mailto:xuecheng.shao@rutgers.edu) (Rutgers)
@@ -36,7 +34,7 @@ python -m pip install qepy
 
      ```shell
 	 ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90
-	  make pwall
+	  make all
 	  export qedir=`pwd`
      ```
 
@@ -44,7 +42,7 @@ python -m pip install qepy
 
      ```shell
 	 git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-     oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
+     python -m pip install -U ./qepy
 	 ```
 
 ## Manual and Tutorials

@@ -12,8 +12,8 @@ path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_scf_iter():
-    driver = Driver(inputfile, comm, iterative = True)
-    for i in range(60):
+    driver = Driver(inputfile, comm, iterative = True, ldescf=True)
+    for i in range(100):
         driver.diagonalize()
         driver.mix()
         converged = driver.check_convergence()

@@ -4,10 +4,10 @@ import numpy as np
 class QEInput(object):
     """Input for QE
 
-    Read/write the QE input file. The input `qe_options` or the return of reading is a dictionary.
-    There are two main types of QE input parameters : namelist and card.
-    In the `qe_options`, for namelist, the key is always start with '&',  and the value is a dictionary.
-    But for card, the key is the first line of the card, and the value is a list of string.
+    Read/write the QE input file. The input `qe_options` or the output after reading an 
+    input is a dictionary. There are two main types of QE input parameters : namelist and card.
+    In `qe_options` namelist keys always start with '&',  and the value is a dictionary.
+    Cards keys are the first line of the card, and the value is a list of strings.
 
     *e.g.* ::
 
@@ -21,7 +21,8 @@ class QEInput(object):
 
     .. note ::
 
-        If the type of value of namelist is string(character), the value also need contains with quotes.
+        Nota bene: when the value of a namelist is a string (character), it needs to be enclosed 
+        by quotation marks in addition to the usual string apostophies.
 
 
     Parameters
@@ -95,7 +96,7 @@ class QEInput(object):
         Parameters
         ----------
         atoms : ase.Atoms
-            atoms has all atomic information
+            ase.Atoms has all atomic information in ASE units
         qe_options : dict
             Input parameters of QE
         """
@@ -329,6 +330,7 @@ QEOPTIONS={
 
 
 class QEOutput(object):
+    """Parser of QE output. Usually not needed, but can be useful to access info from the QE output"""
     def __init__(self, fh = None, nat = None, **kwargs):
         self.fh = fh
         self.nat = nat

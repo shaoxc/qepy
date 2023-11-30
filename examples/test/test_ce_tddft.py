@@ -1,6 +1,7 @@
 from qepy.driver import Driver
 import numpy as np
 import pathlib
+import pytest
 
 try:
     from mpi4py import MPI
@@ -12,6 +13,7 @@ path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_0_scf():
+    pytest.importorskip("qepy.qepy_cetddft")
     # Run scf
     driver = Driver(inputfile, comm)
     driver.scf()
@@ -27,6 +29,7 @@ def test_0_scf():
     assert np.isclose(energy, -552.93477389, atol = 1E-6)
 
 def test_1_tddft_continue():
+    pytest.importorskip("qepy.qepy_cetddft")
     # Run TDDFT after scf, without stop
     driver = Driver(inputfile, comm, task = 'optical', progress = True)
     driver.scf()
@@ -37,6 +40,7 @@ def test_1_tddft_continue():
     driver.stop()
 
 def test_2_tddft_iterative():
+    pytest.importorskip("qepy.qepy_cetddft")
     # Run TDDFT
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
     for i in range(5):
@@ -48,6 +52,7 @@ def test_2_tddft_iterative():
     driver.stop()
 
 def test_3_tddft_restart():
+    pytest.importorskip("qepy.qepy_cetddft")
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
     # restart from 5
     driver.tddft_restart(istep=5)

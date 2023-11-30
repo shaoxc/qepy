@@ -4,6 +4,7 @@
     tprnfor = .true.
     tstress = .true.
     pseudo_dir = './DATA/'
+    iprint = 1
 /
 &system
     ibrav = 0

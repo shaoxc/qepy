@@ -1,0 +1,361 @@
+include ../make.qepy.inc
+include ../make.depend
+QESRC_DIR = PW/src
+PNAME = qepy_pw
+QEPY_LIBS = -L../ -lqepy_ks_solvers -lqepy_dft_d3 $(MODS_BASE)
+QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) -I../ks_solvers -I$(QEDIR)/KS_Solvers -I../dft_d3 -I$(QEDIR)/dft-d3 $(INCS_MODS_BASE) $(INCS_MODS_BASE_QE)
+
+QEPY_OBJS = qepy_common.o \
+qepy_mod.o \
+qepy_delta_e.o \
+qepy_electrons.o \
+qepy_forces.o \
+qepy_hinit1.o \
+qepy_pw2casino_write.o \
+qepy_pwscf.o \
+qepy_run_pwscf.o \
+qepy_setlocal.o \
+qepy_stop_run.o \
+qepy_stress.o \
+qepy_v_of_rho.o \
+qepy_v_of_rho_all.o
+
+QEPY_PROG_OBJS = pwscf.o
+
+QEPY_FIX_OBJS = wfcinit.o \
+setup.o \
+read_file_new.o \
+pw_restart_new.o \
+potinit.o
+
+QE_OBJS = add_qexsd_step.o \
+atomic_wfc_mod.o \
+close_files.o \
+electrons.o \
+forces.o \
+hinit1.o \
+move_ions.o \
+non_scf.o \
+punch.o \
+pw2casino.o \
+pwcom.o \
+run_pwscf.o \
+scale_h.o \
+scf_mod.o \
+stop_run.o \
+stress.o \
+sum_band.o \
+update_pot.o \
+v_of_rho.o
+
+LIB_OBJS_TEMP = Coul_cut_2D.o \
+a2fmod.o \
+acfdt_in_pw.o \
+add_bfield.o \
+add_dmft_occ.o \
+add_efield.o \
+add_gatefield.o \
+add_paw_to_deeq.o \
+add_paw_to_deeq_gpu.o \
+add_qexsd_step.o \
+add_vhub_to_deeq.o \
+add_vhub_to_deeq_gpu.o \
+add_vuspsi.o \
+add_vuspsi_gpu.o \
+additional_cusolver_subs.o \
+addusdens.o \
+addusforce.o \
+addusstress.o \
+allocate_fft.o \
+allocate_locpot.o \
+allocate_nlpot.o \
+allocate_wfc.o \
+atomic_rho.o \
+atomic_wfc.o \
+atomic_wfc_gpu.o \
+atomic_wfc_mod.o \
+average_pp.o \
+beef.o \
+bp_c_phase.o \
+bp_mod.o \
+bp_strings.o \
+buffers.o \
+c_bands.o \
+c_phase_field.o \
+cdiagh.o \
+clean_pw.o \
+close_files.o \
+commutator_Hx_psi.o \
+commutator_Vhubx_psi.o \
+compute_becsum.o \
+compute_deff.o \
+compute_dip.o \
+compute_qdipol.o \
+compute_qdipol_so.o \
+compute_rho.o \
+compute_ux.o \
+coset.o \
+d_matrix.o \
+data_structure.o \
+deriv_drhoc.o \
+divide_class.o \
+divide_class_so.o \
+divide_et_impera.o \
+drhoc.o \
+drhoc_gpu.o \
+dvloc_of_g.o \
+dynamics_module.o \
+efermig.o \
+efermit.o \
+electrons.o \
+environ_io_stub.o \
+environ_pw_module.o \
+eqvect.o \
+esm.o \
+esm_common_mod.o \
+esm_ewald_mod.o \
+esm_force_mod.o \
+esm_hartree_mod.o \
+esm_local_mod.o \
+esm_stres_mod.o \
+ewald.o \
+ewald_dipole.o \
+extfield.o \
+exx.o \
+exx_band.o \
+exx_base.o \
+fcp_capacitance.o \
+fcp_dyn_calcavg.o \
+fcp_dyn_printavg.o \
+fcp_dynamics.o \
+fcp_hessian.o \
+fcp_input.o \
+fcp_module.o \
+fcp_relaxation.o \
+find_group.o \
+force_cc.o \
+force_corr.o \
+force_ew.o \
+force_hub.o \
+force_lc.o \
+force_us.o \
+forces.o \
+forces_bp_efield.o \
+g2_kin.o \
+g_psi.o \
+g_psi_gpu.o \
+g_psi_mod.o \
+g_psi_mod_gpu.o \
+gcscf_input.o \
+gcscf_module.o \
+gen_at_dj.o \
+gen_at_dy.o \
+get_locals.o \
+gk_sort.o \
+gradcorr.o \
+gweights.o \
+h_epsi_her_apply.o \
+h_epsi_her_set.o \
+h_psi.o \
+h_psi_gpu.o \
+h_psi_meta.o \
+hinit0.o \
+hinit1.o \
+hs_1psi.o \
+hs_1psi_gpu.o \
+hs_psi.o \
+hs_psi_gpu.o \
+hubbard.o \
+init_ns.o \
+init_nsg.o \
+init_q_aeps.o \
+init_run.o \
+init_us_2.o \
+init_vloc.o \
+input.o \
+intersite_V.o \
+io_rho_xml.o \
+irrek.o \
+iweights.o \
+kpoint_grid.o \
+lchk_tauxk.o \
+ldaU.o \
+loc_scdm.o \
+loc_scdm_k.o \
+make_pointlists.o \
+makov_payne.o \
+manypw.o \
+martyna_tuckerman.o \
+memory_report.o \
+mix_rho.o \
+move_ions.o \
+multable.o \
+n_plane_waves.o \
+new_ns.o \
+new_nsb.o \
+new_nsg.o \
+new_occ.o \
+newd.o \
+newd_gpu.o \
+non_scf.o \
+ns_adj.o \
+nsg_adj.o \
+offset_atom_wfc.o \
+openfil.o \
+orbm_kubo.o \
+ortho_wfc.o \
+orthoatwfc.o \
+orthoatwfc_gpu.o \
+oscdft_base.o \
+oscdft_context.o \
+oscdft_enums.o \
+oscdft_forces.o \
+oscdft_forces_subs.o \
+oscdft_functions.o \
+oscdft_functions_gpu.o \
+oscdft_indices.o \
+oscdft_input.o \
+oscdft_occupations.o \
+oscdft_wavefunction.o \
+oscdft_wavefunction_subs.o \
+oscdft_wavefunction_subs_gpu.o \
+oscdft_wfcO.o \
+oscdft_wfcO_gpu.o \
+output_tau.o \
+para.o \
+paw_exx.o \
+paw_init.o \
+paw_onecenter.o \
+paw_symmetry.o \
+plugin_check.o \
+plugin_clean.o \
+plugin_clock.o \
+plugin_ext_forces.o \
+plugin_init_cell.o \
+plugin_init_ions.o \
+plugin_init_potential.o \
+plugin_initbase.o \
+plugin_initialization.o \
+plugin_int_forces.o \
+plugin_print_energies.o \
+plugin_read_input.o \
+plugin_scf_energy.o \
+plugin_scf_potential.o \
+plugin_summary.o \
+plus_u_full.o \
+potinit.o \
+print_clock_pw.o \
+print_ks_energies.o \
+punch.o \
+pw2blip.o \
+pw2casino.o \
+pw2casino_write.o \
+pw_init_qexsd_input.o \
+pw_restart_new.o \
+pwcom.o \
+pwcom_gpu.o \
+rdiagh.o \
+read_conf_from_file.o \
+read_file_new.o \
+realus.o \
+remove_atomic_rho.o \
+report_mag.o \
+restart_in_electrons.o \
+rho2zeta.o \
+rism_module.o \
+rotate_wfc.o \
+rotate_wfc_gpu.o \
+run_driver.o \
+run_pwscf.o \
+ruotaijk.o \
+s_1psi.o \
+s_1psi_gpu.o \
+s_psi.o \
+s_psi_gpu.o \
+save_in_cbands.o \
+save_in_electrons.o \
+scale_h.o \
+scf_mod.o \
+scf_mod_gpu.o \
+scissor.o \
+set_kplusq.o \
+set_kup_and_kdw.o \
+set_occupations.o \
+set_rhoc.o \
+set_spin_vars.o \
+set_vrs.o \
+setlocal.o \
+setup.o \
+sic.o \
+start_k.o \
+stop_run.o \
+stres_cc.o \
+stres_ewa.o \
+stres_gradcorr.o \
+stres_har.o \
+stres_hub.o \
+stres_knl.o \
+stres_loc.o \
+stres_mgga.o \
+stres_nonloc_dft.o \
+stres_us.o \
+stress.o \
+struct_fact.o \
+sum_band.o \
+sum_band_gpu.o \
+sumkg.o \
+sumkt.o \
+summary.o \
+symm_base.o \
+symme.o \
+symmetrize_at.o \
+tetra.o \
+transform_becsum_nc.o \
+transform_becsum_so.o \
+transform_qq_so.o \
+trnvecc.o \
+two_chem.o \
+update_pot.o \
+us_exx.o \
+usnldiag.o \
+usnldiag_gpu.o \
+utils.o \
+utils_gpu.o \
+v_of_rho.o \
+vcsmd.o \
+vcsubs.o \
+vhpsi.o \
+vhpsi_gpu.o \
+vloc_of_g.o \
+vloc_psi.o \
+vloc_psi_gpu.o \
+wannier_check.o \
+wannier_clean.o \
+wannier_init.o \
+wannier_occ.o \
+weights.o \
+wfcinit.o \
+wfcinit_gpu.o \
+write_ns.o \
+wsweight.o \
+xdm_dispersion.o
+
+vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QEDIR)/$(QESRC_DIR)
+
+QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
+LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
+LIB_OBJS := $(addprefix $(QEDIR)/$(QESRC_DIR)/,$(LIB_OBJS_TEMP))
+
+ifeq ($(strip $(WRAP_OBJS)),)
+QEPY_OBJS = qepy_fake.o
+endif
+
+.PHONY: all
+
+all : ${F90WRAP_FILES}
+	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+	cp lib$(PNAME).*.so ../lib$(PNAME).so
+	if test -d $(PNAME); then mv $(PNAME) ../; fi
+
+${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
+	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 

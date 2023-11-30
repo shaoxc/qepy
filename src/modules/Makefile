@@ -1,0 +1,259 @@
+include ../make.qepy.inc
+include ../make.depend
+QESRC_DIR = Modules
+PNAME = qepy_modules
+QEPY_LIBS = -L../ -lqepy_upflib -lqepy_xclib -lqepy_fftxlib -lqepy_laxlib -lqepy_utilxlib -lqepy_mbd
+QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) -I../upflib -I$(QEDIR)/upflib -I../xclib -I$(QEDIR)/XClib -I../fftxlib -I$(QEDIR)/FFTXlib/src -I../laxlib -I$(QEDIR)/LAXlib -I../utilxlib -I$(QEDIR)/UtilXlib -I../mbd -I$(QEDIR)/external/mbd/src
+
+QEPY_OBJS = qepy_sys.o
+
+QEPY_PROG_OBJS = command_line_options.o \
+open_close_input_file.o \
+plugin_arguments.o
+
+QEPY_FIX_OBJS = set_para_diag.o \
+funct.o
+
+QE_OBJS = cell_base.o \
+check_stop.o \
+constants.o \
+control_flags.o \
+deviatoric.o \
+environment.o \
+io_global.o \
+ions_base.o \
+mp_bands.o \
+mp_global.o \
+mp_pools.o \
+mp_world.o \
+qexsd.o \
+read_input.o \
+recvec.o \
+wavefunctions.o
+
+LIB_OBJS_TEMP = additional_kpoints.o \
+allocate_fft_3drism.o \
+atom_weight.o \
+autopilot.o \
+basic_algebra_routines.o \
+becmod.o \
+becmod_gpu.o \
+becmod_subs_gpu.o \
+bfgs_module.o \
+bspline.o \
+bz_form.o \
+capital.o \
+cell_base.o \
+check_stop.o \
+chempot.o \
+chempot_lauerism.o \
+closure.o \
+command_line_options.o \
+compute_dipole.o \
+constants.o \
+constraints_module.o \
+control_flags.o \
+corrdipole_laue.o \
+correctat0_vv.o \
+corrgxy0_laue.o \
+coulomb_vcut.o \
+cryst_to_car.o \
+cryst_to_car_2d.o \
+cuda_subroutines.o \
+customize_signals.o \
+data_structure_3drism.o \
+date_and_tim.o \
+deviatoric.o \
+dist.o \
+do_1drism.o \
+do_3drism.o \
+do_lauerism.o \
+electrons_base.o \
+environ_api_stub.o \
+environ_base_module.o \
+environment.o \
+eqn_1drism.o \
+eqn_3drism.o \
+eqn_lauedipole.o \
+eqn_lauegxy0.o \
+eqn_lauelong.o \
+eqn_lauerism.o \
+eqn_laueshort.o \
+eqn_lauevoid.o \
+err_rism.o \
+expint.o \
+extffield.o \
+fd_gradient.o \
+fft_base.o \
+fft_rho.o \
+fft_wave.o \
+fox_init_module.o \
+fsockets.o \
+funct.o \
+generate_function.o \
+generate_k_along_lines.o \
+gradutils.o \
+guess_3drism.o \
+gvecw.o \
+has_xml.o \
+hdf5_qe.o \
+init_1drism.o \
+init_3drism.o \
+inpfile.o \
+input_1drism.o \
+input_3drism.o \
+input_parameters.o \
+int_to_char.o \
+invmat.o \
+io_base.o \
+io_files.o \
+io_global.o \
+io_rism_xml.o \
+ions_base.o \
+kind.o \
+latgen.o \
+lauefft.o \
+lauefft_subs.o \
+linpack.o \
+lj_forcefield.o \
+lj_solute.o \
+lmdif.o \
+matches.o \
+mbdlib.o \
+mdiis.o \
+mm_dispersion.o \
+molebridge_vv.o \
+molecorr_vv.o \
+molecule_const.o \
+molecule_types.o \
+mp_bands.o \
+mp_exx.o \
+mp_global.o \
+mp_images.o \
+mp_pools.o \
+mp_rism.o \
+mp_swap_ax_rism.o \
+mp_wave.o \
+mp_world.o \
+noncol.o \
+normalize_lauerism.o \
+open_close_input_file.o \
+parameters.o \
+parser.o \
+plot_io.o \
+plot_rism.o \
+plugin_arguments.o \
+plugin_flags.o \
+plugin_variables.o \
+potential_3drism.o \
+potential_esm.o \
+potential_vv.o \
+print_chempot_3drism.o \
+print_chempot_lauerism.o \
+print_chempot_vv.o \
+print_corr_vv.o \
+print_solvavg.o \
+pw_dot.o \
+qeh5_module.o \
+qes_bcast_module.o \
+qes_init_module.o \
+qes_libs_module.o \
+qes_read_module.o \
+qes_reset_module.o \
+qes_types_module.o \
+qes_write_module.o \
+qexsd.o \
+qexsd_copy.o \
+qexsd_init.o \
+qexsd_input.o \
+qmmm.o \
+qmmm_aux.o \
+radfft.o \
+radial_gradients.o \
+random_numbers.o \
+random_numbers_gpu.o \
+read_cards.o \
+read_input.o \
+read_mol.o \
+read_namelists.o \
+read_pseudo.o \
+read_solv.o \
+recips.o \
+recvec.o \
+recvec_3drism.o \
+recvec_subs.o \
+remove_tot_torque.o \
+rgen.o \
+rism.o \
+rism1d_facade.o \
+rism3d_facade.o \
+rms_residual.o \
+run_info.o \
+scale_fft_3drism.o \
+scale_fft_lauerism.o \
+set_para_diag.o \
+set_signal.o \
+set_vdw_corr.o \
+setqf.o \
+sockets.o \
+solute.o \
+solvation_3drism.o \
+solvation_esm.o \
+solvation_force.o \
+solvation_lauerism.o \
+solvation_pbc.o \
+solvation_stress.o \
+solvavg.o \
+solvmol.o \
+sort.o \
+space_group.o \
+stack.o \
+summary_1drism.o \
+summary_3drism.o \
+suscept_g0.o \
+suscept_laue.o \
+suscept_laueint.o \
+suscept_vv.o \
+test_input_file.o \
+timestep.o \
+trimcheck.o \
+tsvdw.o \
+version.o \
+volume.o \
+w0gauss.o \
+w1gauss.o \
+wannier_gw.o \
+wannier_new.o \
+wave_gauge.o \
+wavefunctions.o \
+wavefunctions_gpu.o \
+wgauss.o \
+write_rism_type.o \
+ws_base.o \
+wyckoff.o \
+wypos.o \
+xc_rVV10.o \
+xc_vdW_DF.o \
+xml_io_rism.o \
+xsf.o \
+zvscal.o
+
+vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QEDIR)/$(QESRC_DIR)
+
+QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
+LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
+LIB_OBJS := $(addprefix $(QEDIR)/$(QESRC_DIR)/,$(LIB_OBJS_TEMP))
+
+ifeq ($(strip $(WRAP_OBJS)),)
+QEPY_OBJS = qepy_fake.o
+endif
+
+.PHONY: all
+
+all : ${F90WRAP_FILES}
+	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+	cp lib$(PNAME).*.so ../lib$(PNAME).so
+	if test -d $(PNAME); then mv $(PNAME) ../; fi
+
+${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
+	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 

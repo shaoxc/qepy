@@ -92,6 +92,12 @@ jobs:
             sudo ln -s $libdir /usr/local/lib/libdir
             echo ${SDKROOT:-$(xcrun --show-sdk-path)}
             #
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+
       - uses: actions/upload-artifact@v3
         with:
           name: qepy-wheels

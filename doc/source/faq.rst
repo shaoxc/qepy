@@ -95,7 +95,7 @@ Gfortran
 
      .. code:: shell
 
-        make pwall MANUAL_DFLAGS='-Dzdotc=zdotc_wrapper'
+        make all MANUAL_DFLAGS='-Dzdotc=zdotc_wrapper'
 
 
 Intel Compiler
