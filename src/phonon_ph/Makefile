@@ -1,0 +1,226 @@
+include ../make.qepy.inc
+include ../make.depend
+QESRC_DIR = PHonon/PH
+PNAME = qepy_phonon_ph
+QEPY_LIBS = -L../ $(MODS_LR)
+QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) $(INCS_MODS_LR) $(INCS_MODS_LR_QE)
+
+QEPY_OBJS = 
+
+QEPY_PROG_OBJS = alpha2f.o \
+dvscf_q2r.o \
+dynmat.o \
+epa.o \
+fqha.o \
+lambda.o \
+matdyn.o \
+phonon.o \
+postahc.o \
+q2qstar.o \
+q2r.o
+
+QEPY_FIX_OBJS = 
+
+QE_OBJS = 
+
+LIB_OBJS_TEMP = acfdtest.o \
+add_dkmds.o \
+add_for_charges.o \
+add_zstar_ue.o \
+add_zstar_ue_us.o \
+addcore.o \
+addnlcc.o \
+addnlcc_zstar_eu_us.o \
+addusddens.o \
+addusddense.o \
+addusdynmat.o \
+ahc.o \
+allocate_part.o \
+allocate_pert.o \
+allocate_phq.o \
+apply_trev.o \
+bcast_ph_input.o \
+c_bands_ph.o \
+cch_psi_all.o \
+check_if_partial_dyn.o \
+check_initial_status.o \
+check_restart_recover.o \
+chi_test.o \
+clean_pw_ph.o \
+clinear.o \
+close_phq.o \
+compute_alphasum.o \
+compute_becalp.o \
+compute_becsum_ph.o \
+compute_drhous.o \
+compute_drhous_nc.o \
+compute_dvloc.o \
+compute_nldyn.o \
+compute_weight.o \
+d2ionq.o \
+d2ionq_disp.o \
+d2mxc.o \
+d2nsq_bare.o \
+davcio_drho.o \
+deallocate_part.o \
+deallocate_phq.o \
+delta_sphi.o \
+dfile_autoname.o \
+dfile_star.o \
+dhdrhopsi.o \
+dielec.o \
+dielec_test.o \
+dnsq_bare.o \
+dnsq_orth.o \
+dnsq_scf.o \
+do_phonon.o \
+do_q2r.o \
+dpsi_orth.o \
+drho.o \
+drhodv.o \
+drhodvloc.o \
+drhodvnl.o \
+drhodvus.o \
+dvanqq.o \
+dvkb3.o \
+dvpsi_e.o \
+dvpsi_e2.o \
+dvqhub_barepsi_us.o \
+dvqhub_barepsi_us2.o \
+dvqpsi_us.o \
+dvqpsi_us_only.o \
+dvscf_interpolate.o \
+dwfc.o \
+dyndia.o \
+dynmat0.o \
+dynmat_hub_bare.o \
+dynmat_hub_scf.o \
+dynmat_us.o \
+dynmatcc.o \
+dynmatrix.o \
+el_opt.o \
+el_ph_collect.o \
+elph.o \
+elph_scdft_mod.o \
+elph_tetra_mod.o \
+elphon.o \
+ep_matrix_element_wannier.o \
+find_equiv_sites.o \
+find_irrep.o \
+find_mode_sym.o \
+generate_dynamical_matrix_c.o \
+generate_effective_charges_c.o \
+gmressolve_all.o \
+hdiag.o \
+incdrhous.o \
+incdrhous_nc.o \
+init_representations.o \
+initialize_ph.o \
+io_dyn_mat.o \
+io_dyn_mat_old.o \
+io_pattern.o \
+non_scf_ph.o \
+obsolete.o \
+openfilq.o \
+pcgreen.o \
+ph_restart.o \
+phcom.o \
+phescf.o \
+phq_init.o \
+phq_readin.o \
+phq_recover.o \
+phq_setup.o \
+phq_summary.o \
+phqscf.o \
+polariz.o \
+prepare_q.o \
+prepare_sym_analysis.o \
+print_clock_ph.o \
+psidspsi.o \
+psym_dmag.o \
+psym_dmage.o \
+psymdvscf.o \
+psyme.o \
+psyme2.o \
+punch_plot_e.o \
+q2qstar_ph.o \
+q_points.o \
+q_points_wannier.o \
+raman.o \
+raman_mat.o \
+ramanm.o \
+random_matrix.o \
+read_wfc_rspace_and_fwfft.o \
+rigid.o \
+rotate_and_add_dyn.o \
+rotate_dvscf_star.o \
+rotate_pattern_add.o \
+run_nscf.o \
+save_ph_input.o \
+set_asr_c.o \
+set_drhoc.o \
+set_dvscf.o \
+set_int12_nc.o \
+set_irr.o \
+set_irr_nosym.o \
+set_irr_sym.o \
+setlocq.o \
+solve_e.o \
+solve_e2.o \
+solve_e_fpol.o \
+solve_e_nscf.o \
+solve_linter.o \
+stop_ph.o \
+summarize.o \
+swfc.o \
+sym_and_write_zue.o \
+sym_def.o \
+sym_dmag.o \
+sym_dmage.o \
+sym_dns.o \
+sym_dns_wrapper.o \
+symdvscf.o \
+symdyn_munu.o \
+symdynph_gq.o \
+syme.o \
+syme2.o \
+syme_dns.o \
+symm.o \
+symmorphic_or_nzb.o \
+tra_write_matrix.o \
+transform_alphasum_nc.o \
+transform_alphasum_so.o \
+transform_int_nc.o \
+transform_int_so.o \
+trntnsc.o \
+write_eigenvectors.o \
+write_epsilon_and_zeu.o \
+write_hub.o \
+write_matrix.o \
+write_modes.o \
+write_qplot_data.o \
+write_ramtns.o \
+write_rec.o \
+yambo.o \
+zstar_eu.o \
+zstar_eu_us.o
+
+vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QEDIR)/$(QESRC_DIR)
+
+QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
+LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
+LIB_OBJS := $(addprefix $(QEDIR)/$(QESRC_DIR)/,$(LIB_OBJS_TEMP))
+
+ifeq ($(strip $(WRAP_OBJS)),)
+QEPY_OBJS = qepy_fake.o
+endif
+
+.PHONY: all
+
+all : ${F90WRAP_FILES}
+	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+	cp lib$(PNAME).*.so ../lib$(PNAME).so
+	if test -d $(PNAME); then mv $(PNAME) ../; fi
+
+${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
+	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 

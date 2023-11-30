@@ -1,4 +1,3 @@
-import qepy
 from qepy.driver import Driver
 import numpy as np
 import pathlib
@@ -13,10 +12,9 @@ except Exception:
 path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
-@pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
 def test_0_scf():
+    pytest.importorskip("qepy.qepy_cetddft")
     # Run scf
-    pytest.importorskip("pylibxc")
     driver = Driver(inputfile, comm)
     driver.scf()
     converged = driver.check_convergence()
@@ -30,8 +28,8 @@ def test_0_scf():
     assert converged
     assert np.isclose(energy, -552.93477389, atol = 1E-6)
 
-@pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
 def test_1_tddft_continue():
+    pytest.importorskip("qepy.qepy_cetddft")
     # Run TDDFT after scf, without stop
     driver = Driver(inputfile, comm, task = 'optical', progress = True)
     driver.scf()
@@ -41,8 +39,8 @@ def test_1_tddft_continue():
     assert np.isclose(dipole[0, 0], 0.56199, atol = 1E-3)
     driver.stop()
 
-@pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
 def test_2_tddft_iterative():
+    pytest.importorskip("qepy.qepy_cetddft")
     # Run TDDFT
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
     for i in range(5):
@@ -53,8 +51,8 @@ def test_2_tddft_iterative():
     assert np.isclose(dipole[0, 0], 0.54355, atol = 1E-3)
     driver.stop()
 
-@pytest.mark.skipif(not hasattr(qepy, 'qepy_tddft_readin'), reason="requires ce-tddft")
 def test_3_tddft_restart():
+    pytest.importorskip("qepy.qepy_cetddft")
     driver = Driver(inputfile, comm, task = 'optical', iterative = True)
     # restart from 5
     driver.tddft_restart(istep=5)

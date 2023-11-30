@@ -1,10 +1,19 @@
 import numpy as np
 import tempfile
 from functools import wraps
+from importlib import import_module
 import qepy
-from qepy.core import env
+import qepy_modules # import the QE MPI first
+from qepy.core import env, qepylibs, qepy_clean_saved
 from qepy.io import QEInput
-from qepy import constants
+
+class QEpyLib(type):
+    def __getattr__(cls, attr):
+        if attr in qepylibs:
+            p = import_module(attr)
+            return p
+        else :
+            return object.__getattribute__(cls, attr)
 
 def gathered(function):
     @wraps(function)
@@ -21,7 +30,7 @@ def gathered(function):
         results = function(self, **kwargs)
         #
         if gather and self.nproc > 1 :
-            qepy.qepy_mod.qepy_get_value(arr, out, gather = True)
+            self.qepy_pw.qepy_mod.qepy_get_value(arr, out, gather = True)
             if isinstance(results, (tuple, list)):
                 results = out, *results[1:]
             else :
@@ -29,7 +38,7 @@ def gathered(function):
         return results
     return wrapper
 
-class Driver(object) :
+class Driver(metaclass=QEpyLib) :
     """
     The driver of QEpy.
 
@@ -100,8 +109,6 @@ class Driver(object) :
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
              qe_options = None, prog = 'pw', progress = False, atoms = None, needwf = True,
              **kwargs):
-        if embed is None :
-            embed = qepy.qepy_common.embed_base()
         self.task = task
         self.embed = embed
         self.comm = comm
@@ -116,9 +123,10 @@ class Driver(object) :
         self.atoms = atoms
         self.needwf = needwf
         #
-        self.embed.ldescf = ldescf
-        self.embed.iterative = iterative
-        self.embed.tddft.iterative = iterative
+        if embed is None:
+            self.embed.ldescf = ldescf
+            self.embed.iterative = iterative
+            self.embed.tddft.iterative = iterative
         #
         self.comm = comm
         self.qepy = qepy
@@ -126,13 +134,17 @@ class Driver(object) :
         #
         self.driver_initialize()
 
+    def __getattr__(self, attr):
+        return getattr(type(self), attr)
+        # return _getattr_qepylibs(self, attr)
+
     def _init_log(self):
         """_initialize the QE output."""
         self.fileobj_interact = False
         if self.logfile in [None, False]:
             self.fileobj = None
         else :
-            # qepy.qepy_mod.qepy_set_stdout(self.logfile)
+            # self.qepy_pw.qepy_mod.qepy_set_stdout(self.logfile)
             if isinstance(self.logfile, bool) and self.logfile :
                 self.fileobj_interact = True
                 self.fileobj = tempfile.NamedTemporaryFile('w+')
@@ -142,6 +154,16 @@ class Driver(object) :
                 self.fileobj = open(self.logfile, 'w+')
         env['STDOUT'] = self.fileobj
         return self.fileobj
+
+    @property
+    def embed(self):
+        if self._embed is None :
+            self._embed = self.qepy_pw.qepy_common.embed_base()
+        return self._embed
+
+    @embed.setter
+    def embed(self, value):
+        self._embed = value
 
     @property
     def comm(self):
@@ -166,22 +188,22 @@ class Driver(object) :
         if hasattr(self.comm, 'rank'):
             return self.comm.rank == 0
         else :
-            return qepy.io_global.get_ionode()
+            return self.qepy_modules.io_global.get_ionode()
 
     @property
     def nproc(self):
         if hasattr(self.comm, 'size'):
             return self.comm.size
         else :
-            return qepy.mp_world.get_nproc()
+            return self.qepy_modules.mp_world.get_nproc()
 
     @property
     def qe_is_mpi(self):
-        return qepy.qepy_common.get_is_mpi()
+        return self.qepy_pw.qepy_common.get_is_mpi()
 
     @property
     def qe_is_openmp(self):
-        return qepy.qepy_common.get_is_openmp()
+        return self.qepy_pw.qepy_common.get_is_openmp()
 
     def restart(self, prog=None, **kwargs):
         """Restart the driver losing all information about the previous driver"""
@@ -214,7 +236,7 @@ class Driver(object) :
             env['DRIVER'] = self
         #
         self._init_log()
-        qepy.qepy_common.set_embed(self.embed)
+        self.qepy_pw.qepy_common.set_embed(self.embed)
         #
         inputfile=self.inputfile
         commf=self.commf
@@ -229,22 +251,22 @@ class Driver(object) :
         if task == 'optical' :
             self.tddft_initialize(inputfile=inputfile, commf = commf, **kwargs)
         elif task == 'nscf' :
-            inputobj = qepy.qepy_common.input_base()
+            inputobj = self.qepy_pw.qepy_common.input_base()
             if self.prefix : inputobj.prefix = self.prefix
             if self.outdir : inputobj.tmp_dir = str(self.outdir) + '/'
             if commf : inputobj.my_world_comm = commf
-            qepy.qepy_initial(inputobj)
+            self.qepy_pw.qepy_initial(inputobj)
             # tmpdir = inputobj.tmp_dir.decode().strip() + inputobj.prefix.decode().strip() + '.save' + '/'
             if self.needwf :
-                qepy.read_file()
+                self.qepy_pw.read_file()
             else :
-                qepy.read_file_new(False)
+                self.qepy_pw.read_file_new(False)
             if self.needwf :
-                qepy.qepy_mod.qepy_open_files()
+                self.qepy_pw.qepy_mod.qepy_open_files()
         else :
-            qepy.qepy_pwscf(inputfile, commf)
+            self.qepy_pw.qepy_pwscf(inputfile, commf)
             if self.embed.iterative :
-                qepy.control_flags.set_niter(1)
+                self.qepy_modules.control_flags.set_niter(1)
         #
         self.density = np.zeros((1, 1))
         self.iter = 0
@@ -263,12 +285,12 @@ class Driver(object) :
         if commf is None : commf = self.commf
         #
         if self.progress :
-            qepy.wvfct.get_array_g2kin()
-            qepy.qepy_tddft_readin(inputfile)
+            self.qepy_pw.wvfct.get_array_g2kin()
+            self.qepy_cetddft.qepy_tddft_readin(inputfile)
         else :
-            qepy.qepy_tddft_main_initial(inputfile, commf)
-            qepy.read_file()
-        qepy.qepy_tddft_main_setup()
+            self.qepy_cetddft.qepy_tddft_main_initial(inputfile, commf)
+            self.qepy_pw.read_file()
+        self.qepy_cetddft.qepy_tddft_main_setup()
 
     def diagonalize(self, print_level = 2, nscf = False, **kwargs):
         """Diagonalize the Hamiltonian
@@ -281,13 +303,13 @@ class Driver(object) :
         self.embed.lmovecell = False
         self.iter += 1
         if self.task == 'optical' :
-            qepy.qepy_molecule_optical_absorption()
+            self.qepy_cetddft.qepy_molecule_optical_absorption()
         elif nscf :
             self.embed.task = 'nscf'
-            qepy.qepy_electrons_scf(print_level, 0)
+            self.qepy_pw.qepy_electrons_scf(print_level, 0)
         else :
             self.embed.mix_coef = -1.0
-            qepy.qepy_electrons_scf(print_level, 0)
+            self.qepy_pw.qepy_electrons_scf(print_level, 0)
 
     def mix(self, mix_coef = 0.7, print_level = 2):
         """Mix the density with the QE density mixing
@@ -299,11 +321,11 @@ class Driver(object) :
         """
         if self.task == 'optical' : return
         self.embed.mix_coef = mix_coef
-        qepy.qepy_electrons_scf(print_level, 0)
+        self.qepy_pw.qepy_electrons_scf(print_level, 0)
 
     def check_convergence(self, **kwargs):
         """Check the convergence of the SCF"""
-        converged = bool(qepy.control_flags.get_conv_elec())
+        converged = bool(self.qepy_modules.control_flags.get_conv_elec())
         if converged and not self.embed.initial : self.end_scf()
         return converged
 
@@ -312,59 +334,59 @@ class Driver(object) :
         if self.embed.iterative :
             return self.embed.dnorm
         else :
-            return qepy.control_flags.get_scf_error()
+            return self.qepy_modules.control_flags.get_scf_error()
 
     def get_scf_steps(self, **kwargs):
         """Return the number of SCF steps"""
         if self.embed.iterative :
             return self.iter
         else :
-            return qepy.control_flags.get_n_scf_steps()
+            return self.qepy_modules.control_flags.get_n_scf_steps()
 
     def scf(self, print_level = 2, maxiter = None, original = False, nscf = False, **kwargs):
         """Run the scf/tddft until converged or reached the maximum number of iterations"""
         if maxiter is not None and not self.embed.iterative :
-            qepy.control_flags.set_niter(maxiter)
+            self.qepy_modules.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
-            qepy.qepy_molecule_optical_absorption()
+            self.qepy_cetddft.qepy_molecule_optical_absorption()
         elif not self.embed.iterative and self.embed.exttype < 2 :
             # Use electrons to support hybrid xc functional
             return self.electrons(original=original)
         elif nscf :
             self.embed.task = 'nscf'
-            qepy.qepy_electrons_scf(print_level, 0)
+            self.qepy_pw.qepy_electrons_scf(print_level, 0)
         else :
-            qepy.qepy_electrons_scf(print_level, 0)
+            self.qepy_pw.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
 
     def non_scf(self, **kwargs):
         """Single "non-selfconsistent" calculation"""
         # fix some saved variables from last scf calculations
-        qepy.control_flags.set_lscf(0)
-        qepy.control_flags.set_lbfgs(0)
-        qepy.control_flags.set_lmd(0)
-        qepy.control_flags.set_lwf(0)
+        self.qepy_modules.control_flags.set_lscf(0)
+        self.qepy_modules.control_flags.set_lbfgs(0)
+        self.qepy_modules.control_flags.set_lmd(0)
+        self.qepy_modules.control_flags.set_lwf(0)
         #
-        qepy.non_scf()
-        return qepy.ener.get_etot()
+        self.qepy_pw.non_scf()
+        return self.qepy_pw.ener.get_etot()
 
     def electrons(self, original = False, **kwargs):
         """Execute original QE routine "electrons" """
         if original :
-            qepy.electrons()
+            self.qepy_pw.electrons()
         else :
-            qepy.qepy_electrons()
-        return qepy.ener.get_etot()
+            self.qepy_pw.qepy_electrons()
+        return self.qepy_pw.ener.get_etot()
 
     def end_scf(self, nscf = False, **kwargs):
         """Ends the SCF and cleans the SCF workspace. Only run when in iterative mode (i.e., one cycle at a time)"""
         if self.embed.iterative :
             if self.task == 'optical' :
                 self.embed.tddft.finish = True
-                qepy.qepy_molecule_optical_absorption()
+                self.qepy_cetddft.qepy_molecule_optical_absorption()
             else :
                 self.embed.finish = True
-                qepy.qepy_electrons_scf(0, 0)
+                self.qepy_pw.qepy_electrons_scf(0, 0)
 
     def stop(self, exit_status = 0, what = 'all', print_flag = 0, **kwargs):
         """Stop the driver. This must be done anytime a new driver is created.
@@ -384,10 +406,14 @@ class Driver(object) :
             self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
             if not self.embed.initial : self.end_scf()
-            qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
+            self.qepy_pw.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
 
         if hasattr(self.fileobj, 'close'): self.fileobj.close()
-        qepy.qepy_clean_saved()
+        qepy_clean_saved()
+        # qepy_clean_saved(self.qepy_modules)
+        # qepy_clean_saved(self.qepy_pw)
+        # if self.task == 'optical' :
+            # qepy_clean_saved(self.qepy_cetddft)
         #
         env['DRIVER'] = None
         env['STDOUT'] = None
@@ -400,7 +426,7 @@ class Driver(object) :
         istep : int
             Start number of steps, just for output.
         """
-        qepy.qepy_tddft_mod.qepy_cetddft_wfc2rho()
+        self.qepy_cetddft.qepy_tddft_mod.qepy_cetddft_wfc2rho()
         if istep is not None :
             self.embed.tddft.istep = istep
 
@@ -408,8 +434,8 @@ class Driver(object) :
         """Stops TDDFT run"""
         if not self.embed.tddft.initial : self.end_scf()
         #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
-        qepy.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
-        qepy.qepy_stop_tddft(exit_status)
+        self.qepy_pw.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
+        self.qepy_cetddft.qepy_stop_tddft(exit_status)
 
     def save(self, what = 'all', **kwargs):
         """
@@ -433,8 +459,8 @@ class Driver(object) :
 
           see PW/src/punch.f90
         """
-        qepy.punch(what)
-        # qepy.close_files(False)
+        self.qepy_pw.punch(what)
+        # self.qepy_pw.close_files(False)
 
     def update_run_options(self, qe_options = {}, **kwargs):
         pass
@@ -442,8 +468,8 @@ class Driver(object) :
     def get_energy(self, **kwargs):
         """Return the total energy.
         Nota bene: Only use for regular QE runs (i.e., not when doing embedding)."""
-        if abs(qepy.ener.get_etot()) > 1E-16 :
-            energy = qepy.ener.get_etot()
+        if abs(self.qepy_pw.ener.get_etot()) > 1E-16 :
+            energy = self.qepy_pw.ener.get_etot()
         elif abs(self.embed.etotal) > 1E-16 :
             energy = self.embed.etotal
         else :
@@ -454,7 +480,7 @@ class Driver(object) :
         """Calculate the energy with PW2CASINO of QE.
         Use this only if you have a good reason to use it! For example
         embedding calculations."""
-        qepy.qepy_calc_energies()
+        self.qepy_pw.qepy_calc_energies()
         return self.embed.etotal
 
     def update_ions(self, positions = None, lattice = None, update = 0, **kwargs):
@@ -474,11 +500,11 @@ class Driver(object) :
         positions = positions.T
         if lattice is not None :
             lattice = lattice.T
-            if not qepy.cellmd.get_lmovecell():
+            if not self.qepy_pw.cellmd.get_lmovecell():
                 raise ValueError(" Lattice update only works for variable-cell simulations.\n Please restart the QEpy with calculation= 'vc-relax' or 'vc-md'")
-            qepy.qepy_mod.qepy_update_ions(positions, update, lattice)
+            self.qepy_pw.qepy_mod.qepy_update_ions(positions, update, lattice)
         else :
-            qepy.qepy_mod.qepy_update_ions(positions, update)
+            self.qepy_pw.qepy_mod.qepy_update_ions(positions, update)
 
     def pwscf_restart(self, starting_pot='file', starting_wfc='file'):
         """Read PW ouput/restart files.
@@ -486,19 +512,19 @@ class Driver(object) :
         Parameters
         ----------
         """
-        qepy.qepy_mod.qepy_restart_from_xml()
-        if qepy.basis.get_starting_pot().strip() != starting_pot :
-            qepy.basis.set_starting_pot(starting_pot)
-            qepy.potinit()
-        if qepy.basis.get_starting_wfc().strip() != starting_wfc :
-            qepy.basis.set_starting_wfc(starting_wfc)
-            qepy.wfcinit()
+        self.qepy_pw.qepy_mod.qepy_restart_from_xml()
+        if self.qepy_pw.basis.get_starting_pot().strip() != starting_pot :
+            self.qepy_pw.basis.set_starting_pot(starting_pot)
+            self.qepy_pw.potinit()
+        if self.qepy_pw.basis.get_starting_wfc().strip() != starting_wfc :
+            self.qepy_pw.basis.set_starting_wfc(starting_wfc)
+            self.qepy_pw.wfcinit()
 
     def create_array(self, gather = True, kind = 'rho'):
         """Returns an empty array in real space.
         Nota bene: this is for real-space arrays like the density (rho) and potentials."""
         if kind == 'rho' :
-            nspin = qepy.lsda_mod.get_nspin()
+            nspin = self.qepy_pw.lsda_mod.get_nspin()
             if gather and self.nproc > 1 :
                 nr = self.get_number_of_grid_points(gather = gather)
                 if self.is_root :
@@ -515,26 +541,26 @@ class Driver(object) :
     def get_density(self, gather = True, out = None):
         """Returns valence pseudodensity array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
-        qepy.qepy_mod.qepy_get_rho(out, gather = gather)
+        self.qepy_pw.qepy_mod.qepy_get_rho(out, gather = gather)
         return out
 
     def get_core_density(self, gather = True, out = None):
         """Returns core density array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
-        qepy.qepy_mod.qepy_get_rho_core(out, gather = gather)
+        self.qepy_pw.qepy_mod.qepy_get_rho_core(out, gather = gather)
         return out
 
     def get_kinetic_energy_density(self, gather = True, out = None):
         """Returns KS kinetic energy density array in real space."""
         if out is None : out = self.create_array(gather=gather, kind='rho')
-        qepy.qepy_mod.qepy_get_tau(out, gather = gather)
+        self.qepy_pw.qepy_mod.qepy_get_tau(out, gather = gather)
         return out
 
     def get_wave_function(self, band=None, kpt=0):
         """Returns wave-function array in real space."""
-        qepy.qepy_mod.qepy_get_evc(kpt + 1)
+        self.qepy_pw.qepy_mod.qepy_get_evc(kpt + 1)
         nrs = np.zeros(3, dtype = 'int32')
-        qepy.qepy_mod.qepy_get_grid_smooth(nrs)
+        self.qepy_pw.qepy_mod.qepy_get_grid_smooth(nrs)
         if self.is_root :
             wf = np.empty(np.prod(nrs), order = 'F', dtype = np.complex128)
         else :
@@ -546,14 +572,14 @@ class Driver(object) :
             if band.ndim == 0 : band = [band]
         wfs = []
         for ibnd in band :
-            qepy.qepy_mod.qepy_get_wf(kpt + 1, ibnd + 1, wf)
+            self.qepy_pw.qepy_mod.qepy_get_wf(kpt + 1, ibnd + 1, wf)
             wfs.append(wf.copy())
         return wfs
 
     def get_dipole_tddft(self):
         """Return the total dipole computed by a TDDFT run.
         Nota bene: only available during TDDFT runs."""
-        # dipole = qepy.qepy_tddft_common.get_array_dipole().copy()
+        # dipole = self.qepy_cetddft.qepy_tddft_common.get_array_dipole().copy()
         dipole = self.embed.tddft.dipole
         return dipole
 
@@ -591,7 +617,7 @@ class Driver(object) :
         if potential is None : potential = np.zeros((1, 1))
         if potential.ndim != 2 : raise ValueError("The array should be 2-d.")
         #
-        qepy.qepy_mod.qepy_set_extpot(potential, gather = gather)
+        self.qepy_pw.qepy_mod.qepy_set_extpot(potential, gather = gather)
 
     def get_output(self):
         """Return the output of QE.
@@ -621,13 +647,13 @@ class Driver(object) :
     @gathered
     def get_elf(self, gather = True, out = None, **kwargs):
         """Return electron localization function."""
-        qepy.do_elf(out)
+        self.qepy_pp.do_elf(out)
         return out
 
     @gathered
     def get_rdg(self, gather = True, out = None, **kwargs):
         """Return reduced density gradient."""
-        qepy.do_rdg(out)
+        self.qepy_pp.do_rdg(out)
         return out
 #-----------------------------------------------------------------------
 
@@ -635,7 +661,7 @@ class Driver(object) :
     def get_local_pp(self, gather = True, out = None, **kwargs):
         """Return local component of the pseudopotential."""
         for i in range(out.shape[1]):
-            out[:, i] = qepy.scf.get_array_vltot()
+            out[:, i] = self.qepy_pw.scf.get_array_vltot()
         return out
 
     @gathered
@@ -644,7 +670,7 @@ class Driver(object) :
             tuple (potential, energy, total charge)
         """
         if not add : out[:] = 0.0
-        ehart, charge = qepy.v_h(self.embed.rho.of_g[:,0], out)
+        ehart, charge = self.qepy_pw.v_h(self.embed.rho.of_g[:,0], out)
         return out, ehart, charge
 
     @gathered
@@ -661,15 +687,15 @@ class Driver(object) :
         """
         etxc = vtxc = 0.0
         rho_obj = self.embed.rho
-        rho_core = qepy.scf.get_array_rho_core()
-        rhog_core = qepy.scf.get_array_rhog_core()
-        is_meta = qepy.dft_setting_routines.xclib_dft_is('meta')
+        rho_core = self.qepy_pw.scf.get_array_rho_core()
+        rhog_core = self.qepy_pw.scf.get_array_rhog_core()
+        is_meta = self.qepy_xclib.dft_setting_routines.xclib_dft_is('meta')
         if is_meta:
             if tau is None : tau = out*0.0
-            qepy.v_xc_meta(rho_obj, rho_core, rhog_core, etxc, vtxc, out, tau)
+            self.qepy_pw.v_xc_meta(rho_obj, rho_core, rhog_core, etxc, vtxc, out, tau)
             return out, etxc, vtxc, tau
         else :
-            etxc, vtxc = qepy.v_xc(rho_obj, rho_core, rhog_core, out)
+            etxc, vtxc = self.qepy_pw.v_xc(rho_obj, rho_core, rhog_core, out)
             return out, etxc, vtxc
 
     @gathered
@@ -680,13 +706,13 @@ class Driver(object) :
             Then final potential is saved in the v_obj
         """
         rho_obj = self.embed.rho
-        rho_core = qepy.scf.get_array_rho_core()
-        rhog_core = qepy.scf.get_array_rhog_core()
+        rho_core = self.qepy_pw.scf.get_array_rho_core()
+        rhog_core = self.qepy_pw.scf.get_array_rhog_core()
         v_obj = self.embed.v
         etotefield = 0.0
         #
         v_obj.of_r[:] = 0.0
-        ehart, etxc, vtxc, eth, charge = qepy.qepy_v_of_rho(rho_obj, rho_core, rhog_core, etotefield, v_obj)
+        ehart, etxc, vtxc, eth, charge = self.qepy_pw.qepy_v_of_rho(rho_obj, rho_core, rhog_core, etotefield, v_obj)
         info = [ehart, etxc, vtxc, eth, etotefield, charge]
         if add :
             out += v_obj.of_r
@@ -738,63 +764,63 @@ class Driver(object) :
               - nlcc (4)
         """
         if len(ignore) > 0 : icalc = self.forcename2type(ignore)
-        qepy.qepy_forces(icalc)
-        forces = qepy.force_mod.get_array_force().T
+        self.qepy_pw.qepy_forces(icalc)
+        forces = self.qepy_pw.force_mod.get_array_force().T
         return forces
 
     @classmethod
     def get_stress(cls, **kwargs):
         """Return the stress (3, 3)."""
         stress = np.zeros((3, 3), order='F')
-        qepy.stress(stress)
+        cls.qepy_pw.stress(stress)
         return stress
 
     #ASE DFTCalculator
     @classmethod
     def get_number_of_bands(cls):
         """Return the number of bands."""
-        return qepy.wvfct.get_nbnd()
+        return cls.qepy_pw.wvfct.get_nbnd()
 
     @classmethod
     def get_xc_functional(cls):
         """Return the XC-functional identifier.
 
         'LDA', 'PBE', ..."""
-        return qepy.funct.get_dft_short().decode("utf-8")
+        return cls.qepy_modules.funct.get_dft_short().decode("utf-8")
 
     @classmethod
     def get_bz_k_points(cls):
         """Return all the k-points in the 1. Brillouin zone.
 
         The coordinates are relative to reciprocal latice vectors."""
-        return qepy.klist.get_array_xk()
+        return cls.qepy_pw.klist.get_array_xk()
 
     @classmethod
     def get_number_of_spins(cls):
         """Return the number of spins in the calculation.
 
         Spin-paired calculations: 1, spin-polarized calculation: 2."""
-        return qepy.lsda_mod.get_nspin()
+        return cls.qepy_pw.lsda_mod.get_nspin()
 
     @classmethod
     def get_spin_polarized(cls):
         """Is it a spin-polarized calculation?"""
-        return bool(qepy.lsda_mod.get_lsda())
+        return bool(cls.qepy_pw.lsda_mod.get_lsda())
 
     @classmethod
     def get_ibz_k_points(cls):
         """Return k-points in the irreducible part of the Brillouin zone.
 
         The coordinates are relative to reciprocal latice vectors."""
-        xk = qepy.klist.get_array_xk()[:, :cls.get_number_of_k_points()].T
-        return xk @ qepy.cell_base.get_array_at()
+        xk = cls.qepy_pw.klist.get_array_xk()[:, :cls.get_number_of_k_points()].T
+        return xk @ cls.qepy_modules.cell_base.get_array_at()
 
     @classmethod
     def get_k_point_weights(cls):
         """Weights of the k-points.
 
         The sum of all weights is one."""
-        return qepy.klist.get_array_wk()[:cls.get_number_of_k_points()]
+        return cls.qepy_pw.klist.get_array_wk()[:cls.get_number_of_k_points()]
 
     def get_pseudo_density(self, spin=None, pad=True, gather = True):
         """Return pseudo-density array.
@@ -812,8 +838,8 @@ class Driver(object) :
     def get_pseudo_wave_function(cls, band=None, kpt=0, spin=0, broadcast=True,
                                  pad=True):
         """Return pseudo-wave-function array."""
-        qepy.qepy_mod.qepy_get_evc(kpt + 1)
-        evc = qepy.wavefunctions.get_array_evc()
+        cls.qepy_pw.qepy_mod.qepy_get_evc(kpt + 1)
+        evc = cls.qepy_modules.wavefunctions.get_array_evc()
         if band is None :
             return evc
         else :
@@ -822,17 +848,17 @@ class Driver(object) :
     @classmethod
     def get_eigenvalues(cls, kpt=0, spin=0):
         """Return eigenvalue array."""
-        return qepy.wvfct.get_array_et().T[kpt]
+        return cls.qepy_pw.wvfct.get_array_et().T[kpt]
 
     @classmethod
     def get_occupation_numbers(cls, kpt=0, spin=0):
         """Return occupation number array."""
-        return qepy.wvfct.get_array_wg().T[kpt]
+        return cls.qepy_pw.wvfct.get_array_wg().T[kpt]
 
     @classmethod
     def get_fermi_level(cls):
         """Return the Fermi level."""
-        return qepy.ener.get_ef()
+        return cls.qepy_pw.ener.get_ef()
 
     # def initial_wannier(self, initialwannier, kpointgrid, fixedstates,
                         # edf, spin, nbands):
@@ -851,13 +877,13 @@ class Driver(object) :
     @classmethod
     def get_magnetic_moment(cls, **kwargs):
         """Return the total magnetic moment."""
-        return qepy.lsda_mod.get_magtot()
+        return cls.qepy_pw.lsda_mod.get_magtot()
 
     @classmethod
     def get_number_of_grid_points(cls, gather = True):
         """Return the shape of arrays."""
         nr = np.zeros(3, dtype = 'int32')
-        qepy.qepy_mod.qepy_get_grid(nr, gather)
+        cls.qepy_pw.qepy_mod.qepy_get_grid(nr, gather)
         return nr
     #ASE DFTCalculator END
 #-----------------------------------------------------------------------
@@ -865,38 +891,38 @@ class Driver(object) :
     @classmethod
     def get_number_of_k_points(cls):
         """Return the number of kpoints."""
-        return qepy.klist.get_nkstot()
+        return cls.qepy_pw.klist.get_nkstot()
 
     @classmethod
     def get_volume(cls):
         """Return the volume."""
-        return qepy.cell_base.get_omega()
+        return cls.qepy_modules.cell_base.get_omega()
 
     @classmethod
     def get_ecutrho(cls):
         """Return the cutoff for density."""
-        return qepy.gvect.get_ecutrho()
+        return cls.qepy_modules.gvect.get_ecutrho()
 
     @classmethod
     def get_ions_lattice(cls):
         """Return the matrix of the lattice vectors in Bohrs."""
-        alat = qepy.cell_base.get_alat()
-        lattice = qepy.cell_base.get_array_at() * alat
+        alat = cls.qepy_modules.cell_base.get_alat()
+        lattice = cls.qepy_modules.cell_base.get_array_at() * alat
         return lattice.T
 
     @classmethod
     def get_ions_positions(cls):
         """Return the cartesian positions of ions in Bohrs."""
-        alat = qepy.cell_base.get_alat()
-        pos = qepy.ions_base.get_array_tau().T * alat
+        alat = cls.qepy_modules.cell_base.get_alat()
+        pos = cls.qepy_modules.ions_base.get_array_tau().T * alat
         return pos
 
     @classmethod
     def get_ions_symbols(cls):
         """Return the symbols of ions."""
-        ityp = qepy.ions_base.get_array_ityp() - 1
-        nat = qepy.ions_base.get_nat()
-        label = qepy.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')
+        ityp = cls.qepy_modules.ions_base.get_array_ityp() - 1
+        nat = cls.qepy_modules.ions_base.get_nat()
+        label = cls.qepy_modules.ions_base.get_array_atm().T.view('S3')[:,0].astype('U3')
         label = [x.strip() for x in label]
         symbols = []
         for i in range(nat):
@@ -964,7 +990,7 @@ class Driver(object) :
     def get_ase_atoms(cls):
         """Return the atom.Atoms from QE to ASE (using ASE units)."""
         from ase.atoms import Atoms
-        units_Bohr = constants.BOHR_RADIUS_SI * 1E10
+        units_Bohr = cls.qepy_modules.constants.BOHR_RADIUS_SI * 1E10
         #
         symbols = cls.get_ions_symbols()
         positions = cls.get_ions_positions() * units_Bohr
@@ -986,22 +1012,22 @@ class Driver(object) :
         if density is None : density = np.zeros((1, 1))
         if density.ndim != 2 : raise ValueError("The array should be 2-d.")
         #
-        qepy.qepy_mod.qepy_set_rho(density, gather = gather)
+        cls.qepy_pw.qepy_mod.qepy_set_rho(density, gather = gather)
 
     @classmethod
     def switch_nlpp(cls, nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):
         """Switch on/off the nonlocal part of the pseudopotential"""
-        nhm_ = qepy.uspp_param.get_nhm()
-        nbetam_ = qepy.uspp_param.get_nbetam()
-        nh_ = qepy.uspp_param.get_array_nh().copy()
-        nkb_ = qepy.uspp.get_nkb()
+        nhm_ = cls.qepy_upflib.uspp_param.get_nhm()
+        nbetam_ = cls.qepy_upflib.uspp_param.get_nbetam()
+        nh_ = cls.qepy_upflib.uspp_param.get_array_nh().copy()
+        nkb_ = cls.qepy_upflib.uspp.get_nkb()
 
         if nh is None: nh = nh_ * 0
 
-        qepy.uspp_param.set_nhm(nhm)
-        qepy.uspp_param.set_nbetam(nbetam)
-        qepy.uspp.set_nkb(nkb)
-        qepy.uspp_param.set_array_nh(nh)
+        cls.qepy_upflib.uspp_param.set_nhm(nhm)
+        cls.qepy_upflib.uspp_param.set_nbetam(nbetam)
+        cls.qepy_upflib.uspp.set_nkb(nkb)
+        cls.qepy_upflib.uspp_param.set_array_nh(nh)
 
         pp_options = {
             'nhm' : nhm_,
@@ -1016,7 +1042,7 @@ class Driver(object) :
     def update_exchange_correlation(cls, xc=None, libxc=None, **kwargs):
         """Switch XC on the fly"""
         if libxc : xc = None
-        qepy.qepy_mod.qepy_set_dft(xc)
+        cls.qepy_pw.qepy_mod.qepy_set_dft(xc)
 
     @classmethod
     def sum_band(cls, occupations = None, **kwargs):
@@ -1027,7 +1053,7 @@ class Driver(object) :
         occupations: np.ndarray (nbnd, nk)
             occupation numbers
         """
-        qepy.qepy_mod.qepy_sum_band(occupations)
+        cls.qepy_pw.qepy_mod.qepy_sum_band(occupations)
 
     @staticmethod
     def name2type(dictionary, name):

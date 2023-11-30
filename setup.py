@@ -2,7 +2,7 @@ import os
 import sys
 import re
 import subprocess
-import pathlib
+from pathlib import Path
 import shutil
 
 from setuptools import setup, find_packages, Extension
@@ -37,6 +37,8 @@ class MakeBuild(build_ext):
         build_args = []
         env = os.environ
         self.build_name = self.build_lib+ os.sep + name
+        self.build_path = Path(self.build_temp)
+        env['PYTHON'] = sys.executable
 
         try:
             import multiprocessing as mp
@@ -45,32 +47,12 @@ class MakeBuild(build_ext):
             nprocs = 4
         build_args += ['-j', str(nprocs)]
 
-        if env.get('qepydev', False):
+        if env.get('qepydev', 'no').lower() == 'yes' :
             print("only remove *.so files", flush = True)
-            for f in pathlib.Path(self.build_temp).glob('*.so'): os.remove(f)
+            for f in self.build_path.glob('*.so'): f.unlink()
         else :
-            if os.path.exists(self.build_temp): shutil.rmtree(self.build_temp)
-
-        if not os.path.exists(self.build_temp): os.makedirs(self.build_temp)
-
-        makefiles = list(pathlib.Path(topdir + '/qepy/').glob('__*__.py')) + \
-            list(pathlib.Path(topdir + '/install/').glob('*')) + \
-            list(pathlib.Path(topdir + '/src/').glob('*'))
-
-        qeversion = 'qe-' + env.get('qeversion', '7.2')
-
-        for f in makefiles :
-            if f.is_file():
-                shutil.copy2(f, self.build_temp)
-            else :
-                if f.name.startswith('qe-') :
-                    if f.name != qeversion : continue
-                shutil.copytree(f, self.build_temp+os.sep+f.name)
-
-        makefiles = list(pathlib.Path(self.build_temp).glob('**/*.f90'))
-        for f in makefiles : shutil.copy2(f, self.build_temp)
-
-        env['PYTHON'] = sys.executable
+            if self.build_path.is_dir(): shutil.rmtree(self.build_temp)
+            shutil.copytree(topdir+os.sep+'/src/', self.build_temp)
 
         # install the QE
         qedir = env.get('qedir', '')
@@ -99,39 +81,34 @@ class MakeBuild(build_ext):
             subprocess.check_call(["make", "all"] + build_args, cwd=qedir, env = env)
             env['qedir'] = os.path.abspath(qedir)
 
+        subprocess.check_call(['make', 'all'] + build_args, cwd=self.build_temp, env = env)
+
         if env.get('tddft', 'no').lower() == 'yes' :
-            subprocess.check_call(['make', '-f', 'Makefile.cetddft'] + build_args, cwd=self.build_temp, env = env)
+            subprocess.check_call(['make', 'qepy_cetddft'] + build_args, cwd=self.build_temp, env = env)
 
-        cwd = os.getcwd()
-        os.chdir(self.build_temp)
-        #
-        sys.path.insert(0, './')
-        from cmdx.qepy_cmd_patch import ini2files_qex
-        if env.get('cmdx', 'no').lower() == 'yes' :
-            ini2files_qex('cmdx/qepy_qex.ini')
-        else:
-            ini2files_qex()
-        #
-        os.chdir(cwd)
-
-        subprocess.check_call(['make', '-f', 'Makefile'] + build_args, cwd=self.build_temp, env = env)
-
-        with open(self.build_temp + '/qepy/__init__.py', 'r+') as fh :
-            lines = fh.readlines()
-            fh.seek(0)
-            first = True
-            for line in lines :
-                if first and '_qepy' in line :
-                    fh.write(init_new)
-                    first = False
-                fh.write(line)
+        for f in self.build_path.glob('qepy_*/__init__.py'):
+            with open(f, 'r+') as fh :
+                lines = fh.readlines()
+                fh.seek(0)
+                if 'pname' not in lines[1]:
+                    pname = lines[1].split()[1]
+                    lines[1] = f"pname = '{pname}'\n" + init_new + lines[1]
+                # else:
+                    # l = 'import ' + lines[1].split('=')[1].strip()[1:-1]
+                    # lines[19] += l
+                for line in lines :
+                    fh.write(line)
 
         if not os.path.exists(self.build_lib): os.makedirs(self.build_lib)
-        # if os.path.exists(self.build_name): shutil.rmtree(self.build_name)
-        for f in pathlib.Path(self.build_temp + os.sep + name).glob('*'):
+        for f in self.build_path.glob('*.so'):
             shutil.copy2(f, self.build_name)
-        for f in pathlib.Path(self.build_temp).glob('*.so'):
-            shutil.copy2(f, self.build_lib + os.sep)
+        for f in self.build_path.glob('qepy_*'):
+            if f.is_file():
+                shutil.copy2(f, self.build_name)
+            else :
+                target = self.build_name+os.sep+f.name
+                if Path(target).is_dir(): shutil.rmtree(target)
+                shutil.copytree(f, target)
 
 
 extensions_qepy = Extension(
@@ -182,7 +159,6 @@ if __name__ == "__main__":
                 'Development Status :: 3 - Alpha',
                 'Intended Audience :: Science/Research',
                 'Programming Language :: Python :: 3',
-                'Programming Language :: Python :: 3.7',
                 'Programming Language :: Python :: 3.8',
                 'Programming Language :: Python :: 3.9',
                 'Programming Language :: Python :: 3.10',
