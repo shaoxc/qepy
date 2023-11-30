@@ -26,7 +26,6 @@ build:
    - cd $PUBLIC
    - PACKAGE=$(python -c 'import qepy, os; print(os.path.split(qepy.__path__[0])[0])')
    - cp -r $PACKAGE/qepy* .
-   - cp $PACKAGE/_qepy* .
    - ls *
 
   artifacts:
@@ -78,6 +77,5 @@ docker_image:
     - docker run -t -d --name qepy_con $CONTAINER_IMAGE:$QTAG
     - docker cp $PUBLIC/qepy qepy_con:$PACKAGE
     - docker cp $PUBLIC/qepy-* qepy_con:$PACKAGE
-    - docker cp $PUBLIC/_qepy* qepy_con:$PACKAGE
     - docker commit qepy_con $CONTAINER_IMAGE:$QTAGNEW
     - docker push $CONTAINER_IMAGE:$QTAGNEW
