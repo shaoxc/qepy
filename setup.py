@@ -34,7 +34,7 @@ class MakeBuild(build_ext):
 
     def build_extension(self, ext):
         topdir = './'
-        build_args = ['-k']
+        build_args = ' '
         env = os.environ
         self.build_name = self.build_lib+ os.sep + name
         self.build_path = Path(self.build_temp)
@@ -45,7 +45,7 @@ class MakeBuild(build_ext):
             nprocs = max(mp.cpu_count()//2, 2)
         except ImportError:
             nprocs = 4
-        build_args += ['-j', str(nprocs)]
+        build_args += ' -j ' + str(nprocs)
 
         if env.get('qepydev', 'no').lower() == 'yes' :
             print("only remove *.so files", flush = True)
@@ -58,8 +58,8 @@ class MakeBuild(build_ext):
         qedir = env.get('qedir', '')
         if not qedir :
             qedir = self.build_temp + '/q-e'
-            qe_download = ["git", "clone", "-b", "qe-7.2", "--depth=1", "https://gitlab.com/QEF/q-e.git", qedir]
-            subprocess.check_call(qe_download, env = env)
+            qe_download = "git clone -b qe-7.2 --depth=1 https://gitlab.com/QEF/q-e.git "+ qedir
+            subprocess.check_call(qe_download, env = env, shell=True, text=True)
             if '-fPIC' not in env.get('CFLAGS', ''):
                 env['CFLAGS'] = '-fPIC ' + env.get('CFLAGS', '')
             if '-fPIC' not in env.get('FFLAGS', ''):
@@ -69,33 +69,45 @@ class MakeBuild(build_ext):
             # blas and lapack
             if 'BLAS_LIBS' not in env : env['BLAS_LIBS'] = '-lblas'
             if 'LAPACK_LIBS' not in env : env['LAPACK_LIBS'] = '-llapack'
-            qe_install_flags = env.get('QE_INSTALL_FLAGS', '').split('|')
+            qe_install_flags = env.get('QE_INSTALL_FLAGS', '')
             print('env', env)
-            res = subprocess.run(["./configure"] + qe_install_flags, cwd=qedir, env = env, check=False, capture_output=True)
-            stderr=res.stderr.decode()
-            if 'error' in stderr:
+            print('build_args', build_args)
+            res = subprocess.run("./configure " + qe_install_flags, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
+            if res.returncode > 0 :
                 print('Some errors happened in configure...')
-                subprocess.run(["cat", "install/config.log"], cwd=qedir, env = env, check = False)
-                print(stderr)
+                print(res.stderr)
+                subprocess.run("cat install/config.log", cwd=qedir, env = env, shell=True)
                 exit()
-            subprocess.check_call(["make", "all"] + build_args, cwd=qedir, env = env)
+
+            res = subprocess.run("make all " + build_args, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
+            if res.returncode > 0 :
+                print(res.stderr)
+                print("'make w90' sometimes will failed at first time, so try again")
+                res = subprocess.run("make all " + build_args, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
+                if res.returncode > 0 :
+                    print('Some errors happened in make...')
+                    print(res.stderr)
+                    exit()
+
             env['qedir'] = os.path.abspath(qedir)
 
-        subprocess.check_call(['make', 'all'] + build_args, cwd=self.build_temp, env = env)
+        res = subprocess.run('make all ' + build_args, cwd=self.build_temp, env = env, shell=True, capture_output=True, text=True)
+        if res.returncode > 0 :
+            print("Return:", res.returncode)
+            print("stderr:", res.stderr)
+            print("stdout:", res.stdout)
 
         if env.get('tddft', 'no').lower() == 'yes' :
-            subprocess.check_call(['make', 'qepy_cetddft'] + build_args, cwd=self.build_temp, env = env)
+            subprocess.check_call('make qepy_cetddft ' + build_args, cwd=self.build_temp, env = env, shell=True)
 
         for f in self.build_path.glob('qepy_*/__init__.py'):
+            if env.get('qepydev', 'no').lower() == 'yes' : break
             with open(f, 'r+') as fh :
                 lines = fh.readlines()
                 fh.seek(0)
                 if 'pname' not in lines[1]:
                     pname = lines[1].split()[1]
                     lines[1] = f"pname = '{pname}'\n" + init_new + lines[1]
-                # else:
-                    # l = 'import ' + lines[1].split('=')[1].strip()[1:-1]
-                    # lines[19] += l
                 for line in lines :
                     fh.write(line)
 
