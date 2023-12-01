@@ -17,7 +17,7 @@ jobs:
       matrix:
         buildplat:
         - [ubuntu-20.04, manylinux, x86_64]
-        python: ["cp37"]
+        python: ["cp38"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -34,8 +34,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.12.1
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
-          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' oldxml=yes SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--enable-openmp=yes'
-          CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS oldxml SETUPTOOLS_USE_DISTUTILS QE_INSTALL_FLAGS
+          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--enable-openmp=yes'
+          CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS SETUPTOOLS_USE_DISTUTILS QE_INSTALL_FLAGS
           CIBW_ARCHS_LINUX: "auto"
           CIBW_BEFORE_BUILD: |
             yum install -y blas-devel lapack-devel fftw-devel
