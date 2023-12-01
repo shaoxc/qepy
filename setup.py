@@ -34,7 +34,7 @@ class MakeBuild(build_ext):
 
     def build_extension(self, ext):
         topdir = './'
-        build_args = []
+        build_args = ['-k']
         env = os.environ
         self.build_name = self.build_lib+ os.sep + name
         self.build_path = Path(self.build_temp)
