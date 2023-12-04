@@ -98,5 +98,5 @@ clean:
 
 all : ${F90WRAP_FILES}
 	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
-	cp lib$(PNAME).*so ../lib$(PNAME).so
+	cp lib$(PNAME).so ../lib$(PNAME).so
 	if test -d $(PNAME); then mv $(PNAME) ../; fi

@@ -122,6 +122,10 @@ class MakeBuild(build_ext):
                 target = qepylibs + os.sep + f.name
                 if Path(target).is_dir(): shutil.rmtree(target)
                 shutil.copytree(f, target)
+        # fix macos system
+        if sys.platform == 'darwin':
+            fix_macos_lib = 'for f in libqepy*.so; do for f2 in libqepy*.so; do install_name_tool -change ./$f2 @loader_path/$f2 $f; done; done'
+            subprocess.check_call(fix_macos_lib, cwd=qepylibs, env = env, shell=True)
 
 
 extensions_qepy = Extension(

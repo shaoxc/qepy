@@ -1,6 +1,7 @@
 from sysconfig import get_config_vars
 _config_vars = get_config_vars()
 _config_vars['EXT_SUFFIX'] = '.so'
+_config_vars['SO'] = '.so'
 from numpy.distutils.fcompiler import load_all_fcompiler_classes
 load_all_fcompiler_classes()
 import sys
