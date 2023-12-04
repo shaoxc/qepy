@@ -34,7 +34,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.12.1
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
-          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--enable-openmp=yes'
+          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS=''
           CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS SETUPTOOLS_USE_DISTUTILS QE_INSTALL_FLAGS
           CIBW_ARCHS_LINUX: "auto"
           CIBW_BEFORE_BUILD: |
@@ -43,7 +43,7 @@ jobs:
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 60
+        timeout-minutes: 6
 
 
       - uses: actions/upload-artifact@v3
