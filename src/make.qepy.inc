@@ -9,7 +9,7 @@ PY_SRC_DIR  = ../
 
 QEDIR = $(or ${qedir}, ../../../)
 include ${QEDIR}/make.inc
-PYTHON := $(or ${PYTHON}, python)
+PYTHON := $(or ${PYTHON}, python3)
 
 F2FLAGS = $(F90FLAGS) $(QEPY_INCS)
 
@@ -34,14 +34,14 @@ ifneq ($(findstring -std, ${CFLAGS}), -std)
 endif
 
 FPP = ${F90} -E -cpp $(F2FLAGS)
-FSO = ${MPIF90} -shared $(CFLAGS) -Wl,-rpath='$$ORIGIN/'
-F2PY = CFLAGS='$(CFLAGS)' ${PYTHON} -m f90wrap --f2py-f90wrap \
-                --fcompiler=$(FCOMPILER) --build-dir . \
-                -c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
-                --f90flags='${F2FLAGS}'
+FSO = ${MPIF90} -shared $(CFLAGS) -Wl,-rpath,'$$ORIGIN/'
+F2PY = CFLAGS='$(CFLAGS)' ${PYTHON} ../f90wrap2py.py \
+				--fcompiler=$(FCOMPILER) --build-dir . \
+				-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
+				--f90flags='${F2FLAGS}'
 
 
-export LDFLAGS=-Wl,-rpath='$$ORIGIN/:$$ORIGIN/qepy'
+export LDFLAGS=-Wl,-rpath,'$$ORIGIN/:$$ORIGIN/qepy'
 
 WRAP_OBJS = $(QE_OBJS) $(QEPY_OBJS)
 
@@ -95,3 +95,8 @@ clean:
 	-rm -f *.o *.mod
 	-rm -rf src.* .libs .f2py_f2cmap lib${PNAME}.*so
 	-rm -rf ../${PNAME} ../lib${PNAME}.*so 
+
+all : ${F90WRAP_FILES}
+	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+	cp lib$(PNAME).*so ../lib$(PNAME).so
+	if test -d $(PNAME); then mv $(PNAME) ../; fi
