@@ -92,6 +92,9 @@ class MakeBuild(build_ext):
 
         res = subprocess.run('make all ' + build_args, cwd=self.build_temp, env = env, shell=True, capture_output=True, text=True)
         if res.returncode > 0 :
+            from sysconfig import get_config_vars
+            _config_vars = get_config_vars()
+            print("vars:", _config_vars)
             print("Return:", res.returncode)
             print("stderr:", res.stderr)
             print("stdout:", res.stdout)

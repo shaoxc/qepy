@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - action
+      - macos_arm64
   pull_request:
     branches:
       - action
+      - macos_arm64
 
 jobs:
   build_wheels_macos_arm64:
@@ -74,7 +76,7 @@ jobs:
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 6
+        timeout-minutes: 60
 
       - uses: actions/upload-artifact@v3
         with:
