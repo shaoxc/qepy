@@ -40,8 +40,8 @@ F2PY = CFLAGS='$(CFLAGS)' ${PYTHON} ../f90wrap2py.py \
 				-c --f90exec=$(MPIF90) --f77exec=$(MPIF90) \
 				--f90flags='${F2FLAGS}'
 
-
-export LDFLAGS=-Wl,-rpath,'$$ORIGIN/:$$ORIGIN/qepy'
+export LDFLAGS +=-Wl,-rpath,'$$ORIGIN/:$$ORIGIN/qepy'
+$(info $(LDFLAGS))
 
 WRAP_OBJS = $(QE_OBJS) $(QEPY_OBJS)
 
