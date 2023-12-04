@@ -49,7 +49,7 @@ class MakeBuild(build_ext):
 
         if env.get('qepydev', 'no').lower() == 'yes' :
             print("only remove *.so files", flush = True)
-            for f in self.build_path.glob('*.so'): f.unlink()
+            # for f in self.build_path.glob('*.so'): f.unlink()
         else :
             if self.build_path.is_dir(): shutil.rmtree(self.build_temp)
             shutil.copytree(topdir+os.sep+'/src/', self.build_temp)
@@ -77,7 +77,7 @@ class MakeBuild(build_ext):
                 print('Some errors happened in configure...')
                 print(res.stderr)
                 subprocess.run("cat install/config.log", cwd=qedir, env = env, shell=True)
-                exit()
+                raise RuntimeError('QE configure failed.')
 
             res = subprocess.run("make all " + build_args, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
             if res.returncode > 0 :
@@ -85,9 +85,8 @@ class MakeBuild(build_ext):
                 print("'make w90' sometimes will failed at first time, so try again")
                 res = subprocess.run("make all " + build_args, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
                 if res.returncode > 0 :
-                    print('Some errors happened in make...')
                     print(res.stderr)
-                    exit()
+                    raise RuntimeError('QE installation failed.')
 
             env['qedir'] = os.path.abspath(qedir)
 
@@ -96,6 +95,7 @@ class MakeBuild(build_ext):
             print("Return:", res.returncode)
             print("stderr:", res.stderr)
             print("stdout:", res.stdout)
+            raise RuntimeError('QEpy installation failed.')
 
         if env.get('tddft', 'no').lower() == 'yes' :
             subprocess.check_call('make qepy_cetddft ' + build_args, cwd=self.build_temp, env = env, shell=True)
@@ -112,13 +112,14 @@ class MakeBuild(build_ext):
                     fh.write(line)
 
         if not os.path.exists(self.build_lib): os.makedirs(self.build_lib)
+        qepylibs = self.build_name + os.sep + 'qepylibs'
         for f in self.build_path.glob('*.so'):
-            shutil.copy2(f, self.build_name)
+            shutil.copy2(f, qepylibs)
         for f in self.build_path.glob('qepy_*'):
             if f.is_file():
                 shutil.copy2(f, self.build_name)
             else :
-                target = self.build_name+os.sep+f.name
+                target = qepylibs + os.sep + f.name
                 if Path(target).is_dir(): shutil.rmtree(target)
                 shutil.copytree(f, target)
 
