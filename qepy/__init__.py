@@ -2,7 +2,7 @@ import sys
 import os
 from pathlib import Path
 from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
-path = Path(__file__).resolve().parent
+path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
 # FIX MPI_IN_PLACE and MKL
 if 'mpi4py' in sys.modules :

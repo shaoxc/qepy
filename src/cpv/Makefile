@@ -134,10 +134,5 @@ endif
 
 .PHONY: all
 
-all : ${F90WRAP_FILES}
-	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
-	cp lib$(PNAME).*.so ../lib$(PNAME).so
-	if test -d $(PNAME); then mv $(PNAME) ../; fi
-
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
 	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 

@@ -77,7 +77,7 @@ qepy_kcw_pp : qepy_kcw lib_mods_lr
 	(cd kcw_pp; $(MAKE) || exit 1) ; fi
 
 qepy_ks_solvers : qepy_utilxlib qepy_laxlib qepy_modules
-	if ! test -f libqepy_pw.so; then touch libqepy_pw.so; chmod +x libqepy_pw.so; fi
+	if ! test -f libqepy_pw.so; then cp libqepy_utilxlib.so libqepy_pw.so; fi
 	if test -d ks_solvers; then \
 	(cd ks_solvers; $(MAKE) || exit 1) ; fi
 
