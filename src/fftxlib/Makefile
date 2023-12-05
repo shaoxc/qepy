@@ -9,6 +9,8 @@ QEPY_OBJS =
 
 QEPY_PROG_OBJS = 
 
+QEPY_FIX_OBJS = scatter_mod.o
+
 QE_OBJS = fft_types.o
 
 LIB_OBJS_TEMP = fft_buffers.o \
