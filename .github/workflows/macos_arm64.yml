@@ -72,7 +72,7 @@ jobs:
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 60
+        timeout-minutes: 0
 
       - uses: actions/upload-artifact@v3
         with:
