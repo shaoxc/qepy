@@ -43,6 +43,8 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
   USE scf_gpum,             ONLY : using_vrs
   USE dfunct_gpum,          ONLY : newd_gpu
   !
+  USE qepy_common,      ONLY : embed
+  !
   IMPLICIT NONE
   !
   TYPE(scf_type), INTENT(INOUT) :: rho
@@ -98,6 +100,8 @@ SUBROUTINE qepy_v_of_rho_all( rho, rho_core, rhog_core, &
 !#endif
      !
      ! ... define the total local potential (external + scf)
+     !
+     IF (ALLOCATED(embed%extpot)) v%of_r = v%of_r + embed%extpot
      !
      CALL using_vrs(1)
      CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
