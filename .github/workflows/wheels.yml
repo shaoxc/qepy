@@ -64,7 +64,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
-          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 LDFLAGS='-L/usr/local/lib/libdir -Wl,-rpath,/usr/local/lib/libdir -arch x86_64' SDKROOT=/Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64' CPP='gcc -E'
+          CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' SETUPTOOLS_USE_DISTUTILS=stdlib QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 LDFLAGS='-L/usr/local/lib/libdir -Wl,-rpath,/usr/local/lib/libdir -arch x86_64 -headerpad_max_install_names' SDKROOT=/Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64' CPP='gcc -E'
           CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS SETUPTOOLS_USE_DISTUTILS QE_INSTALL_FLAGS NPY_DISTUTILS_APPEND_FLAGS MACOSX_DEPLOYMENT_TARGET SDKROOT LDFLAGS build_alias host_alias CFLAGS CPP
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_BEFORE_BUILD: |
