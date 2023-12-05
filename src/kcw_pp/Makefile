@@ -10,8 +10,6 @@ QEPY_OBJS =
 QEPY_PROG_OBJS = compute_self_hartree.o \
 interp_r_to_k.o
 
-QEPY_FIX_OBJS = 
-
 QE_OBJS = 
 
 LIB_OBJS_TEMP = bcast_kcw_pp_input.o \
@@ -34,4 +32,4 @@ endif
 .PHONY: all
 
 ${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 
+	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 
