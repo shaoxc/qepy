@@ -18,6 +18,9 @@ build:
   except:
     - github
     - action
+    changes:
+      - "*.md"
+      - "doc/**/*"
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - git submodule update --init --recursive
@@ -39,6 +42,9 @@ test:
   except:
     - github
     - action
+    changes:
+      - "*.md"
+      - "doc/**/*"
   image: $CONTAINER_IMAGE:$QTAG
   script:
    - cp -r $PUBLIC/* $PACKAGE
