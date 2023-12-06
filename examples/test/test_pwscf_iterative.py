@@ -2,17 +2,11 @@ from qepy.driver import Driver
 import numpy as np
 import pathlib
 
-try:
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-except Exception:
-    comm = None
-
 path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_scf_iter():
-    driver = Driver(inputfile, comm, iterative = True, ldescf=True)
+    driver = Driver(inputfile, iterative = True, ldescf=True)
     for i in range(100):
         driver.diagonalize()
         driver.mix()
@@ -32,3 +26,9 @@ def test_scf_iter():
     assert np.isclose(forces[0, 0], -0.00835135, atol = 1E-3)
     assert np.isclose(stress[1, 1], -0.00256059, atol = 1E-3)
     driver.stop()
+
+
+if __name__ == "__main__":
+    tests = [item for item in globals() if item.startswith('test_')]
+    for func in sorted(tests):
+        globals()[func]()

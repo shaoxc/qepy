@@ -2,10 +2,11 @@ import re
 from importlib import import_module
 from qepy import driver
 
+optional=['qepy_cetddft']
 
 def test_modules():
     file = driver.__file__
-    pattern = re.compile(r'(qepy\..+?)\(')
+    pattern = re.compile(r'(qepy_.*?\..+?)\(')
 
     attrs = []
     with open(file, 'r') as fh:
@@ -16,7 +17,11 @@ def test_modules():
     missing = []
     for item in attrs:
         l = item.split('.')
-        mod = import_module('.'.join(l[:-1]))
+        try:
+            mod = import_module('.'.join(l[:-1]))
+        except Exception as e:
+            if l[0] not in optional: raise e
+            continue
         if not hasattr(mod, l[-1]):
             missing.append(item)
 
@@ -26,4 +31,6 @@ def test_modules():
 
 
 if __name__ == "__main__":
-    test_modules()
+    tests = [item for item in globals() if item.startswith('test_')]
+    for func in sorted(tests):
+        globals()[func]()

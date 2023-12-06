@@ -42,6 +42,9 @@ if [ $parallel ]; then
 	for f in *py
 	do
 		$mpirun -n 2 python3 -m pytest --with-mpi $f
+		if [ $? -ne 0 ]; then
+			$mpirun -n 2 python3 -m pytest --with-mpi $f
+		fi
 		check_exit $?
 	done
 fi

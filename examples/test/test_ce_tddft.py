@@ -3,19 +3,13 @@ import numpy as np
 import pathlib
 import pytest
 
-try:
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-except Exception:
-    comm = None
-
 path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_0_scf():
-    pytest.importorskip("qepy.qepy_cetddft")
+    pytest.importorskip("qepy_cetddft")
     # Run scf
-    driver = Driver(inputfile, comm)
+    driver = Driver(inputfile)
     driver.scf()
     converged = driver.check_convergence()
     energy = driver.get_energy()
@@ -29,9 +23,9 @@ def test_0_scf():
     assert np.isclose(energy, -552.93477389, atol = 1E-6)
 
 def test_1_tddft_continue():
-    pytest.importorskip("qepy.qepy_cetddft")
+    pytest.importorskip("qepy_cetddft")
     # Run TDDFT after scf, without stop
-    driver = Driver(inputfile, comm, task = 'optical', progress = True)
+    driver = Driver(inputfile, task = 'optical', progress = True)
     driver.scf()
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
@@ -40,9 +34,9 @@ def test_1_tddft_continue():
     driver.stop()
 
 def test_2_tddft_iterative():
-    pytest.importorskip("qepy.qepy_cetddft")
+    pytest.importorskip("qepy_cetddft")
     # Run TDDFT
-    driver = Driver(inputfile, comm, task = 'optical', iterative = True)
+    driver = Driver(inputfile, task = 'optical', iterative = True)
     for i in range(5):
         driver.diagonalize()
     dipole = driver.get_dipole_tddft()
@@ -52,8 +46,8 @@ def test_2_tddft_iterative():
     driver.stop()
 
 def test_3_tddft_restart():
-    pytest.importorskip("qepy.qepy_cetddft")
-    driver = Driver(inputfile, comm, task = 'optical', iterative = True)
+    pytest.importorskip("qepy_cetddft")
+    driver = Driver(inputfile, task = 'optical', iterative = True)
     # restart from 5
     driver.tddft_restart(istep=5)
     for i in range(5):
@@ -63,3 +57,9 @@ def test_3_tddft_restart():
         print('dipople:\n', dipole)
     assert np.isclose(dipole[0, 0], 0.56199, atol = 1E-3)
     driver.stop()
+
+
+if __name__ == "__main__":
+    tests = [item for item in globals() if item.startswith('test_')]
+    for func in sorted(tests):
+        globals()[func]()
