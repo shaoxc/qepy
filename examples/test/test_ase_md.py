@@ -10,7 +10,7 @@ def test_md():
     from ase import units
     from ase.md.verlet import VelocityVerlet
 
-    atoms = QEpyCalculator(inputfile = inputfile, from_file = True).atoms
+    atoms = QEpyCalculator(inputfile = inputfile, comm=True, from_file = True).atoms
 
     dyn = VelocityVerlet(atoms, 2 * units.fs)
     # from ase.io.trajectory import Trajectory

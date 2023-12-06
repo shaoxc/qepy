@@ -6,7 +6,7 @@ path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_scf():
-    driver = Driver(inputfile)
+    driver = Driver(inputfile, comm=True)
     driver.scf()
     converged = driver.check_convergence()
     #

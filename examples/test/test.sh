@@ -43,7 +43,7 @@ if [ $parallel ]; then
 	do
 		$mpirun -n 2 python3 -m pytest --with-mpi $f
 		if [ $? -ne 0 ]; then
-			$mpirun -n 2 python3 -m pytest --with-mpi $f
+			$mpirun -n 2 python3  $f
 		fi
 		check_exit $?
 	done

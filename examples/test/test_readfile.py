@@ -6,7 +6,7 @@ path = pathlib.Path(__file__).resolve().parent / 'DATA'
 inputfile = path / 'qe_in.in'
 
 def test_0_scf():
-    driver = Driver(inputfile)
+    driver = Driver(inputfile, comm=True)
     driver.scf()
     converged = driver.check_convergence()
     energy = driver.get_energy()
@@ -15,7 +15,7 @@ def test_0_scf():
     driver.stop()
 
 def test_1_read():
-    driver = Driver(prefix = 'tmp', task = 'nscf')
+    driver = Driver(prefix = 'tmp', task = 'nscf', comm=True)
     energy = driver.get_energy()
     if driver.is_root :
         print('energy :\n', energy)
@@ -23,7 +23,7 @@ def test_1_read():
     driver.stop(what = 'no')
 
 def test_2_read_pw():
-    driver = Driver(inputfile)
+    driver = Driver(inputfile, comm=True)
     driver.pwscf_restart()
     energy = driver.get_energy()
     if driver.is_root :

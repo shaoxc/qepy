@@ -9,7 +9,7 @@ inputfile = path / 'qe_in.in'
 def test_0_scf():
     pytest.importorskip("qepy_cetddft")
     # Run scf
-    driver = Driver(inputfile)
+    driver = Driver(inputfile, comm=True)
     driver.scf()
     converged = driver.check_convergence()
     energy = driver.get_energy()
@@ -25,7 +25,7 @@ def test_0_scf():
 def test_1_tddft_continue():
     pytest.importorskip("qepy_cetddft")
     # Run TDDFT after scf, without stop
-    driver = Driver(inputfile, task = 'optical', progress = True)
+    driver = Driver(inputfile, comm=True, task = 'optical', progress = True)
     driver.scf()
     dipole = driver.get_dipole_tddft()
     if driver.is_root :
@@ -36,7 +36,7 @@ def test_1_tddft_continue():
 def test_2_tddft_iterative():
     pytest.importorskip("qepy_cetddft")
     # Run TDDFT
-    driver = Driver(inputfile, task = 'optical', iterative = True)
+    driver = Driver(inputfile, comm=True, task = 'optical', iterative = True)
     for i in range(5):
         driver.diagonalize()
     dipole = driver.get_dipole_tddft()
@@ -47,7 +47,7 @@ def test_2_tddft_iterative():
 
 def test_3_tddft_restart():
     pytest.importorskip("qepy_cetddft")
-    driver = Driver(inputfile, task = 'optical', iterative = True)
+    driver = Driver(inputfile, comm=True, task = 'optical', iterative = True)
     # restart from 5
     driver.tddft_restart(istep=5)
     for i in range(5):
