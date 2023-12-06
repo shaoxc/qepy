@@ -1,7 +1,6 @@
 stages:
   - build
   - test
-  - qe
   - deploy
 
 variables:
@@ -16,8 +15,9 @@ variables:
 build:
   stage: build
   except:
-    - github
-    - action
+    refs:
+      - github
+      - action
     changes:
       - "*.md"
       - "doc/**/*"
@@ -40,8 +40,9 @@ build:
 test:
   stage: test
   except:
-    - github
-    - action
+    refs:
+      - github
+      - action
     changes:
       - "*.md"
       - "doc/**/*"
@@ -50,11 +51,25 @@ test:
    - cp -r $PUBLIC/* $PACKAGE
    - cd examples/test
    - bash test.sh
+
+test-mpi:
+  stage: test
+  except:
+    refs:
+      - github
+      - action
+    changes:
+      - "*.md"
+      - "doc/**/*"
+  image: $CONTAINER_IMAGE:$QTAG
+  script:
+   - cp -r $PUBLIC/* $PACKAGE
+   - cd examples/test
    - export MPIRUN="mpirun --allow-run-as-root --oversubscribe"
    - bash test.sh p
 
 qe:
-  stage: qe
+  stage: test
   only:
     - docker
   image: $CONTAINER_IMAGE:$QTAG
