@@ -1,19 +1,10 @@
 import numpy as np
 import tempfile
 from functools import wraps
-from importlib import import_module
 import qepy
 import qepy_modules # import the QE MPI first
-from qepy.core import env, qepylibs, qepy_clean_saved
+from qepy.core import env, qepy_clean_saved, QEpyLibs
 from qepy.io import QEInput
-
-class QEpyLib(type):
-    def __getattr__(cls, attr):
-        if attr in qepylibs:
-            p = import_module(attr)
-            return p
-        else :
-            return object.__getattribute__(cls, attr)
 
 def gathered(function):
     @wraps(function)
@@ -38,7 +29,7 @@ def gathered(function):
         return results
     return wrapper
 
-class Driver(metaclass=QEpyLib) :
+class Driver(metaclass=QEpyLibs):
     """
     The driver of QEpy.
 

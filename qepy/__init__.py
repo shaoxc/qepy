@@ -25,8 +25,6 @@ except Exception :
     pass
 # End Fix
 
-from qepy.driver import Driver
-
 __author__ = "Pavanello Research Group"
 __contact__ = "m.pavanello@rutgers.edu"
 __version__ = "7.2.0rc0"
@@ -45,3 +43,8 @@ try:
     __version__ = version("qepy")
 except Exception :
     pass
+
+# compatible with older versions API
+from .core import QEpyMods
+constants = QEpyMods('qepy_modules.constants')
+qepy_common = QEpyMods('qepy_pw.qepy_common')

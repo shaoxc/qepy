@@ -4,6 +4,7 @@ import sys
 from functools import wraps
 import pkgutil
 import operator
+from importlib import import_module
 
 class Logger(type):
     def __new__(cls, name, bases, attrs):
@@ -98,3 +99,41 @@ qepylibs = [
     'qepy_phonon_ph',
     'qepy_utilxlib',
 ]
+
+class QEpyLibs(type):
+    def __getattr__(cls, attr):
+        if attr in qepylibs:
+            p = import_module(attr)
+            return p
+        else :
+            return object.__getattribute__(cls, attr)
+
+class QEpyMods:
+    def __init__(self, qepymod):
+        self.qepymod = qepymod
+
+    def __getattr__(self, attr):
+        if attr == 'qepymod' :
+            return object.__getattribute__(self, attr)
+        else :
+            for _, mod in self.qepymod.items() :
+                if hasattr(mod, attr):
+                    return getattr(mod, attr)
+            else:
+                raise AttributeError(f"There is no '{attr}' in {list(self.qepymod.keys())}")
+
+    @property
+    def qepymod(self):
+        if isinstance(self._qepymod, str):
+            self._qepymod = {self._qepymod: None}
+        elif not isinstance(self._qepymod, dict):
+            self._qepymod = dict.fromkeys(self._qepymod)
+        for k, v in self._qepymod.items():
+            if v is None :
+                mod = import_module(k)
+                self._qepymod[mod.__name__] = mod
+        return self._qepymod
+
+    @qepymod.setter
+    def qepymod(self, value):
+        self._qepymod = value
