@@ -145,7 +145,7 @@ class Driver(metaclass=QEpyLib) :
             self.fileobj = None
         else :
             # self.qepy_pw.qepy_mod.qepy_set_stdout(self.logfile)
-            if isinstance(self.logfile, bool) and self.logfile :
+            if self.logfile is True:
                 self.fileobj_interact = True
                 self.fileobj = tempfile.NamedTemporaryFile('w+')
             elif hasattr(self.logfile, 'write'):
@@ -352,12 +352,12 @@ class Driver(metaclass=QEpyLib) :
             self.qepy_modules.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
             self.qepy_cetddft.qepy_molecule_optical_absorption()
-        elif not self.embed.iterative and self.embed.exttype < 2 :
-            # Use electrons to support hybrid xc functional
-            return self.electrons(original=original)
         elif nscf :
             self.embed.task = 'nscf'
             self.qepy_pw.qepy_electrons_scf(print_level, 0)
+        elif not self.embed.iterative and self.embed.exttype < 2 :
+            # Use electrons to support hybrid xc functional
+            return self.electrons(original=original)
         else :
             self.qepy_pw.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
