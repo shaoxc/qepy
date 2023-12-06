@@ -173,8 +173,11 @@ class Driver(metaclass=QEpyLib) :
     def comm(self, value):
         """Sets the MPI communicator with value given by mpi4py"""
         if value is True:
-            from mpi4py import MPI
-            value = MPI.COMM_WORLD
+            try:
+                from mpi4py import MPI
+                value = MPI.COMM_WORLD
+            except Exception:
+                value = None
         self._comm = value
         if hasattr(self.comm, 'py2f') :
             self.commf = self.comm.py2f()
@@ -202,11 +205,11 @@ class Driver(metaclass=QEpyLib) :
 
     @property
     def qe_is_mpi(self):
-        return self.qepy_pw.qepy_common.get_is_mpi()
+        return bool(self.qepy_pw.qepy_common.get_is_mpi())
 
     @property
     def qe_is_openmp(self):
-        return self.qepy_pw.qepy_common.get_is_openmp()
+        return bool(self.qepy_pw.qepy_common.get_is_openmp())
 
     def restart(self, prog=None, **kwargs):
         """Restart the driver losing all information about the previous driver"""
