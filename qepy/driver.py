@@ -172,8 +172,11 @@ class Driver(metaclass=QEpyLib) :
     @comm.setter
     def comm(self, value):
         """Sets the MPI communicator with value given by mpi4py"""
+        if value is True:
+            from mpi4py import MPI
+            value = MPI.COMM_WORLD
         self._comm = value
-        if self.comm is not None and hasattr(self.comm, 'py2f') :
+        if hasattr(self.comm, 'py2f') :
             self.commf = self.comm.py2f()
         else :
             self.commf = self.comm
