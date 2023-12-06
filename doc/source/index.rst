@@ -21,7 +21,7 @@ Thanks to ...
 
 What's in this code?
 ====================
-Small modifications to QE routines and a quick compilation with Python wrappers. QEpy_ is based on QE-6.5 and is kept up to date with the latest QE stable release.
+Small modifications to QE routines and a quick compilation with Python wrappers. QEpy_ is kept up to date with the latest QE stable release.
 
 .. toctree::
    :maxdepth: 2

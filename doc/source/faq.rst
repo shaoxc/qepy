@@ -8,15 +8,10 @@ Frequently Asked Questions
 Installation
 ============
 
-What is the `oldxml`?
----------------------
+What is the `tddft=yes`?
+------------------------
 
-  The old format (**-D__OLDXML**) has been deprecated since `version 6.4 <https://gitlab.com/QEF/q-e/-/releases/qe-6.4>`__. ``oldxml`` allows you to read the output (wavefunctions, etc) from an old XML file.
-
-How do I know when I need `oldxml`?
------------------------------------
-
-  For newer version QE (>6.3), the XML file name is **data-file-schema.xml**. In contrast, the XML file name is **data-file.xml** for older version QE (some with precompiler flag **-D__OLDXML**)
+  Support real-time TDDFT by using `ce-tddft <https://github.com/dceresoli/ce-tddft>`__. And the real-time TDDFT also support adding/replacing external potential.
 
 Running
 =======
@@ -57,6 +52,12 @@ Signal: Segmentation fault...
 
     python -m pip install mpi4py --no-cache-dir
 
+BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+----------------------------------------------------
+
+Without `mpi4py`, the QEpy still can parallel running, but you cannot control the parallel. If you want to run a different job, you have to restart the script or the jupyter kernel.
+With `mpi4py` to run the parallel QEpy, you can add ``comm`` to ``Driver``, or directly use ``comm.py2f()`` in the function.
+
 
 Bugs
 ====
@@ -79,13 +80,6 @@ Gfortran
 
       Try to add ``-fallow-argument-mismatch`` to the variable **FFLAGS** (e.g. ``FFLAGS='-fPIC -fallow-argument-mismatch'``).
 
-   #. For some versions of the MacOS, maybe you will has error:
-
-      - *Illegal Instruction: 4...*
-
-      Try to add ``-mmacosx-version-min=10.14`` to the **FFLAGS**. 
-
-     
 
    #. For a few versions of BLAS library, will raise error:
 
@@ -133,3 +127,27 @@ OpenMPI
 
 .. _QEpy: https://gitlab.com/shaoxc/qepy
 .. _DFTpy: http://dftpy.rutgers.edu
+
+MacOS
+-----
+
+   #. For some versions of the MacOS, maybe you will has error:
+
+      - *Illegal Instruction: 4...*
+
+      Try to add ``-mmacosx-version-min=10.14`` to the **FFLAGS**. 
+
+     
+   #. *clang: error: no input files...*
+
+      Redefine *CPP* as *CPP=gcc -E* in `make.inc <https://www.quantum-espresso.org/Doc/user_guide_PDF/user_guide.pdf>`__.
+
+   #. *changing install names or rpaths can't be redone for...*
+
+      Add ``-headerpad_max_install_names`` to the **LDFLAGS**.
+
+Abandon
+=======
+  - Read old format XML file
+
+    The old format (**-D__OLDXML**) has been deprecated since `version 6.4 <https://gitlab.com/QEF/q-e/-/releases/qe-6.4>`__. ``oldxml`` allows you to read the output (wavefunctions, etc) from an old XML file. Last version to support it is `qepy==6.5.0`.
