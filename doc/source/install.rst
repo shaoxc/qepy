@@ -54,22 +54,23 @@ or with all features:
       oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
 
 
-Example on Ubuntu 20.04
+Example on Ubuntu 22.04
 +++++++++++++++++++++++
 
 .. code:: shell
 
+
   sudo apt-get update
-  sudo apt-get install --upgrade make git python3-dev python3-pip
-  sudo apt-get install --upgrade gcc gfortran libblas-dev liblapack-dev libopenmpi-dev libfftw3-dev
+  sudo apt-get install --upgrade -y make git python3-dev python3-pip wget
+  sudo apt-get install --upgrade -y gcc gfortran libblas-dev liblapack-dev libopenmpi-dev libfftw3-dev
   git clone --depth=1 -b qe-7.2 https://gitlab.com/QEF/q-e.git
   cd q-e
-  ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC MPIF90=mpif90 --with-scalapack=no BLAS_LIBS='-lblas' LAPACK_LIBS='-llapack'
-  make all -j 4
-  make all -j 4
+  ./configure CFLAGS=-fPIC FFLAGS='-fPIC -fallow-argument-mismatch' try_foxflags=-fPIC MPIF90=mpif90 --with-scalapack=no BLAS_LIBS='-lblas' LAPACK_LIBS='-llapack'
+  make all -j 8
+  make all -j 8
   cd ..
   git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-  qedir=`pwd`/q-e/ python -m pip install -U ./qepy
+  qedir=`pwd`/q-e/ python3 -m pip install -U ./qepy
 
 
 
