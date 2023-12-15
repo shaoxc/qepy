@@ -102,7 +102,8 @@ qepylibs = [
 
 class QEpyLibs(type):
     def __getattr__(cls, attr):
-        if attr in qepylibs:
+        if attr.startswith('qepy_'):
+            # TODO: replace the package by subpackage
             p = import_module(attr)
             return p
         else :

@@ -1,8 +1,8 @@
 import numpy as np
 import qepy
 from qepy.core import qepy_clean_saved
-import qepy_pw
-import qepy_modules
+from qepy import qepy_pw
+from qepy import qepy_modules
 import unittest
 import pathlib
 import shutil

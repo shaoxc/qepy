@@ -2,7 +2,7 @@ import numpy as np
 import tempfile
 from functools import wraps
 import qepy
-import qepy_modules # import the QE MPI first
+import qepy.qepy_modules # import the QE MPI first
 from qepy.core import env, qepy_clean_saved, QEpyLibs
 from qepy.io import QEInput
 

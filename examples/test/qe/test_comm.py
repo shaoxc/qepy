@@ -1,5 +1,5 @@
 import qepy
-import qepy_pw
+from qepy import qepy_pw
 import unittest
 import pathlib
 import shutil

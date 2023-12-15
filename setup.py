@@ -103,7 +103,8 @@ class MakeBuild(build_ext):
                 raise RuntimeError('QEpy[cetddft] installation failed.')
 
         for f in self.build_path.glob('qepy_*/__init__.py'):
-            if env.get('qepydev', 'no').lower() == 'yes' : break
+            # if env.get('qepydev', 'no').lower() == 'yes' : break
+            mods = []
             with open(f, 'r+') as fh :
                 lines = fh.readlines()
                 fh.seek(0)
@@ -111,6 +112,14 @@ class MakeBuild(build_ext):
                     pname = lines[1].split()[1]
                     lines[1] = f"pname = '{pname}'\n" + init_new + lines[1]
                 for line in lines :
+                    if line.startswith('import qepy_'):
+                        m = line.split()[-1]
+                        v = m.partition('.')[2]
+                        mods.append(v + ' = ' + m + '\n')
+                        print('line', line, mods[-1])
+                    fh.write(line)
+                fh.write('\n')
+                for line in mods:
                     fh.write(line)
 
         if not os.path.exists(self.build_lib): os.makedirs(self.build_lib)

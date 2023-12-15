@@ -2,7 +2,6 @@
 import argparse
 from importlib import import_module
 import qepy
-import qepy_modules
 from qepy.qebins import QEBINS
 
 def get_parse(prog = 'pw.x', parser = None):
@@ -16,7 +15,8 @@ def get_args(prog):
     parser = get_parse(prog)
     args, others = parser.parse_known_args()
     args.qecmd = ' '.join(others)
-    qepy_modules.qepy_sys.set_command_line(args.qecmd)
+    if len(args.qecmd)>1:
+        qepy.qepy_modules.qepy_sys.set_command_line(args.qecmd)
     return args
 
 def run(args, prog):

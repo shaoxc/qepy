@@ -1,11 +1,11 @@
 import re
 from importlib import import_module
-from qepy import driver
+import qepy.driver
 
 optional=['qepy_cetddft']
 
 def test_modules():
-    file = driver.__file__
+    file = qepy.driver.__file__
     pattern = re.compile(r'(qepy_.*?\..+?)\(')
 
     attrs = []

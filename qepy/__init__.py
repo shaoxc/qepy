@@ -2,8 +2,10 @@ import sys
 import os
 from pathlib import Path
 from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
+from importlib import import_module
 path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
+__path__.append(str(path))
 # FIX MPI_IN_PLACE and MKL
 if 'mpi4py' in sys.modules :
     if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
@@ -48,3 +50,9 @@ except Exception :
 from .core import QEpyMods
 constants = QEpyMods('qepy_modules.constants')
 qepy_common = QEpyMods('qepy_pw.qepy_common')
+
+# TODO: replace the package by subpackage
+def __getattr__(pname):
+    if pname.startswith('qepy_'):
+        p = import_module(pname)
+        return p
