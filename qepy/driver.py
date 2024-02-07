@@ -927,7 +927,7 @@ class Driver(metaclass=QEpyLibs):
         return symbols
 
     @classmethod
-    def data2field(cls, data, cell = None, grid = None, rank = None):
+    def data2field(cls, data, cell = None, grid = None, rank = None, cplx=False):
         """QE data to DFTpy DirectField.
         If data is None or small temporary array will return np.zeros(1).
         """
@@ -937,7 +937,7 @@ class Driver(metaclass=QEpyLibs):
         if data is None or data.size < 8 : return np.zeros(1)
         #
         if cell is None : cell = cls.get_ions_lattice()
-        if grid is None : grid = DirectGrid(lattice=cell, nr=cls.get_number_of_grid_points(), ecut=cls.get_ecutrho())
+        if grid is None : grid = DirectGrid(lattice=cell, nr=cls.get_number_of_grid_points(), ecut=cls.get_ecutrho(), cplx=cplx)
         if not rank :
             rank = data.shape[1] if data.ndim == 2 else 1
         #
@@ -945,7 +945,7 @@ class Driver(metaclass=QEpyLibs):
             raise ValueError('The size of data not match the grid,\
                     please check the data or set another grid', data.size, grid.nnrR*rank)
         #
-        field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=rank)
+        field = DirectField(grid=grid, data=data.ravel(order='C'), order='F', rank=rank, cplx=cplx)
         return field
 
     @classmethod
