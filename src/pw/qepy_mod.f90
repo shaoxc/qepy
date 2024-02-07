@@ -704,14 +704,21 @@ CONTAINS
 
    SUBROUTINE qepy_sum_band(occupations)
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
+      USE lsda_mod,             ONLY : isk
       !
       REAL(DP),INTENT(in),OPTIONAL :: occupations(:,:)
+      INTEGER :: isk_saved(size(isk))
+      INTEGER :: i
       !
       IF ( present(occupations) ) THEN
+         isk_saved = isk
          IF (ALLOCATED(f_inp)) DEALLOCATE(f_inp)
          ALLOCATE(f_inp(size(occupations,1), size(occupations,2)))
          f_inp(:,:) = occupations(:,:)
          tfixed_occ = .TRUE.
+         DO i = 1, size(isk)
+            isk(i) = i
+         ENDDO
       ELSE
          tfixed_occ = .FALSE.
          IF (ALLOCATED(f_inp)) DEALLOCATE(f_inp)
@@ -719,6 +726,7 @@ CONTAINS
       !
       CALL sum_band()
       !
+      IF ( present(occupations) ) isk = isk_saved
    END SUBROUTINE
 
    SUBROUTINE qepy_get_tau(tau, gather)
@@ -815,6 +823,132 @@ CONTAINS
          ALLOCATE( vnew%kin_g(ngm,nspin) )
       ENDIF
       !
+   END SUBROUTINE
+
+   SUBROUTINE qepy_calc_kinetic_density(tau)
+      USE kinds,               ONLY : DP
+      USE control_flags,       ONLY : gamma_only
+      USE wavefunctions,       ONLY : evc, psic
+      USE wavefunctions_gpum,  ONLY : using_evc
+      USE wvfct_gpum,          ONLY : using_et
+      USE gvect,               ONLY : g
+      USE klist,               ONLY : nks, igk_k, ngk, xk
+      USE lsda_mod,            ONLY : lsda,  nspin
+      USE fft_base,            ONLY : dffts
+      USE io_files,            ONLY : nwordwfc,  iunwfc
+      USE cell_base,           ONLY : tpiba, omega
+      USE wvfct,               ONLY : npwx, nbnd, wg, et
+      USE buffers,             ONLY : get_buffer
+      USE fft_wave,            ONLY : wave_g2r
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(OUT) :: tau(:,:)
+      INTEGER :: npw, ibnd, j, ik, ikk, ispin, nk, i, ir
+      REAL(dp), ALLOCATABLE :: g2kin(:)
+      REAL(dp) :: kplusgi, w1
+      COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
+      !
+      IF( lsda )THEN
+         nk = nks/2
+      ELSE
+         nk = nks
+      ENDIF
+      !
+      tau(:,:) = 0.0_DP
+      ALLOCATE (kplusg_evc(npwx,1))
+      DO ispin = 1, nspin
+         CALL using_evc(0); CALL using_et(0)
+         DO ik = 1, nk
+            ikk = ik + nk*(ispin-1)
+            npw = ngk(ikk)
+            IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
+            IF( nks > 1 ) CALL using_evc(2)
+            DO ibnd = 1, nbnd
+               w1 = wg(ibnd,ikk)
+               DO j = 1, 3
+                  DO i = 1, npw
+                     kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
+                     kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(i,ibnd)
+                  ENDDO
+                  IF (gamma_only) THEN
+                     CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts)
+                  ELSE
+                     CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, igk=igk_k(:,ik) )
+                  ENDIF
+                  !$omp parallel do
+                  DO ir = 1, dffts%nnr
+                     tau(ir, ispin) = tau(ir, ispin) + w1 * ( DBLE( psic(ir) )**2 + &
+                        AIMAG( psic(ir) )**2 )
+                  END DO
+                  !$omp end parallel do
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+      tau = tau / omega
+      DEALLOCATE (kplusg_evc)
+   END SUBROUTINE
+
+   SUBROUTINE qepy_calc_kinetic_density_normal(tau)
+      USE kinds,               ONLY : DP
+      USE control_flags,       ONLY : gamma_only
+      USE wavefunctions,       ONLY : evc, psic
+      USE wavefunctions_gpum,  ONLY : using_evc
+      USE wvfct_gpum,          ONLY : using_et
+      USE gvect,               ONLY : g
+      USE klist,               ONLY : nks, igk_k, ngk, xk
+      USE lsda_mod,            ONLY : lsda,  nspin
+      USE fft_base,            ONLY : dffts
+      USE io_files,            ONLY : nwordwfc,  iunwfc
+      USE cell_base,           ONLY : tpiba2, omega
+      USE wvfct,               ONLY : npwx, nbnd, wg, et
+      USE buffers,             ONLY : get_buffer
+      USE fft_wave,            ONLY : wave_g2r
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(OUT) :: tau(:,:)
+      INTEGER :: npw, ibnd, j, ik, ikk, ispin, nk
+      REAL(dp), ALLOCATABLE :: g2kin(:)
+      REAL(dp) :: atmp
+      COMPLEX(DP), ALLOCATABLE :: psicg(:)
+      COMPLEX(DP), ALLOCATABLE :: evcg(:,:)
+      !
+      IF( lsda )THEN
+         nk = nks/2
+      ELSE
+         nk = nks
+      ENDIF
+      !
+      tau(:,:) = 0.0_DP
+      ALLOCATE ( g2kin(npwx), evcg(npwx,1), psicg(size(psic)))
+      DO ispin = 1, nspin
+         CALL using_evc(0); CALL using_et(0)
+         DO ik = 1, nk
+            ikk = ik + nk*(ispin-1)
+            npw = ngk(ikk)
+            IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
+            IF( nks > 1 ) CALL using_evc(2)
+            g2kin(1:npw) = ( ( xk(1,ikk) + g(1,igk_k(1:npw,ikk)) )**2 + &
+                             ( xk(2,ikk) + g(2,igk_k(1:npw,ikk)) )**2 + &
+                             ( xk(3,ikk) + g(3,igk_k(1:npw,ikk)) )**2 ) * tpiba2
+            DO ibnd = 1, nbnd
+               evcg(1:npw,1) = evc(1:npw,ibnd) * g2kin(1:npw)
+               IF (gamma_only) THEN
+                  CALL wave_g2r(evc(1:npw,ibnd:ibnd), psic, dffts )
+                  CALL wave_g2r(evcg(1:npw, 1:1), psicg, dffts)
+               ELSE
+                  CALL wave_g2r(evc(1:npw,ibnd:ibnd), psic, dffts, igk=igk_k(:,ikk) )
+                  CALL wave_g2r(evcg(1:npw, 1:1), psicg, dffts, igk=igk_k(:,ikk) )
+               ENDIF
+               DO j = 1, dffts%nnr
+                  atmp = DBLE(conjg(psic(j))*psicg(j)) * wg(ibnd,ikk)
+                  tau(j,ispin) = tau(j,ispin) + atmp
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+      tau = tau / omega
+      DEALLOCATE ( g2kin, evcg, psicg )
    END SUBROUTINE
 
 END MODULE qepy_mod

@@ -598,6 +598,7 @@
          CALL mp_sum( extene,  intra_bgrp_comm )
 #endif
       ENDIF
+      IF ( nkb < 1 ) enl = 0.0_DP
       !
       deband_hwf = qepy_delta_e(vrs)
       !
