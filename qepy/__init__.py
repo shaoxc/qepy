@@ -7,16 +7,15 @@ path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
 __path__.append(str(path))
 # FIX MPI_IN_PLACE and MKL
-if 'mpi4py' in sys.modules :
-    if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
-        mpilib = util._get_soname(util._findLib_ld('mpi'))
-    else :
-        mpilib = None
-    mpilib = mpilib or util.find_library('mpi') or util.find_library('mpifort')
-    try:
-        CDLL(mpilib, RTLD_LOCAL | RTLD_GLOBAL)
-    except Exception :
-        pass
+if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
+    mpilib = util._get_soname(util._findLib_ld('mpi'))
+else :
+    mpilib = None
+mpilib = util.find_library('mpifort') or mpilib or util.find_library('mpi')
+try:
+    CDLL(mpilib, RTLD_LOCAL | RTLD_GLOBAL)
+except Exception :
+    pass
 try:
     if hasattr(util, '_findLib_ld'):
         mkllib = os.path.basename(util._findLib_ld('mkl_rt'))
