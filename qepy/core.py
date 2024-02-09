@@ -61,7 +61,10 @@ def qepy_clean_saved(module=None):
 
 
 env = {
+    'LOGFILE' : None, # The screen output of QE.
     'STDOUT' : None,  # file descriptor of output
+    'STDIN' : None,  # file descriptor of input
+    'STDIN_SAVE' : None,  # The saved screen input of QE.
     'DRIVER' : None, # save the instance of driver class
 }
 

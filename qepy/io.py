@@ -1,5 +1,8 @@
 from collections import OrderedDict
 import numpy as np
+import tempfile
+import os
+from .core import env
 
 class QEInput(object):
     """Input for QE
@@ -69,6 +72,10 @@ class QEInput(object):
         else :
             fh = open(filename, 'w')
         #
+        if prog in ['list', 'lambda']:
+            self.write_list(fh, qe_options=qe_options, **kwargs)
+            return
+        #
         options = QEOPTIONS.get(prog, {}).copy()
         options.update(qe_options)
         #
@@ -76,6 +83,16 @@ class QEInput(object):
             if key.startswith('&'):
                 fh.write(key.upper() + '\n')
                 for k, v in value.items() :
+                    if isinstance(v, str):
+                        if v.startswith('"') or v.startswith("'"):
+                            pass
+                        else:
+                            v = "'" + v + "'"
+                    elif isinstance(v, bool):
+                        if v :
+                            v = '.true.'
+                        else:
+                            v = '.false.'
                     fh.write('   ' + k + ' = ' + str(v) + '\n')
                 fh.write('/\n\n')
             else :
@@ -84,8 +101,23 @@ class QEInput(object):
                 key = ' '.join(l)
                 fh.write(key + '\n')
                 for v in value :
+                    if isinstance(v, (list, tuple, set)):
+                        v = ' '.join(map(str, v))
                     fh.write(str(v) + '\n')
                 fh.write('\n')
+
+        if not hasattr(filename, 'write'): fh.close()
+
+    @staticmethod
+    def write_list(filename, qe_options=[], **kwargs):
+        if hasattr(filename, 'write'):
+            fh = filename
+        else :
+            fh = open(filename, 'w')
+        for v in qe_options:
+            if isinstance(v, (list, tuple, set)):
+                v = ' '.join(map(str, v))
+            fh.write(str(v) + '\n')
 
         if not hasattr(filename, 'write'): fh.close()
 
@@ -398,3 +430,64 @@ class QEOutput(object):
     @classmethod
     def get_stress(cls, fh = None, **kwargs):
         return cls.get_stress_all(fh=fh, **kwargs)['total']
+
+
+def set_logfile(logfile=None):
+    """_initialize the QE output."""
+    if hasattr(env['STDOUT'], 'close'): env['STDOUT'].close()
+    if logfile in [None, False]:
+        fileobj = None
+    else :
+        if logfile is True:
+            fileobj = tempfile.NamedTemporaryFile('w+')
+        elif hasattr(logfile, 'write'):
+            fileobj = logfile
+        else :
+            fileobj = open(logfile, 'w+')
+    env['LOGFILE'] = logfile
+    env['STDOUT'] = fileobj
+    return fileobj
+
+def get_output():
+    """Return the output of QE.
+
+    It depends on the `logfile` of `set_logfile`.
+
+      - None : return None.
+      - str  : return all outputs.
+      - True : It will return the output from last time.
+    """
+    fileobj = env['STDOUT']
+    logfile = env['LOGFILE']
+    if fileobj is not None :
+        if logfile is True :
+            fileobj.flush()
+            fileobj.seek(0)
+            lines = fileobj.readlines()
+            fileobj.close()
+            #
+            set_logfile(logfile=True)
+            #
+            return lines
+        else :
+            fileobj.seek(0)
+            return fileobj.readlines()
+    else :
+        return None
+
+def set_input(inputfile=None):
+    if hasattr(env['STDIN'], 'close'): env['STDIN'].close()
+    if inputfile :
+        if hasattr(inputfile, 'read'):
+            fileobj = inputfile
+        else :
+            fileobj = open(inputfile, 'r')
+        stdin = os.dup(0)
+        os.dup2(fileobj.fileno(), 0)
+        env['STDIN'] = fileobj
+        env['STDIN_SAVE'] = stdin
+    else:
+        stdin = env['STDIN_SAVE']
+        if stdin is not None :
+            os.dup2(stdin, 0)
+            os.close(stdin)
