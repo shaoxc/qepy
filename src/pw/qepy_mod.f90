@@ -826,27 +826,33 @@ CONTAINS
    END SUBROUTINE
 
    SUBROUTINE qepy_calc_kinetic_density(tau)
-      USE kinds,               ONLY : DP
-      USE control_flags,       ONLY : gamma_only
-      USE wavefunctions,       ONLY : evc, psic
-      USE wavefunctions_gpum,  ONLY : using_evc
-      USE wvfct_gpum,          ONLY : using_et
-      USE gvect,               ONLY : g
-      USE klist,               ONLY : nks, igk_k, ngk, xk
-      USE lsda_mod,            ONLY : lsda,  nspin
-      USE fft_base,            ONLY : dffts
-      USE io_files,            ONLY : nwordwfc,  iunwfc
-      USE cell_base,           ONLY : tpiba, omega
-      USE wvfct,               ONLY : npwx, nbnd, wg, et
-      USE buffers,             ONLY : get_buffer
-      USE fft_wave,            ONLY : wave_g2r
+      USE kinds,                ONLY : DP
+      USE control_flags,        ONLY : gamma_only
+      USE wavefunctions,        ONLY : evc, psic
+      USE wavefunctions_gpum,   ONLY : using_evc
+      USE wvfct_gpum,           ONLY : using_et
+      USE gvect,                ONLY : g, ngm
+      USE klist,                ONLY : nks, igk_k, ngk, xk
+      USE lsda_mod,             ONLY : lsda,  nspin
+      USE fft_base,             ONLY : dffts, dfftp
+      USE mp_pools,             ONLY : inter_pool_comm
+      USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm
+      use scf,                  ONLY : rho
+      USE symme,                ONLY : sym_rho
+      USE fft_rho,              ONLY : rho_g2r, rho_r2g
+      USE mp,                   ONLY : mp_sum
+      USE io_files,             ONLY : nwordwfc,  iunwfc
+      USE cell_base,            ONLY : tpiba, omega
+      USE wvfct,                ONLY : npwx, nbnd, wg, et
+      USE buffers,              ONLY : get_buffer
+      USE fft_wave,             ONLY : wave_g2r
       !
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: tau(:,:)
       INTEGER :: npw, ibnd, j, ik, ikk, ispin, nk, i, ir
       REAL(dp), ALLOCATABLE :: g2kin(:)
       REAL(dp) :: kplusgi, w1
-      COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
+      COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:), kin_g(:,:)
       !
       IF( lsda )THEN
          nk = nks/2
@@ -856,6 +862,7 @@ CONTAINS
       !
       tau(:,:) = 0.0_DP
       ALLOCATE (kplusg_evc(npwx,1))
+      ALLOCATE (kin_g(ngm,nspin))
       DO ispin = 1, nspin
          CALL using_evc(0); CALL using_et(0)
          DO ik = 1, nk
@@ -886,24 +893,40 @@ CONTAINS
          ENDDO
       ENDDO
       tau = tau / omega
-      DEALLOCATE (kplusg_evc)
+      ! symmetrize
+      CALL mp_sum( tau, inter_pool_comm )
+      CALL mp_sum( tau, inter_bgrp_comm )
+      !
+      CALL rho_r2g( dffts, tau, kin_g )
+      !
+      IF (.NOT. gamma_only) CALL sym_rho( nspin, kin_g )
+      !
+      CALL rho_g2r( dfftp, kin_g, tau )
+      !
+      DEALLOCATE (kplusg_evc, kin_g)
    END SUBROUTINE
 
    SUBROUTINE qepy_calc_kinetic_density_normal(tau)
-      USE kinds,               ONLY : DP
-      USE control_flags,       ONLY : gamma_only
-      USE wavefunctions,       ONLY : evc, psic
-      USE wavefunctions_gpum,  ONLY : using_evc
-      USE wvfct_gpum,          ONLY : using_et
-      USE gvect,               ONLY : g
-      USE klist,               ONLY : nks, igk_k, ngk, xk
-      USE lsda_mod,            ONLY : lsda,  nspin
-      USE fft_base,            ONLY : dffts
-      USE io_files,            ONLY : nwordwfc,  iunwfc
-      USE cell_base,           ONLY : tpiba2, omega
-      USE wvfct,               ONLY : npwx, nbnd, wg, et
-      USE buffers,             ONLY : get_buffer
-      USE fft_wave,            ONLY : wave_g2r
+      USE kinds,                ONLY : DP
+      USE control_flags,        ONLY : gamma_only
+      USE wavefunctions,        ONLY : evc, psic
+      USE wavefunctions_gpum,   ONLY : using_evc
+      USE wvfct_gpum,           ONLY : using_et
+      USE gvect,                ONLY : g, ngm
+      USE klist,                ONLY : nks, igk_k, ngk, xk
+      USE lsda_mod,             ONLY : lsda,  nspin
+      USE fft_base,             ONLY : dffts, dfftp
+      USE mp_pools,             ONLY : inter_pool_comm
+      USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm
+      use scf,                  ONLY : rho
+      USE symme,                ONLY : sym_rho
+      USE fft_rho,              ONLY : rho_g2r, rho_r2g
+      USE mp,                   ONLY : mp_sum
+      USE io_files,             ONLY : nwordwfc,  iunwfc
+      USE cell_base,            ONLY : tpiba2, omega
+      USE wvfct,                ONLY : npwx, nbnd, wg, et
+      USE buffers,              ONLY : get_buffer
+      USE fft_wave,             ONLY : wave_g2r
       !
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: tau(:,:)
@@ -911,7 +934,7 @@ CONTAINS
       REAL(dp), ALLOCATABLE :: g2kin(:)
       REAL(dp) :: atmp
       COMPLEX(DP), ALLOCATABLE :: psicg(:)
-      COMPLEX(DP), ALLOCATABLE :: evcg(:,:)
+      COMPLEX(DP), ALLOCATABLE :: evcg(:,:), kin_g(:,:)
       !
       IF( lsda )THEN
          nk = nks/2
@@ -921,6 +944,7 @@ CONTAINS
       !
       tau(:,:) = 0.0_DP
       ALLOCATE ( g2kin(npwx), evcg(npwx,1), psicg(size(psic)))
+      ALLOCATE (kin_g(ngm,nspin))
       DO ispin = 1, nspin
          CALL using_evc(0); CALL using_et(0)
          DO ik = 1, nk
@@ -948,7 +972,18 @@ CONTAINS
          ENDDO
       ENDDO
       tau = tau / omega
+      ! symmetrize
+      CALL mp_sum( tau, inter_pool_comm )
+      CALL mp_sum( tau, inter_bgrp_comm )
+      !
+      CALL rho_r2g( dffts, tau, kin_g )
+      !
+      IF (.NOT. gamma_only) CALL sym_rho( nspin, kin_g )
+      !
+      CALL rho_g2r( dfftp, kin_g, tau )
+      !
       DEALLOCATE ( g2kin, evcg, psicg )
+      DEALLOCATE ( kin_g )
    END SUBROUTINE
 
 END MODULE qepy_mod
