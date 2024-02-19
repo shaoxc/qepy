@@ -4,12 +4,12 @@ on:
   push:
     tags:
       - 'v*'
-      inputs:
   workflow_dispatch:
-    ref:
-      description: 'Branch or Reference'
-      required: false
-      default: 'github'
+    inputs:
+      ref:
+        description: 'Branch or Reference'
+        required: false
+        default: 'github'
 
 jobs:
   publish:
