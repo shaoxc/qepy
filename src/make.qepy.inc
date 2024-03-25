@@ -41,7 +41,7 @@ F2PY = CFLAGS='$(CFLAGS)' ${PYTHON} ../f90wrap2py.py \
 				--f90flags='${F2FLAGS}'
 
 export LDFLAGS +=-Wl,-rpath,'$$ORIGIN/:$$ORIGIN/qepy'
-$(info $(LDFLAGS))
+#$(info $(LDFLAGS))
 
 WRAP_OBJS = $(QE_OBJS) $(QEPY_OBJS)
 
@@ -94,9 +94,10 @@ clean:
 	-rm -f ${F90WRAP_FILES} ${WRAP_FPP_FILES}
 	-rm -f *.o *.mod
 	-rm -rf src.* .libs .f2py_f2cmap lib${PNAME}.*so
-	-rm -rf ../${PNAME} ../lib${PNAME}.*so 
+	-rm -rf ${PNAME} ../${PNAME} ../lib${PNAME}.*so 
 
 all : ${F90WRAP_FILES}
 	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+	${PYTHON} ../fix_init_.py $(PNAME)/__init__.py
 	cp lib$(PNAME).so ../lib$(PNAME).so
-	if test -d $(PNAME); then mv $(PNAME) ../; fi
+	if test -d $(PNAME); then cp -r $(PNAME) ../; fi

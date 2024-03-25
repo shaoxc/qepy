@@ -48,7 +48,10 @@ stop_run.o \
 stress.o \
 sum_band.o \
 update_pot.o \
-v_of_rho.o
+v_of_rho.o \
+symm_base.o \
+symme.o \
+symmetrize_at.o
 
 LIB_OBJS_TEMP = Coul_cut_2D.o \
 a2fmod.o \

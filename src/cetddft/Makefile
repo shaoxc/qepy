@@ -27,7 +27,7 @@ LIB_OBJS_TEMP =
 vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QESRC_DIR)
 
 QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
-$(info $(QEPY_OBJS))
+#$(info $(QEPY_OBJS))
 LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
 LIB_OBJS := $(addprefix $(QESRC_DIR)/,$(LIB_OBJS_TEMP))
 

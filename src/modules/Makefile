@@ -29,7 +29,11 @@ mp_world.o \
 qexsd.o \
 read_input.o \
 recvec.o \
-wavefunctions.o
+wavefunctions.o \
+space_group.o \
+wyckoff.o \
+wypos.o \
+latgen.o
 
 LIB_OBJS_TEMP = additional_kpoints.o \
 allocate_fft_3drism.o \
