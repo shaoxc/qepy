@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
 from importlib import import_module
+from importlib.metadata import version # python >= 3.8
 path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
 __path__.append(str(path))
@@ -30,15 +31,7 @@ __author__ = "Pavanello Research Group"
 __contact__ = "m.pavanello@rutgers.edu"
 __version__ = "7.2.0rc0"
 __license__ = "GPL"
-__date__ = "2023-11-30"
-
-try:
-    from importlib.metadata import version # python >= 3.8
-except Exception :
-    try:
-        from importlib_metadata import version
-    except Exception :
-        pass
+__date__ = "2024-02-19"
 
 try:
     __version__ = version("qepy")

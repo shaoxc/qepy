@@ -129,9 +129,7 @@ if release :
 else :
     VERSION = {
             'use_scm_version': {'version_scheme': 'post-release'},
-            'setup_requires': [
-                'setuptools_scm',
-                'importlib-metadata>=0.12;python_version<"3.8"'],
+            'setup_requires': ['setuptools_scm'],
             }
 
 if __name__ == "__main__":
