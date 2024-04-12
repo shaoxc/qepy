@@ -1,9 +1,7 @@
-include ../make.qepy.inc
-include ../make.depend
 QESRC_DIR = Modules
 PNAME = qepy_modules
-QEPY_LIBS = -L../ -lqepy_upflib -lqepy_xclib -lqepy_fftxlib -lqepy_laxlib -lqepy_utilxlib -lqepy_mbd
-QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) -I../upflib -I$(QEDIR)/upflib -I../xclib -I$(QEDIR)/XClib -I../fftxlib -I$(QEDIR)/FFTXlib/src -I../laxlib -I$(QEDIR)/LAXlib -I../utilxlib -I$(QEDIR)/UtilXlib -I../mbd -I$(QEDIR)/external/mbd/src
+QEPY_LIBS = -L$(BUILDDIR) -lqepy_upflib -lqepy_xclib -lqepy_fftxlib -lqepy_laxlib -lqepy_utilxlib -lqepy_mbd
+QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) -I$(BUILDDIR)/upflib -I$(QEDIR)/upflib -I$(BUILDDIR)/xclib -I$(QEDIR)/XClib -I$(BUILDDIR)/fftxlib -I$(QEDIR)/FFTXlib/src -I$(BUILDDIR)/laxlib -I$(QEDIR)/LAXlib -I$(BUILDDIR)/utilxlib -I$(QEDIR)/UtilXlib -I$(BUILDDIR)/mbd -I$(QEDIR)/external/mbd/src
 
 QEPY_OBJS = qepy_sys.o
 
@@ -242,17 +240,5 @@ xml_io_rism.o \
 xsf.o \
 zvscal.o
 
-vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QEDIR)/$(QESRC_DIR)
-
-QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
-LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
-LIB_OBJS := $(addprefix $(QEDIR)/$(QESRC_DIR)/,$(LIB_OBJS_TEMP))
-
-ifeq ($(strip $(WRAP_OBJS)),)
-QEPY_OBJS = qepy_fake.o
-endif
-
-.PHONY: all
-
-${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 
+include ../make.qepy.inc
+include ../make.depend

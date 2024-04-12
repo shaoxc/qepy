@@ -37,12 +37,13 @@ class MakeBuild(build_ext):
         self.build_path = Path(self.build_temp)
         env['PYTHON'] = sys.executable
 
-        try:
-            import multiprocessing as mp
-            nprocs = max(mp.cpu_count()//2, 2)
-        except ImportError:
-            nprocs = 4
-        build_args += ' -j ' + str(nprocs)
+        if env.get('qepybackend', '').lower() != 'meson' :
+            try:
+                import multiprocessing as mp
+                nprocs = max(mp.cpu_count()//2, 2)
+            except ImportError:
+                nprocs = 4
+            build_args += ' -j ' + str(nprocs)
 
         if env.get('qepydev', 'no').lower() == 'yes' :
             print("only remove *.so files", flush = True)

@@ -1,9 +1,7 @@
-include ../make.qepy.inc
-include ../make.depend
 QESRC_DIR = GWW/bse
 PNAME = qepy_gww_bse
-QEPY_LIBS = -L../ -lqepy_gww_gww -lqepy_gww_minpack $(MODS_PW)
-QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) -I../gww_gww -I$(QEDIR)/GWW/gww -I../gww_minpack -I$(QEDIR)/GWW/minpack $(INCS_MODS_PW) $(INCS_MODS_PW_QE) -I../gww_pw4gww -I$(QEDIR)/GWW/pw4gww
+QEPY_LIBS = -L$(BUILDDIR) -lqepy_gww_gww -lqepy_gww_minpack $(MODS_PW)
+QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) -I$(BUILDDIR)/gww_gww -I$(QEDIR)/GWW/gww -I$(BUILDDIR)/gww_minpack -I$(QEDIR)/GWW/minpack $(INCS_MODS_PW) $(INCS_MODS_PW_QE) -I$(BUILDDIR)/gww_pw4gww -I$(QEDIR)/GWW/pw4gww
 
 QEPY_OBJS = 
 
@@ -48,17 +46,5 @@ write_wannier_matrix.o \
 ../pw4gww/stop_pp.o \
 ../pw4gww/mp_wave_parallel.o
 
-vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QEDIR)/$(QESRC_DIR)
-
-QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
-LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
-LIB_OBJS := $(addprefix $(QEDIR)/$(QESRC_DIR)/,$(LIB_OBJS_TEMP))
-
-ifeq ($(strip $(WRAP_OBJS)),)
-QEPY_OBJS = qepy_fake.o
-endif
-
-.PHONY: all
-
-${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 
+include ../make.qepy.inc
+include ../make.depend
