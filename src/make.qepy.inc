@@ -12,8 +12,11 @@ BUILDDIR = $(dir $(abspath $(filter %make.qepy.inc,$(MAKEFILE_LIST))))
 SRC_DIR  = ./
 
 QEDIR = $(or ${qedir}, ../../../)
+qepybackend ?= meson
+#
 include ${QEDIR}/make.inc
 PYTHON := $(or ${PYTHON}, python3)
+PYTHONPATH := $(shell ${PYTHON} -c 'import sys; print(sys.executable)')
 UNAME = $(shell uname)
 ifeq (${UNAME}, Darwin)
    SEDI := gsed -i
@@ -33,13 +36,6 @@ else ifneq ($(findstring ifx, ${F90}),)
    FCOMPILER=intelem
 else
    FCOMPILER=gnu95
-endif
-
-#fix meson c_linker with MPI
-ifneq ($(findstring mpi, ${MPIF90}),)
-ifeq ($(findstring mpi, ${CC}),)
-   CC := mpi${CC}
-endif
 endif
 
 ifneq ($(findstring -std, ${CFLAGS}), -std)
@@ -95,8 +91,9 @@ INCS_MODS_PW_QE = -I$(QEDIR)/PW/src -I$(QEDIR)/KS_Solvers -I$(QEDIR)/dft-d3 $(IN
 
 INCS_MODS_LR_QE = -I$(QEDIR)/LR_Modules $(INCS_MODS_PW_QE)
 
+QEPYSRC = ${BUILDDIR}/fix/ ${BUILDDIR}/cmdx/ $(SRC_DIR)
 
-vpath %.f90 ${BUILDDIR}/fix/ ${BUILDDIR}/cmdx/ $(SRC_DIR) $(QEDIR)/$(QESRC_DIR)
+vpath %.f90 ${QEPYSRC} $(QEDIR)/$(QESRC_DIR)
 
 QEPY_OBJS_NEW = ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
 LIB_OBJS = $(addprefix $(QEDIR)/$(QESRC_DIR)/, $(filter-out ${QEPY_OBJS_NEW}, ${LIB_OBJS_TEMP}))
@@ -110,37 +107,44 @@ QEPY_OBJS_NEW = qepy_fake.o
 endif
 
 MESONTMP = _build_dir
-QEPY_OBJS_MESON = $(addprefix ../, $(QEPY_OBJS_NEW))
+#QEPY_OBJS_MESON = $(addprefix ../, $(QEPY_OBJS_NEW))
+QEPY_FIELS = $(QEPY_OBJS_NEW:%.o=%.f90)
 
-ifeq ($(qepybackend), meson)
-lib${PNAME}module.c : $(QEPY_OBJS_NEW)
-	${PYTHON} -m f90wrap --f2py-f90wrap -m lib${PNAME} ${F90WRAP_FILES} --lower
+ifneq ($(qepybackend), meson)
+build : ${PNAME} $(QEPY_OBJS_NEW)
+	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS_NEW) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+else
+lib${PNAME}module.c : ${PNAME}
+	@${PYTHON} -m f90wrap --f2py-f90wrap -m lib${PNAME} ${F90WRAP_FILES} --lower
 
 build : lib${PNAME}module.c
 	@cp ../meson.build.template meson.build
-	${SEDI} "s/\$${name}/'lib${PNAME}'/" meson.build
-	${SEDI} "s@\$${qepy_link_str}@'$(QEPY_OBJS_MESON) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}'@" meson.build
-	meson setup --wipe ${MESONTMP} -Dfortran_args='${F2FLAGS}' -Dc_args='${CFLAGS}' -Dc_link_args='${LDFLAGS}'
+	@${SEDI} "s%\$${pythonpath}%'${PYTHONPATH}'%" meson.build
+	@${SEDI} "s%\$${name}%'lib${PNAME}'%" meson.build
+	@#${SEDI} "s%\$${qepy_link_str}%'$(QEPY_OBJS_MESON) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}'%" meson.build
+	@${SEDI} "s%\$${qepy_link_str}%'$(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}'%" meson.build
+	@${SEDI} "s%\$${source_str}%'$(QEPY_FIELS)'%" meson.build
+	@${SEDI} "s%\$${vpath}%'$(QEPYSRC)'%" meson.build
+	meson setup --wipe ${MESONTMP} -Dfortran_args='${F2FLAGS}' -Dc_args='${CFLAGS}' -Dc_link_args='${LDFLAGS}' -Db_lundef=false
 	meson compile -C ${MESONTMP} --verbose -j 0
 	@mv ${MESONTMP}/lib${PNAME}.*so lib$(PNAME).so
-else
-build : $(QEPY_OBJS_NEW)
-	${F2PY} -m lib${PNAME} ${F90WRAP_FILES} $(QEPY_OBJS_NEW) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}
+	@find _build_dir -name '*.mod' -exec cp {} . \;
 endif
 
-
-${PNAME} : ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(BUILDDIR)/kind_map.json -P 
-
+${PNAME} : ${WRAP_FPP_FILES}
+	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(BUILDDIR)/kind_map.json -P 
 
 clean:
-	-rm -f ${F90WRAP_FILES} ${WRAP_FPP_FILES}
-	-rm -f *.o *.mod
-	-rm -rf src.* .libs .f2py_f2cmap lib${PNAME}*
-	-rm -rf ${PNAME} ${BUILDDIR}/${PNAME} ${BUILDDIR}/lib${PNAME}.*so 
-	-rm -rf ${MESONTMP} 
+	@-rm -f ${F90WRAP_FILES} ${WRAP_FPP_FILES}
+	@-rm -f *.o *.mod
+	@-rm -rf src.* .libs .f2py_f2cmap lib${PNAME}*
+	@-rm -rf ${PNAME} ${BUILDDIR}/${PNAME} ${BUILDDIR}/lib${PNAME}.*
+	@-rm -rf ${MESONTMP} 
 
-all : ${PNAME} build
+all : build
 	${PYTHON} ${BUILDDIR}/fix_init_.py $(PNAME)/__init__.py
-	cp lib$(PNAME).so ${BUILDDIR}/lib$(PNAME).so
+	@if test '${UNAME}' = 'Darwin'; then \
+		install_name_tool -id '@loader_path/lib${PNAME}.so' lib${PNAME}.so; \
+	fi
+	cp lib$(PNAME).so ${BUILDDIR}/
 	if test -d $(PNAME); then cp -r $(PNAME) ${BUILDDIR}/; fi

@@ -52,8 +52,16 @@ endif
 add_project_arguments(_intel_cflags, language: ['c', 'cpp'])
 add_project_arguments(_intel_fflags, language: 'fortran')
 ##<-- 
-##
-py = import('python').find_installation(pure: false)
+
+##--> update variables
+pythonpath = ${pythonpath}
+name = ${name}
+qepy_link_str = ${qepy_link_str}
+source_str = ${source_str}
+vpath = ${vpath}
+##<--
+#
+py = import('python').find_installation(pythonpath, pure: false)
 py_dep = py.dependency()
 
 incdir_numpy = run_command(py,
@@ -69,9 +77,6 @@ incdir_f2py = run_command(py,
 fortranobject_c = incdir_f2py / 'fortranobject.c'
 quadmath_dep = ff.find_library('quadmath', required: false)
 
-name = ${name}
-qepy_link_str = ${qepy_link_str}
-#
 source = files([name+'module.c', fortranobject_c])
 source += files(run_command('sh', '-c', 'ls f90wrap_*.f90', check:true).stdout().strip().split('\n'))
 link_args = []
@@ -81,16 +86,28 @@ foreach a : qepy_link_str.split()
   link_args += a
 endforeach
 
+fs = import('fs')
+foreach f : source_str.split()
+  foreach path : vpath.split()
+    if fs.is_file(path / f)
+      source += path /f
+    endif
+  endforeach
+endforeach
+
 qepy_incs_np = include_directories(incdir_numpy, incdir_f2py, qepy_incs_dirs)
 
 # additional_flags
 
-py.extension_module(name,
+build_target(name,
   source,
   include_directories: qepy_incs_np,
   dependencies : [py_dep, quadmath_dep],
   link_args : link_args,
   install : true,
   gnu_symbol_visibility : 'default',
-  #sources : [qepy_objs, lib_objs],
+  link_language : 'fortran',
+  name_prefix : '',
+  name_suffix : 'so',
+  target_type : 'shared_library',
   )

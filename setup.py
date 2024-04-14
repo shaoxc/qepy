@@ -37,13 +37,13 @@ class MakeBuild(build_ext):
         self.build_path = Path(self.build_temp)
         env['PYTHON'] = sys.executable
 
-        if env.get('qepybackend', '').lower() != 'meson' :
-            try:
-                import multiprocessing as mp
-                nprocs = max(mp.cpu_count()//2, 2)
-            except ImportError:
-                nprocs = 4
-            build_args += ' -j ' + str(nprocs)
+        # if env.get('qepybackend', '').lower() != 'meson' :
+        try:
+            import multiprocessing as mp
+            nprocs = max(mp.cpu_count()//2, 2)
+        except ImportError:
+            nprocs = 4
+        build_args += ' -j ' + str(nprocs)
 
         if env.get('qepydev', 'no').lower() == 'yes' :
             print("only remove *.so files", flush = True)
@@ -111,10 +111,6 @@ class MakeBuild(build_ext):
                 target = qepylibs + os.sep + f.name
                 if Path(target).is_dir(): shutil.rmtree(target)
                 shutil.copytree(f, target)
-        # fix macos system
-        if sys.platform == 'darwin':
-            fix_macos_lib = 'for f in libqepy*.so; do for f2 in libqepy*.so; do install_name_tool -change ./$f2 @loader_path/$f2 $f; done; done'
-            subprocess.check_call(fix_macos_lib, cwd=qepylibs, env = env, shell=True)
 
 
 extensions_qepy = Extension(
@@ -147,7 +143,9 @@ if __name__ == "__main__":
             python_requires = '>=3.8',
             install_requires=[
                 'setuptools',
-                'numpy>=1.18.0',
+                'numpy>=1.19.2',
+                'meson>=0.63.3',
+                'ninja>=1.8.2',
                 'f90wrap@git+https://github.com/jameskermode/f90wrap',
                 ],
             extras_require={
@@ -167,6 +165,7 @@ if __name__ == "__main__":
                 'Programming Language :: Python :: 3.9',
                 'Programming Language :: Python :: 3.10',
                 'Programming Language :: Python :: 3.11',
+                'Programming Language :: Python :: 3.12',
                 'Topic :: Scientific/Engineering :: Chemistry',
                 'Topic :: Scientific/Engineering :: Physics'
                 ],
