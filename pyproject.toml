@@ -5,7 +5,8 @@ requires = [
 	'setuptools',
 	'wheel',
 	'f90wrap@git+https://github.com/jameskermode/f90wrap',
-	"oldest-supported-numpy; python_version>'3.7'",
+	'oldest-supported-numpy; python_version>="3.8"',
+	'setuptools>=67.0; python_version>="3.12"',
 	#"meson-python>=0.13.0",
 ]
 build-backend = 'setuptools.build_meta'
