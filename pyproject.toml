@@ -5,6 +5,7 @@ requires = [
 	'wheel',
 	'f90wrap@git+https://github.com/jameskermode/f90wrap',
 	'oldest-supported-numpy; python_version>="3.8"',
+	'setuptools; python_version<"3.12"',
 	'setuptools>=60.0; python_version>="3.12"',
 	#"meson-python>=0.13.0",
 ]
