@@ -54,14 +54,14 @@ add_project_arguments(_intel_fflags, language: 'fortran')
 ##<-- 
 
 ##--> update variables
-pythonpath = ${pythonpath}
+pythonexec = ${pythonexec}
 name = ${name}
 qepy_link_str = ${qepy_link_str}
 source_str = ${source_str}
 vpath = ${vpath}
 ##<--
 #
-py = import('python').find_installation(pythonpath, pure: false)
+py = import('python').find_installation(pythonexec, pure: false)
 py_dep = py.dependency()
 
 incdir_numpy = run_command(py,

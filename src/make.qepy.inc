@@ -16,7 +16,7 @@ qepybackend ?= meson
 #
 include ${QEDIR}/make.inc
 PYTHON := $(or ${PYTHON}, python3)
-PYTHONPATH := $(shell ${PYTHON} -c 'import sys; print(sys.executable)')
+PYTHONEXEC := $(shell ${PYTHON} -c 'import sys; print(sys.executable)')
 UNAME = $(shell uname)
 ifeq (${UNAME}, Darwin)
    SEDI := gsed -i
@@ -119,7 +119,7 @@ lib${PNAME}module.c : ${PNAME}
 
 build : lib${PNAME}module.c
 	@cp ../meson.build.template meson.build
-	@${SEDI} "s%\$${pythonpath}%'${PYTHONPATH}'%" meson.build
+	@${SEDI} "s%\$${pythonexec}%'${PYTHONEXEC}'%" meson.build
 	@${SEDI} "s%\$${name}%'lib${PNAME}'%" meson.build
 	@#${SEDI} "s%\$${qepy_link_str}%'$(QEPY_OBJS_MESON) $(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}'%" meson.build
 	@${SEDI} "s%\$${qepy_link_str}%'$(LIB_OBJS) $(QEPY_LIBS) ${QELIBS}'%" meson.build
