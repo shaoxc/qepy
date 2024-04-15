@@ -8,8 +8,11 @@ import shutil
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-# setuptools > 59.8.0
-os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
+if os.environ.get('qepybackend', 'meson').lower() != 'meson' :
+    # setuptools > 59.8.0
+    os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
+    if sys.version_info >= (3, 12):
+        raise RuntimeError('Only meson support python>=3.12')
 
 with open('qepy/__init__.py') as fh :
     lines = fh.read()
@@ -37,7 +40,6 @@ class MakeBuild(build_ext):
         self.build_path = Path(self.build_temp)
         env['PYTHON'] = sys.executable
 
-        # if env.get('qepybackend', '').lower() != 'meson' :
         try:
             import multiprocessing as mp
             nprocs = max(mp.cpu_count()//2, 2)
