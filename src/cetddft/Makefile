@@ -1,9 +1,7 @@
-include ../make.qepy.inc
-include ../make.depend
-QESRC_DIR = ../ce-tddft/src
+PLUGIN_DIR = $(BUILDDIR)/ce-tddft/src
 PNAME = qepy_cetddft
-QEPY_LIBS = -L../ $(MODS_LR)
-QEPY_INCS = -I. $(INCS_MODS_LR) $(INCS_MODS_LR_QE)
+QEPY_LIBS = -L$(BUILDDIR) $(MODS_LR)
+QEPY_INCS = -I. -I$(QEDIR)/$(QESRC_DIR) $(INCS_MODS_LR) $(INCS_MODS_LR_QE)
 
 QEPY_OBJS = qepy_molecule_optical_absorption.o \
 qepy_tddft_common.o \
@@ -24,18 +22,5 @@ QE_OBJS =
 
 LIB_OBJS_TEMP =
 
-vpath %.f90 ../fix/ ../cmdx/ $(SRC_DIR) $(QESRC_DIR)
-
-QEPY_OBJS := ${QEPY_OBJS} ${QEPY_FIX_OBJS} ${QEPY_PROG_OBJS}
-#$(info $(QEPY_OBJS))
-LIB_OBJS_TEMP := $(filter-out ${QEPY_OBJS}, ${LIB_OBJS_TEMP})
-LIB_OBJS := $(addprefix $(QESRC_DIR)/,$(LIB_OBJS_TEMP))
-
-ifeq ($(strip $(WRAP_OBJS)),)
-QEPY_OBJS = qepy_fake.o
-endif
-
-.PHONY: all
-
-${F90WRAP_FILES}: ${QEPY_OBJS} ${WRAP_FPP_FILES}
-	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} -k $(PY_SRC_DIR)/kind_map.json -P 
+include ../make.qepy.inc
+include ../make.depend
