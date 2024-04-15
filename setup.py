@@ -8,7 +8,7 @@ import shutil
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-if os.environ.get('qepybackend', '').lower() != 'meson' :
+if os.environ.get('qepybackend', 'meson').lower() != 'meson' :
     # setuptools > 59.8.0
     os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
     if sys.version_info >= (3, 12):
