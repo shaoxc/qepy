@@ -37,9 +37,58 @@ wannier_ham.o \
 wannier_plot.o \
 wfck2r.o
 
-QE_OBJS = elf.o \
+QE_OBJS = add_shift_cc.o \
+add_shift_lc.o \
+add_shift_us.o \
+adduscore.o \
+addusdens1d.o \
+atomic_wfc_nc_proj.o \
+chdens_bspline.o \
+chdens_bspline_sphere.o \
+chdens_module.o \
+compute_ppsi.o \
+compute_sigma_avg.o \
+cube.o \
+d_matrix_nc.o \
+d_matrix_so.o \
+do_initial_state.o \
+do_shift_ew.o \
+dosg.o \
+elf.o \
+fermisurfer_common.o \
+fouriermod.o \
+ggen1d.o \
+globalmod.o \
+idwmod.o \
 local_dos.o \
-local_dos_mag.o
+local_dos1d.o \
+local_dos_mag.o \
+openfil_pp.o \
+oscdft_et_mod.o \
+oscdft_pp_mod.o \
+partialdos.o \
+paw_postproc.o \
+projections_mod.o \
+projwfc_box.o \
+punch_plot.o \
+punch_rism.o \
+read_proj.o \
+smallgk.o \
+solvdens.o \
+stm.o \
+stop_pp.o \
+sum_band_kin.o \
+sym_band.o \
+vasp_read_chgcar_mod.o \
+vasp_xml_module.o \
+wannier_enrg.o \
+wannier_proj.o \
+work_function.o \
+write_hamiltonians.o \
+write_io_header.o \
+write_p_avg.o \
+write_proj.o \
+xc_vdW_scale_mod.o
 
 LIB_OBJS_TEMP = add_shift_cc.o \
 add_shift_lc.o \

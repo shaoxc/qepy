@@ -7,9 +7,7 @@ from qepy.io import set_input
 
 def get_parse(prog = 'pw.x', parser = None):
     if parser is None :
-        parser = argparse.ArgumentParser(description=prog)
-    parser.add_argument(f'--{prog}', dest=prog, action='store_true',
-            default=False, help=f'Same as regular "{prog}" in QE.')
+        parser = argparse.ArgumentParser(description=f'QE Program : "{prog}"')
     return parser
 
 def get_args(prog):
