@@ -3,10 +3,11 @@ requires = [
 	'meson>=0.63.3',
 	'ninja>=1.8.2',
 	'wheel',
-	'f90wrap@git+https://github.com/jameskermode/f90wrap',
+	'f90wrap>=0.2.14',
 	'oldest-supported-numpy; python_version>="3.8"',
 	'setuptools; python_version<"3.12"',
 	'setuptools>=60.0; python_version>="3.12"',
 	#"meson-python>=0.13.0",
+	#'f90wrap@git+https://github.com/jameskermode/f90wrap',
 ]
 build-backend = 'setuptools.build_meta'

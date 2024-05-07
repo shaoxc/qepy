@@ -58,6 +58,7 @@ elf.o \
 fermisurfer_common.o \
 fouriermod.o \
 ggen1d.o \
+globalmod.o \
 idwmod.o \
 local_dos.o \
 local_dos1d.o \
@@ -88,8 +89,6 @@ write_io_header.o \
 write_p_avg.o \
 write_proj.o \
 xc_vdW_scale_mod.o
-
-#globalmod.o
 
 LIB_OBJS_TEMP = add_shift_cc.o \
 add_shift_lc.o \
