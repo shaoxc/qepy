@@ -28,14 +28,14 @@ qe_options = {
         '2.025  2.025  0.   '],
 }
 
-tol = 1e-3
+tol = 1e-8
 etotal = -137.929763
 
 def test_1_linear():
     driver=Driver(qe_options=qe_options, comm=True, iterative = True, logfile='tmp.1.out')
     rho = driver.get_density().copy()
     coef = 0.7
-    for i in range(20):
+    for i in range(60):
         driver.diagonalize()
         rho_new = driver.get_density().copy()
         drho = rho_new-rho
@@ -60,7 +60,7 @@ def test_2_mix_potential():
     hartree = driver.get_hartree()
     xc = driver.get_exchange_correlation()
     v_hxc = hartree[0] + xc[0]
-    for i in range(20):
+    for i in range(60):
         driver.diagonalize()
         rho_new, rho = driver.get_density().copy(), rho_new
         drho = rho_new-rho
