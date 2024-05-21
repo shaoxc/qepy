@@ -10,7 +10,6 @@ QEPY_PROG_OBJS =
 QE_OBJS = 
 
 LIB_OBJS_TEMP = mbd.o \
-mbd_c_api.o \
 mbd_constants.o \
 mbd_coulomb.o \
 mbd_damping.o \

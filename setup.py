@@ -148,7 +148,8 @@ if __name__ == "__main__":
                 'numpy>=1.19.2',
                 'meson>=0.63.3',
                 'ninja>=1.8.2',
-                'f90wrap@git+https://github.com/jameskermode/f90wrap',
+                'f90wrap>=0.2.14',
+                # 'f90wrap@git+https://github.com/jameskermode/f90wrap',
                 ],
             extras_require={
                 'mpi': [
