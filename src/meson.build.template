@@ -54,18 +54,21 @@ add_project_arguments(_intel_fflags, language: 'fortran')
 ##<-- 
 
 ##--> update variables
-pythonexec = ${pythonexec}
-name = ${name}
-qepy_link_str = ${qepy_link_str}
-source_str = ${source_str}
-vpath = ${vpath}
+qedir = get_option('qedir')
+pythonexec = get_option('pythonexec')
+libname = get_option('libname')
+qepy_link_str = get_option('qepy_link')
+qe_link_str = get_option('qe_link')
+source_str = get_option('source')
+vpath = get_option('vpath')
+qepy_link_str = qepy_link_str + ' ' + qe_link_str
 ##<--
 #
-py = import('python').find_installation(pythonexec, pure: false)
-py_dep = py.dependency()
+py3 = import('python').find_installation(pythonexec, pure: false)
+py_dep = py3.dependency()
 
 
-incdir_numpy = run_command(py,
+incdir_numpy = run_command(py3,
   ['-c', 'import numpy; print(numpy.get_include())'],
   check : true
 ).stdout().strip()
@@ -76,7 +79,7 @@ incdir_f2py = incdir_numpy / '..' / '..' / 'f2py' / 'src'
 fortranobject_c = incdir_f2py / 'fortranobject.c'
 quadmath_dep = ff.find_library('quadmath', required: false)
 
-source = files([name+'module.c', fortranobject_c])
+source = files([libname+'module.c', fortranobject_c])
 source += files(run_command('sh', '-c', 'ls f90wrap_*.f90', check:true).stdout().strip().split('\n'))
 link_args = []
 qepy_incs_dirs = ['./', '../']
@@ -98,7 +101,7 @@ qepy_incs_np = include_directories(incdir_numpy, incdir_f2py, qepy_incs_dirs)
 
 # additional_flags
 
-build_target(name,
+build_target(libname,
   source,
   include_directories: qepy_incs_np,
   dependencies : [py_dep, quadmath_dep],
@@ -110,3 +113,96 @@ build_target(name,
   name_suffix : 'so',
   target_type : 'shared_library',
   )
+
+### write config file
+use_pythran = false
+dependency_map = {}
+
+compilers = {
+  'C': cc,
+  #'CPP': cpp,
+  #'CYTHON': meson.get_compiler('cython'),
+  'FORTRAN': meson.get_compiler('fortran')
+}
+
+machines = {
+  'HOST': host_machine,
+  'BUILD': build_machine,
+}
+
+conf_data = configuration_data()
+
+# Set compiler information
+foreach name, compiler : compilers
+  conf_data.set(name + '_COMP', compiler.get_id())
+  conf_data.set(name + '_COMP_LINKER_ID', compiler.get_linker_id())
+  conf_data.set(name + '_COMP_VERSION', compiler.version())
+  conf_data.set(name + '_COMP_CMD_ARRAY', ', '.join(compiler.cmd_array()))
+  conf_data.set(name + '_COMP_ARGS', ', '.join(
+      get_option(name.to_lower() + '_args')
+    )
+  )
+  conf_data.set(name + '_COMP_LINK_ARGS', ', '.join(
+      get_option(name.to_lower() + '_link_args')
+    )
+  )
+endforeach
+# Add `pythran` information if present
+if use_pythran
+  conf_data.set('PYTHRAN_VERSION', pythran.version())
+  conf_data.set('PYTHRAN_INCDIR', incdir_pythran)
+endif
+
+# Machines CPU and system information
+foreach name, machine : machines
+  conf_data.set(name + '_CPU', machine.cpu())
+  conf_data.set(name + '_CPU_FAMILY', machine.cpu_family())
+  conf_data.set(name + '_CPU_ENDIAN', machine.endian())
+  conf_data.set(name + '_CPU_SYSTEM', machine.system())
+endforeach
+
+conf_data.set('CROSS_COMPILED', meson.is_cross_build())
+
+# Python information
+conf_data.set('PYTHON_PATH', py3.full_path())
+conf_data.set('PYTHON_VERSION', py3.language_version())
+
+# Dependencies information
+foreach name, dep : dependency_map
+  conf_data.set(name + '_NAME', dep.name())
+  conf_data.set(name + '_FOUND', dep.found())
+  if dep.found()
+    conf_data.set(name + '_VERSION', dep.version())
+    conf_data.set(name + '_TYPE_NAME', dep.type_name())
+    conf_data.set(name + '_INCLUDEDIR', dep.get_variable('includedir', default_value: 'unknown'))
+    conf_data.set(name + '_LIBDIR', dep.get_variable('libdir', default_value: 'unknown'))
+    conf_data.set(name + '_OPENBLAS_CONFIG', dep.get_variable('openblas_config', default_value: 'unknown'))
+    conf_data.set(name + '_PCFILEDIR', dep.get_variable('pcfiledir', default_value: 'unknown'))
+  endif
+endforeach
+
+if libname == 'libqepy_utilxlib'
+# QE information
+  qe_conf_log = qedir / 'install' / 'config.log'
+  if fs.is_file(qe_conf_log)
+    qe_conf = run_command('awk',
+      '/\$/{ $1=$2=""; sub(/^ */, ""); print $0; exit}',
+      qe_conf_log,
+      check: true).stdout().strip()
+  else
+    qe_conf = 'CFLAGS=-fPIC FFLAGS=-fPIC'
+  endif
+
+  conf_data.set('QE_PATH', qedir)
+  conf_data.set('QE_LINK', ', '.join(qe_link_str.split()))
+  conf_data.set('QE_CONF', ', '.join(qe_conf.split()))
+
+  config_py = '__config__.py'
+  configure_file(
+    input: config_py + '.in',
+    output: config_py,
+    configuration : conf_data,
+    #install_dir: meson.project_source_root(),
+    #install_tag: 'python-runtime',
+    )
+endif
