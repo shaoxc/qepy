@@ -3,10 +3,13 @@
 
 default: all
 
-clean:
-	for dir in $(shell ls */Makefile); do \
-		( cd $${dir%/*} ; $(MAKE) clean; ) \
-	done
+MAKEDIRS := $(dir $(shell ls */Makefile))
+MAKECLEANS := $(addsuffix .clean, ${MAKEDIRS})
+
+%.clean : %
+	@-cd $< ; $(MAKE) clean
+
+clean: ${MAKECLEANS}
 
 default : all
 
