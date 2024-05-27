@@ -1,0 +1,14 @@
+option('qedir', type: 'string', value: '',
+        description: 'The directory of QE, where contains the `make.inc` file')
+option('pythonexec', type: 'string', value: '',
+        description: 'Which Python is used')
+option('libname', type: 'string', value: 'libqepy',
+        description: 'The name of the qepy sub-library')
+option('qepy_link', type: 'string', value: '',
+        description: 'The additional linker arguments to library')
+option('qe_link', type: 'string', value: '',
+        description: 'All internal and external libraries for QE')
+option('source', type: 'string', value: 'qepy_fake.f90',
+        description: 'Source files')
+option('vpath', type: 'string', value: './',
+        description: 'The directories that contains the source files')

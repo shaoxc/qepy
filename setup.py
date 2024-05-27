@@ -33,10 +33,10 @@ class MakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
-        topdir = './'
+        topdir = Path('.')
         build_args = ' '
         env = os.environ
-        self.build_name = self.build_lib+ os.sep + name
+        self.build_name = Path(self.build_lib) / name
         self.build_path = Path(self.build_temp)
         env['PYTHON'] = sys.executable
 
@@ -48,11 +48,10 @@ class MakeBuild(build_ext):
         build_args += ' -j ' + str(nprocs)
 
         if env.get('qepydev', 'no').lower() == 'yes' :
-            print("only remove *.so files", flush = True)
-            # for f in self.build_path.glob('*.so'): f.unlink()
+            print("Keep the previous compiled files", flush = True)
         else :
             if self.build_path.is_dir(): shutil.rmtree(self.build_temp)
-            shutil.copytree(topdir+os.sep+'/src/', self.build_temp)
+            shutil.copytree(topdir / 'src', self.build_temp)
 
         # install the QE
         qedir = env.get('qedir', '')
@@ -102,17 +101,18 @@ class MakeBuild(build_ext):
                 print("stderr:", res.stderr)
                 raise RuntimeError('QEpy[cetddft] installation failed.')
 
-        if not os.path.exists(self.build_lib): os.makedirs(self.build_lib)
-        qepylibs = self.build_name + os.sep + 'qepylibs'
+        qepylibs = self.build_name / 'qepylibs'
         for f in self.build_path.glob('*.so'):
             shutil.copy2(f, qepylibs)
         for f in self.build_path.glob('qepy_*'):
             if f.is_file():
                 shutil.copy2(f, self.build_name)
             else :
-                target = qepylibs + os.sep + f.name
-                if Path(target).is_dir(): shutil.rmtree(target)
+                target = qepylibs / f.name
+                if target.is_dir(): shutil.rmtree(target)
                 shutil.copytree(f, target)
+        #
+        shutil.copy2(self.build_path / '__config__.py', self.build_name)
 
 
 extensions_qepy = Extension(
@@ -148,7 +148,8 @@ if __name__ == "__main__":
                 'numpy>=1.19.2',
                 'meson>=0.63.3',
                 'ninja>=1.8.2',
-                'f90wrap@git+https://github.com/jameskermode/f90wrap',
+                'f90wrap>=0.2.14',
+                # 'f90wrap@git+https://github.com/jameskermode/f90wrap',
                 ],
             extras_require={
                 'mpi': [

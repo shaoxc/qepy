@@ -5,6 +5,25 @@ from functools import wraps
 import pkgutil
 import operator
 from importlib import import_module
+from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
+
+def find_library(name):
+    if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
+        lib = util._get_soname(util._findLib_ld(name))
+    else :
+        lib = util.find_library(name)
+    return lib
+
+def load_library(lib=None, name=None):
+    if lib and '.' not in lib: name = lib
+    if name is not None: lib = find_library(name)
+    if lib is None: raise AttributeError("Please provide a library name")
+    try:
+        cdll = CDLL(lib, RTLD_LOCAL | RTLD_GLOBAL)
+    except Exception :
+        cdll = None
+    return cdll
+
 
 class Logger(type):
     def __new__(cls, name, bases, attrs):
