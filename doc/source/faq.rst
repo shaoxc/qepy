@@ -85,11 +85,11 @@ Gfortran
 
       -  *Segmentation fault - invalid memory reference...*
 
-      This is due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__. One solution is manually append the ``-Dzdotc=zdotc_wrapper`` to **DFLAGS** or **MANUAL_DFLAGS** in **make.inc** of QE. You also can do it during make:
+      This is due to the `zdotc` function of external libraries. More details to `here <https://gitlab.com/QEF/q-e/-/wikis/Support/zdotc-crash>`__. One solution is append the ``-ff2c`` to **CFLAGS**  of QE. For example, the following can be used for MacOS with Apple silicon:
 
      .. code:: shell
 
-        make all MANUAL_DFLAGS='-Dzdotc=zdotc_wrapper'
+        ./configure FFLAGS='-fPIC -fallow-argument-mismatch -ff2c -fno-second-underscore' CFLAGS='-fPIC -arch arm64' CPP='gcc -E' LDFLAGS=-headerpad_max_install_names
 
 
 Intel Compiler
