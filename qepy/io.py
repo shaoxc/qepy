@@ -247,10 +247,34 @@ class QEInput(object):
                 break
             else :
                 k, v = line.split('=')
-                options[k.strip()] = v.strip(',').strip()
+                v = v.strip(',').strip()
+                options[k.strip()] = self.string2value(v)
         else :
             raise ValueError("The namelist not closed with '/'.")
         return options
+
+    @staticmethod
+    def string2value(string):
+        if string.startswith('"') or string.startswith("'"): # character
+            v = string
+        elif string[0] == '.': # logical
+            s = string[1].lower()
+            if s == 'f':
+                v = False
+            elif s == 't':
+                v = True
+            else:
+                v = string
+        else:
+            try:
+                v = int(string) # integer
+            except Exception:
+                try:
+                    v = string.upper().replace('D','E')
+                    v = float(v)
+                except Exception:
+                    v = string
+        return v
 
     def read_card(self, fh, **kwargs):
         """read the card
@@ -358,6 +382,8 @@ QEOPTIONS={
         ["&input"], {}),
     "spectrum" : OrderedDict.fromkeys(
         ["&lr_input"], {}),
+    "cetddft" : OrderedDict.fromkeys(
+        ["&inputtddft"], {}),
     }
 
 

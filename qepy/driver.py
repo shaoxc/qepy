@@ -49,6 +49,7 @@ class Driver(metaclass=QEpyLibs):
           - 'scf' : Self consistent field
           - 'nscf' : initialization of Driver from previous SCF calculation
           - 'optical' : Optical absorption spectrum (real-time TDDFT with ce-tddft of Davide Ceresoli)
+          - 'tddfpt_davidson' : TDDFPT with davidson algorithm
 
     embed : object (Fortran)
         embed object itialized in the Fortran side of QEpy needed to communicate with QE.
@@ -247,6 +248,8 @@ class Driver(metaclass=QEpyLibs):
         #
         if task == 'optical' :
             self.tddft_initialize(inputfile=inputfile, commf = commf, **kwargs)
+        elif task.startswith('tddfpt_'):
+            self.tddfpt_initialize(inputfile=inputfile, commf = commf, **kwargs)
         elif task == 'nscf' :
             inputobj = self.qepy_pw.qepy_common.input_base()
             if self.prefix : inputobj.prefix = self.prefix
@@ -289,6 +292,31 @@ class Driver(metaclass=QEpyLibs):
             self.qepy_pw.read_file()
         self.qepy_cetddft.qepy_tddft_main_setup()
 
+    def tddfpt_initialize(self, inputfile = None, commf = None, **kwargs):
+        """ Initialize the tddft
+
+        Parameters
+        ----------
+        inputfile : str
+            Name of QE input file, which also contains `&inputtddft` section.
+        commf : object
+            mpi4py parallel communicator to be sent to Fortran
+        """
+        if inputfile is None : inputfile = self.inputfile
+        if commf is None : commf = self.commf
+        #
+        if self.progress :
+            raise AttributeError("Not support 'progress' now")
+            # self.qepy_pw.wvfct.get_array_g2kin()
+            # self.qepy_cetddft.qepy_tddft_readin(inputfile)
+        else :
+            if self.task != 'tddfpt_davidson' :
+                raise ValueError("Only support 'davidson' algorithm now.")
+            # Fix the io problem if the job directly started after a PW calculation
+            self.qepy_modules.control_flags.set_io_level(1)
+            #
+            self.qepy_tddfpt.qepy_lr_dav_main_initial(inputfile)
+
     def diagonalize(self, print_level = 2, nscf = False, **kwargs):
         """Diagonalize the Hamiltonian
 
@@ -301,12 +329,21 @@ class Driver(metaclass=QEpyLibs):
         self.iter += 1
         if self.task == 'optical' :
             self.qepy_cetddft.qepy_molecule_optical_absorption()
+        elif self.task == 'tddfpt_davidson' :
+            if self.qepy_tddfpt.lr_dav_variables.get_if_check_orth():
+                self.qepy_tddfpt.lr_dav_debug.check_orth()
+            self.qepy_tddfpt.lr_dav_routines.one_dav_step()
+            self.qepy_tddfpt.lr_dav_routines.dav_calc_residue()
+            self.qepy_tddfpt.lr_dav_routines.dav_expan_basis()
         elif nscf :
             self.embed.task = 'nscf'
             self.qepy_pw.qepy_electrons_scf(print_level, 0)
         else :
             self.embed.mix_coef = -1.0
             self.qepy_pw.qepy_electrons_scf(print_level, 0)
+
+    def propagate(self, **kwargs):
+        return self.diagonalize(**kwargs)
 
     def mix(self, mix_coef = 0.7, print_level = 2):
         """Mix the density with the QE density mixing
@@ -322,8 +359,13 @@ class Driver(metaclass=QEpyLibs):
 
     def check_convergence(self, **kwargs):
         """Check the convergence of the SCF"""
-        converged = bool(self.qepy_modules.control_flags.get_conv_elec())
-        if converged and not self.embed.initial : self.end_scf()
+        if self.task == 'scf' :
+            converged = bool(self.qepy_modules.control_flags.get_conv_elec())
+            if converged and not self.embed.initial : self.end_scf()
+        elif self.task == 'tddfpt_davidson' :
+            converged = bool(self.qepy_tddfpt.lr_dav_variables.get_dav_conv())
+        else:
+            converged = False
         return converged
 
     def get_scf_error(self, **kwargs):
@@ -346,6 +388,8 @@ class Driver(metaclass=QEpyLibs):
             self.qepy_modules.control_flags.set_niter(maxiter)
         if self.task == 'optical' :
             self.qepy_cetddft.qepy_molecule_optical_absorption()
+        elif self.task=='tddfpt_davidson' :
+            self.tddfpt_davidson_scf()
         elif nscf :
             self.embed.task = 'nscf'
             self.qepy_pw.qepy_electrons_scf(print_level, 0)
@@ -355,6 +399,34 @@ class Driver(metaclass=QEpyLibs):
         else :
             self.qepy_pw.qepy_electrons_scf(print_level, 0)
         return self.embed.etotal
+
+    def optical_absorption(self, **kwargs):
+        return self.scf(**kwargs)
+
+    def tddfpt_davidson_scf(self, **kwargs):
+        max_iter = self.qepy_tddfpt.lr_dav_variables.get_max_iter()
+        self.scf_conv_type = 'maxiter'
+        for dav_iter in range(max_iter):
+            # if self.qepy_tddfpt.lr_dav_variables.get_if_check_orth():
+                # self.qepy_tddfpt.lr_dav_debug.check_orth()
+            # self.qepy_tddfpt.lr_dav_routines.one_dav_step()
+            # self.qepy_tddfpt.lr_dav_routines.dav_calc_residue()
+            # self.qepy_tddfpt.lr_dav_routines.dav_expan_basis()
+            self.diagonalize(**kwargs)
+            if self.qepy_tddfpt.lr_dav_variables.get_dav_conv():
+                self.scf_conv_type = 'conv'
+                break
+            if self.qepy_modules.check_stop.check_stop_now():
+                self.qepy_tddfpt.lr_dav_routines.lr_write_restart_dav()
+                self.scf_conv_type = 'maxtime'
+                break
+        self.tddfpt_davidson_interpret(**kwargs)
+
+    def tddfpt_davidson_interpret(self, **kwargs):
+        self.qepy_tddfpt.lr_dav_routines.interpret_eign('END')
+        lplot_drho = self.qepy_tddfpt.lr_dav_variables.get_lplot_drho()
+        if lplot_drho:
+            self.qepy_tddfpt.lr_dav_routines.plot_drho()
 
     def non_scf(self, **kwargs):
         """Single "non-selfconsistent" calculation"""
@@ -401,6 +473,8 @@ class Driver(metaclass=QEpyLibs):
         """
         if self.task == 'optical' :
             self.tddft_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
+        elif self.task == 'tddfpt_davidson' :
+            self.tddfpt_davidson_stop(exit_status, print_flag = print_flag, what = what, **kwargs)
         else :
             if not self.embed.initial : self.end_scf()
             self.qepy_pw.qepy_stop_run(exit_status, print_flag = print_flag, what = what, finalize = False)
@@ -433,6 +507,10 @@ class Driver(metaclass=QEpyLibs):
         #! Do not save the PW files, otherwise the initial wfcs will be overwritten.
         self.qepy_pw.qepy_stop_run(exit_status, print_flag = print_flag, what = 'no', finalize = False)
         self.qepy_cetddft.qepy_stop_tddft(exit_status)
+
+    def tddfpt_davidson_stop(self, exit_status = 0, what = 'no', print_flag = 0, **kwargs):
+        """Stops TDDFPT run"""
+        self.qepy_tddfpt.qepy_lr_dav_main_finalise()
 
     def save(self, what = 'all', **kwargs):
         """
