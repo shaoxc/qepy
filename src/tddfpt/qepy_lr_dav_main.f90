@@ -7,7 +7,7 @@
 !
 !--------------------------------------------------------------------
 
-SUBROUTINE qepy_lr_dav_main_initial(infile, my_world_comm, embed)
+SUBROUTINE qepy_lr_dav_main_initial(infile, my_world_comm)
   !---------------------------------------------------------------------
   ! Xiaochuan Ge, SISSA, 2013
   !---------------------------------------------------------------------
@@ -51,7 +51,7 @@ SUBROUTINE qepy_lr_dav_main_initial(infile, my_world_comm, embed)
   !qepy --> set the input
   CHARACTER(len=*) :: infile
   INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
-  type(embed_base), intent(inout), optional :: embed
+  !type(embed_base), intent(inout), optional :: embed
   !
   command_line = ' -i ' // infile
   !
