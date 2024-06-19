@@ -19,9 +19,9 @@ __path__.append(str(path))
 
 __author__ = "Pavanello Research Group"
 __contact__ = "m.pavanello@rutgers.edu"
-__version__ = "7.2.0rc0"
+__version__ = "7.2.0rc1"
 __license__ = "GPL"
-__date__ = "2024-02-19"
+__date__ = "2024-06-19"
 
 try:
     __version__ = version("qepy")
