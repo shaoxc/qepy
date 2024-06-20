@@ -6,10 +6,16 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Branch or Reference'
-        required: false
-        default: 'github'
+      task:
+        description: 'PyPI or TestPyPI'
+        required: true
+        default: 'None'
+        type: choice
+        options:
+        - none
+        - testpypi
+        - pypi
+        - all
 
 jobs:
   publish:
@@ -20,8 +26,24 @@ jobs:
       - name: Check tag
         id: check-tag
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+ ]] || ${{ github.event_name == 'workflow_dispatch' }} ; then
-              echo ::set-output name=match::true
+          task="${{ github.event.inputs.task }}"
+          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            task="pypi"
+          fi
+          if [[ "$task" == "pypi" || "$task" == "all" ]]; then
+            echo "run_pypi=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_pypi=false" >> $GITHUB_OUTPUT
+          fi
+          if [[ "$task" == "testpypi" || "$task" == "all" ]]; then
+            echo "run_testpypi=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_testpypi=false" >> $GITHUB_OUTPUT
+          fi
+          if [[ "$task" == "none" ]]; then
+            echo "match=false" >> $GITHUB_OUTPUT
+          else
+            echo "match=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout repo
@@ -32,13 +54,15 @@ jobs:
 
       - name: Download Python wheels
         if: steps.check-tag.outputs.match == 'true'
-        uses: dawidd6/action-download-artifact@v2.26.0
+        uses: dawidd6/action-download-artifact@v6
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: wheels.yml
           workflow_conclusion: success
           branch: github
-          name: qepy-wheels
+          #name: cp.*
+          #name_is_regexp: true
+          #search_artifacts: true
           path: dist/
 
       - name: Set up Python
@@ -50,18 +74,20 @@ jobs:
       - name: Build a a source tarball
         if: steps.check-tag.outputs.match == 'true'
         run: |
+          find ./dist -name '*.whl' -exec mv {} ./dist \;
+          rm -r ./dist/cp*
           python -m pip install build
           python -m build --sdist
 
       - name: Publish distribution to Test PyPI
-        if: steps.check-tag.outputs.match == 'true'
+        if: steps.check-tag.outputs.run_testpypi == 'true'
         uses: pypa/gh-action-pypi-publish@v1.7.1
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
 
       - name: Publish distribution to PyPI
-        if: steps.check-tag.outputs.match == 'true'
+        if: steps.check-tag.outputs.run_pypi == 'true'
         uses: pypa/gh-action-pypi-publish@v1.7.1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
