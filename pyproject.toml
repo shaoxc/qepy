@@ -1,13 +1,60 @@
 [build-system]
 requires = [
-	'meson>=0.63.3',
+	'meson>=1.4.0',
 	'ninja>=1.8.2',
 	'wheel',
 	'f90wrap>=0.2.14',
 	'oldest-supported-numpy; python_version>="3.8"',
-	'setuptools; python_version<"3.12"',
-	'setuptools>=60.0; python_version>="3.12"',
+	'setuptools>=61.0',
 	#"meson-python>=0.13.0",
 	#'f90wrap@git+https://github.com/jameskermode/f90wrap',
 ]
 build-backend = 'setuptools.build_meta'
+
+[project]
+name = "qepy"
+dynamic = ["version"]
+license = { file = "License" }
+description = "QEpy: Quantum ESPRESSO Python interface"
+authors = [
+	{name = "Michele Pavanello",  email = "m.pavanello@rutgers.edu"},
+	{name = "Xuecheng Shao",      email = "shaoxc@jlu.edu.cn"},
+]
+maintainers = [
+	{name = "Michele Pavanello",  email = "m.pavanello@rutgers.edu"},
+	{name = "Xuecheng Shao",      email = "shaoxc@jlu.edu.cn"},
+]
+requires-python = ">=3.8"
+dependencies = [
+	'f90wrap>=0.2.14',
+	'numpy<2.0',
+]
+readme = "README.md"
+classifiers = [
+	'Development Status :: 3 - Alpha',
+	'Intended Audience :: Science/Research',
+	'Programming Language :: Python :: 3',
+	'Programming Language :: Python :: 3.8',
+	'Programming Language :: Python :: 3.9',
+	'Programming Language :: Python :: 3.10',
+	'Programming Language :: Python :: 3.11',
+	'Programming Language :: Python :: 3.12',
+	'Topic :: Scientific/Engineering :: Chemistry',
+    'Topic :: Scientific/Engineering :: Physics',
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+]
+
+[project.optional-dependencies]
+docs = [
+	"sphinx",
+	"sphinx-rtd-theme",
+	"nbsphinx",
+	"sphinx-panels"
+]
+
+[project.urls]
+homepage = "https://gitlab.com/shaoxc/qepy"
+documentation = "http://qepy.rutgers.edu"
+source = "https://gitlab.com/shaoxc/qepy"

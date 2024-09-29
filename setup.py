@@ -8,24 +8,8 @@ import shutil
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-if os.environ.get('qepybackend', 'meson').lower() != 'meson' :
-    # setuptools > 59.8.0
-    os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
-    if sys.version_info >= (3, 12):
-        raise RuntimeError('Only meson support python>=3.12')
-
-with open('qepy/__init__.py') as fh :
-    lines = fh.read()
-    __version__ = re.search('__version__ = "(.*)"', lines).group(1)
-    __author__ = re.search('__author__ = "(.*)"', lines).group(1)
-    __contact__ = re.search('__contact__ = "(.*)"', lines).group(1)
-    __license__ = re.search('__license__ = "(.*)"', lines).group(1)
-
-with open('README.md') as fh :
-    long_description = fh.read()
-
 name = 'qepy'
-description = "QEpy: Quantum ESPRESSO Python interface"
+qe_branch = 'qe-7.2'
 
 class MakeBuild(build_ext):
     def run(self):
@@ -33,6 +17,7 @@ class MakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
+        print('build_extension: ', ext)
         topdir = Path('.')
         build_args = ' '
         env = os.environ
@@ -57,7 +42,7 @@ class MakeBuild(build_ext):
         qedir = env.get('qedir', '')
         if not qedir :
             qedir = self.build_temp + '/q-e'
-            qe_download = "git clone -b qe-7.2 --depth=1 https://gitlab.com/QEF/q-e.git "+ qedir
+            qe_download = "git clone -b " + qe_branch + " --depth=1 https://gitlab.com/QEF/q-e.git "+ qedir
             subprocess.check_call(qe_download, env = env, shell=True, text=True)
             if '-fPIC' not in env.get('CFLAGS', ''):
                 env['CFLAGS'] = '-fPIC ' + env.get('CFLAGS', '')
@@ -115,15 +100,10 @@ class MakeBuild(build_ext):
         shutil.copy2(self.build_path / '__config__.py', self.build_name)
 
 
-extensions_qepy = Extension(
-        "qepy._qepy",
-        sources = [],
-        )
-
-ext_modules = [extensions_qepy, ]
-
-release = 1
-if release :
+if os.getenv('RELEASE', 'no') == 'yes':
+    with open('qepy/__init__.py') as fh :
+        lines = fh.read()
+        __version__ = re.search('__version__ = "(.*)"', lines).group(1)
     VERSION = {'version' : __version__}
 else :
     VERSION = {
@@ -131,46 +111,8 @@ else :
             'setup_requires': ['setuptools_scm'],
             }
 
-if __name__ == "__main__":
-    setup(
-            name=name,
-            url='https://gitlab.com/shaoxc/qepy',
-            description=description,
-            author=__author__,
-            author_email=__contact__,
-            license=__license__,
-            **VERSION,
-            long_description=long_description,
-            long_description_content_type='text/markdown',
-            python_requires = '>=3.8',
-            install_requires=[
-                'setuptools',
-                'numpy>=1.19.2',
-                'meson>=0.63.3',
-                'ninja>=1.8.2',
-                'f90wrap>=0.2.14',
-                # 'f90wrap@git+https://github.com/jameskermode/f90wrap',
-                ],
-            extras_require={
-                'mpi': [
-                    'mpi4py>=3.0.2',
-                    ],
-                },
-            packages=find_packages('./'),
-            ext_modules=ext_modules,
-            # include_package_data=True,
-            cmdclass = {"build_ext" : MakeBuild},
-            classifiers=[
-                'Development Status :: 3 - Alpha',
-                'Intended Audience :: Science/Research',
-                'Programming Language :: Python :: 3',
-                'Programming Language :: Python :: 3.8',
-                'Programming Language :: Python :: 3.9',
-                'Programming Language :: Python :: 3.10',
-                'Programming Language :: Python :: 3.11',
-                'Programming Language :: Python :: 3.12',
-                'Topic :: Scientific/Engineering :: Chemistry',
-                'Topic :: Scientific/Engineering :: Physics'
-                ],
-            zip_safe = False,
-            )
+setup(**VERSION,
+      packages=find_packages('./'),
+      ext_modules = [Extension("qepy._qepy", sources = [])],
+      cmdclass={"build_ext" : MakeBuild},
+      )

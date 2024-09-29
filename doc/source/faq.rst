@@ -146,6 +146,16 @@ MacOS
 
       Add ``-headerpad_max_install_names`` to the **LDFLAGS**.
 
+QE
+--
+   #. *compilation aborted for mbd_c_api.F90*
+
+      *ifx* not works for mbd until `#60 <https://github.com/libmbd/libmbd/pull/60>`__. The easiest way to fix is running the following before `make`
+
+   .. code:: shell
+      export LIBMBD_C_API=0
+
+
 Abandon
 =======
   - Read old format XML file
