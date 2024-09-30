@@ -17,7 +17,7 @@ class MakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
-        print('build_extension: ', ext)
+        print('build_extension: ', ext, flush=True)
         topdir = Path('.')
         build_args = ' '
         env = os.environ
@@ -54,36 +54,36 @@ class MakeBuild(build_ext):
             if 'BLAS_LIBS' not in env : env['BLAS_LIBS'] = '-lblas'
             if 'LAPACK_LIBS' not in env : env['LAPACK_LIBS'] = '-llapack'
             qe_install_flags = env.get('QE_INSTALL_FLAGS', '')
-            print('env', env)
-            print('build_args', build_args)
+            print('env', env, flush=True)
+            print('build_args', build_args, flush=True)
             res = subprocess.run("./configure " + qe_install_flags, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
             if res.returncode > 0 :
-                print('Some errors happened in configure...')
-                print(res.stderr)
+                print('Some errors happened in configure...', flush=True)
+                print(res.stderr, flush=True)
                 subprocess.run("cat install/config.log", cwd=qedir, env = env, shell=True)
                 raise RuntimeError('QE configure failed.')
 
             res = subprocess.run("make all " + build_args, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
             if res.returncode > 0 :
-                print(res.stderr[-100:])
-                print("'make w90' sometimes will failed at first time, so try again")
+                print(res.stderr[-100:], flush=True)
+                print("'make w90' sometimes will failed at first time, so try again", flush=True)
                 res = subprocess.run("make all " + build_args, cwd=qedir, env = env, shell=True, capture_output=True, text=True)
                 if res.returncode > 0 :
-                    print(res.stderr)
+                    print(res.stderr, flush=True)
                     raise RuntimeError('QE installation failed.')
 
             env['qedir'] = os.path.abspath(qedir)
 
         res = subprocess.run('make all ' + build_args, cwd=self.build_temp, env = env, shell=True, capture_output=True, text=True)
         if res.returncode > 0 :
-            print("stdout:", res.stdout[-10000:])
-            print("stderr:", res.stderr)
+            print("stdout:", res.stdout[-10000:], flush=True)
+            print("stderr:", res.stderr, flush=True)
             raise RuntimeError('QEpy installation failed.')
 
         if env.get('tddft', 'no').lower() == 'yes' :
             res = subprocess.run('make qepy_cetddft' + build_args, cwd=self.build_temp, env = env, shell=True, capture_output=True, text=True)
             if res.returncode > 0 :
-                print("stderr:", res.stderr)
+                print("stderr:", res.stderr, flush=True)
                 raise RuntimeError('QEpy[cetddft] installation failed.')
 
         qepylibs = self.build_name / 'qepylibs'
