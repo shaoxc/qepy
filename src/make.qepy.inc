@@ -52,7 +52,12 @@ F2PY = CFLAGS='$(CFLAGS)' ${PYTHON} ${BUILDDIR}/f90wrap2py.py \
 export LDFLAGS +=-Wl,-rpath,"$$ORIGIN/:$$ORIGIN/qepy"
 export FC := ${MPIF90}
 export CC := ${CC}
+# turn off the response file of mesonbuild
+export MESON_RSP_THRESHOLD := 10000000
 #$(info $(LDFLAGS))
+#ifeq (${UNAME}, Darwin)
+   #export LDFLAGS +=-Wl,-ld_classic
+#endif
 
 MODS_BASE = -lqepy_modules \
 -lqepy_upflib \

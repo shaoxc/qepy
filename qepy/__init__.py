@@ -8,8 +8,8 @@ from .core import QEpyMods, find_library, load_library
 __all__ = ["show_config"]
 
 # fix MPI_IN_PLACE
-mpilib = find_library('mpifort') or find_library('mpi')
-if mpilib : load_library(mpilib)
+# mpilib = find_library('mpifort') or find_library('mpi')
+# if mpilib : load_library(mpilib)
 # fix mkl only if mkl library was linked
 if 'mkl_' in CONFIG.get('QE', {}).get('link', ''): load_library('mkl_rt')
 
@@ -17,11 +17,7 @@ path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
 __path__.append(str(path))
 
-__author__ = "Pavanello Research Group"
-__contact__ = "m.pavanello@rutgers.edu"
-__version__ = "7.2.0rc1"
-__license__ = "GPL"
-__date__ = "2024-06-19"
+__version__ = "7.2.0rc2"
 
 try:
     __version__ = version("qepy")

@@ -3,7 +3,7 @@
 
 default: all
 
-MAKEDIRS := $(dir $(shell ls */Makefile))
+MAKEDIRS := $(patsubst %/Makefile, %, $(shell ls */Makefile))
 MAKECLEANS := $(addsuffix .clean, ${MAKEDIRS})
 
 %.clean : %
