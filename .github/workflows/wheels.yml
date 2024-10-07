@@ -38,7 +38,7 @@ jobs:
 
       - name: Build wheels on linux
         if: ${{ matrix.buildplat[1] == 'manylinux' }}
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.21.2
         env:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
@@ -49,7 +49,7 @@ jobs:
 
       - name: Build wheels on macos
         if: ${{ matrix.buildplat[1] == 'macosx' && matrix.buildplat[2] == 'x86_64' }}
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.21.2
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.9"
           CIBW_BUILD_VERBOSITY: 3
@@ -61,7 +61,7 @@ jobs:
 
       - name: Build wheels on macos_arm64
         if: ${{ matrix.buildplat[1] == 'macosx' && matrix.buildplat[2] == 'arm64' }}
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.21.2
         env:
           MACOSX_DEPLOYMENT_TARGET: "11.0"
           CIBW_BUILD_VERBOSITY: 3
