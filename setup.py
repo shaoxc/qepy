@@ -100,7 +100,7 @@ class MakeBuild(build_ext):
         shutil.copy2(self.build_path / '__config__.py', self.build_name)
 
 
-if os.getenv('RELEASE', 'no') == 'yes':
+if os.getenv('RELEASE', 'yes') == 'yes':
     with open('qepy/__init__.py') as fh :
         lines = fh.read()
         __version__ = re.search('__version__ = "(.*)"', lines).group(1)
