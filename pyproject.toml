@@ -53,6 +53,12 @@ docs = [
 	"nbsphinx",
 	"sphinx-panels"
 ]
+test = [
+	"pytest",
+	"pytest-cov",
+	"pytest-mpi",
+	"ase"
+]
 
 [project.urls]
 homepage = "https://gitlab.com/shaoxc/qepy"
