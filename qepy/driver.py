@@ -172,9 +172,13 @@ class Driver(metaclass=QEpyLibs):
                 value = None
         self._comm = value
         if hasattr(self.comm, 'py2f') :
-            self.commf = self.comm.py2f()
+            self._commf = self.comm.py2f()
         else :
-            self.commf = self.comm
+            self._commf = self.comm
+
+    @property
+    def commf(self):
+        return self._commf
 
     @property
     def is_root(self):
@@ -602,7 +606,7 @@ class Driver(metaclass=QEpyLibs):
             nspin = self.qepy_pw.lsda_mod.get_nspin()
             if gather and self.nproc > 1 :
                 nr = self.get_number_of_grid_points(gather = gather)
-                if self.is_root :
+                if self.embed.dfftp.mype == 0:
                     out = np.zeros((np.prod(nr), nspin), order = 'F')
                 else :
                     out = np.zeros((1, nspin), order = 'F')
@@ -658,6 +662,17 @@ class Driver(metaclass=QEpyLibs):
         dipole = self.embed.tddft.dipole
         return dipole
 
+    def set_density(self, density, gather = True, **kwargs):
+        """Set density array in real space."""
+        #
+        if density is None : density = np.zeros((1, 1))
+        if density.ndim != 2 : raise ValueError("The array should be 2-d.")
+        #
+        if gather and self.nproc > 1 :
+            self.qepy_pw.qepy_mod._mp_bcast_group_real_2(density)
+        self.qepy_pw.qepy_mod.qepy_set_rho(density, gather = gather)
+
+
     def set_external_potential(self, potential, exttype = None, gather = True, extene  = None, **kwargs):
         """Set an external potential in addition to the ones already included in the QEpy run
         according to the logic enumerated below.
@@ -692,6 +707,8 @@ class Driver(metaclass=QEpyLibs):
         if potential is None : potential = np.zeros((1, 1))
         if potential.ndim != 2 : raise ValueError("The array should be 2-d.")
         #
+        if gather and self.nproc > 1 :
+            self.qepy_pw.qepy_mod._mp_bcast_group_real_2(potential)
         self.qepy_pw.qepy_mod.qepy_set_extpot(potential, gather = gather)
 
     def get_output(self):
@@ -1079,15 +1096,6 @@ class Driver(metaclass=QEpyLibs):
         from dftpy.ions import Ions
         atoms = cls.get_ase_atoms()
         return Ions.from_ase(atoms)
-
-    @classmethod
-    def set_density(cls, density, gather = True, **kwargs):
-        """Set density array in real space."""
-        #
-        if density is None : density = np.zeros((1, 1))
-        if density.ndim != 2 : raise ValueError("The array should be 2-d.")
-        #
-        cls.qepy_pw.qepy_mod.qepy_set_rho(density, gather = gather)
 
     @classmethod
     def switch_nlpp(cls, nhm=0, nbetam=0, nkb=0, nh=None, **kwargs):

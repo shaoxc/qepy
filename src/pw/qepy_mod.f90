@@ -15,6 +15,10 @@ MODULE qepy_mod
       MODULE PROCEDURE mp_scatter_real, mp_scatter_complex
    END INTERFACE
    !
+   INTERFACE mp_bcast_group
+      MODULE PROCEDURE mp_bcast_group_real_1, mp_bcast_group_real_2
+   END INTERFACE
+   !
    INTERFACE qepy_get_value
       MODULE PROCEDURE qepy_get_value_real_1, qepy_get_value_real_2
    END INTERFACE
@@ -79,6 +83,33 @@ CONTAINS
       ELSE
          fout(:) = fin(:)
       ENDIF
+   END SUBROUTINE
+
+   SUBROUTINE mp_bcast_group_real_1(data)
+      USE kinds,                ONLY : DP
+      USE fft_base,             ONLY : dfftp
+      USE mp,                   ONLY : mp_bcast
+      USE mp_bands,             ONLY : inter_bgrp_comm, me_bgrp, root_bgrp, root_bgrp_id, nbgrp
+      USE mp_pools,             ONLY : inter_pool_comm, me_pool, root_pool, npool
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(INOUT)        :: data(:)
+      !
+      IF (me_pool == root_pool .and. npool>1 ) CALL mp_bcast(data, root_pool, inter_pool_comm)
+      IF (me_bgrp == root_bgrp .and. nbgrp>1 ) CALL mp_bcast(data, root_bgrp_id, inter_bgrp_comm)
+   END SUBROUTINE
+
+   SUBROUTINE mp_bcast_group_real_2(data)
+      USE kinds,                ONLY : DP
+      !
+      IMPLICIT NONE
+      REAL(DP), INTENT(INOUT)        :: data(:,:)
+      INTEGER                        :: i, n2
+      !
+      n2 = size(data, 2)
+      DO i = 1, n2
+         CALL mp_bcast_group_real_1(data(:,i))
+      END DO
    END SUBROUTINE
 
    SUBROUTINE qepy_get_value_real_1(fin, fout, gather, scatter)
