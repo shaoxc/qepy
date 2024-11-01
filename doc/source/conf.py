@@ -2,9 +2,9 @@ import sys
 import sphinx_rtd_theme
 import os
 project = 'QEpy'
-copyright = '2019, Pavanello Research Group'
-author = 'Pavanello Research Group'
-release = '6.5.0'
+copyright = '2019-2024 QEpy community'
+author = 'QEpy Developers'
+release = '7.2.0'
 
 header = '../../qepy/__init__.py'
 if os.path.isfile(header):
@@ -27,6 +27,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
               'sphinx.ext.autosummary',
+              'sphinx_copybutton',
+              'sphinx_inline_tabs',
               'nbsphinx',
               'sphinx_panels',
               ]
@@ -37,7 +39,7 @@ exclude_patterns = ['build']
 
 html_theme = 'sphinx_rtd_theme'
 # html_theme = 'sphinx_bootstrap_theme'
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # html_favicon = 'static/qepy.ico'
 # html_logo = 'static/qepy.png'
 html_style = 'custom.css'

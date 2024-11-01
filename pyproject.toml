@@ -50,8 +50,11 @@ classifiers = [
 docs = [
 	"sphinx",
 	"sphinx-rtd-theme",
+	"sphinx-panels",
+	"sphinx-copybutton",
+	"sphinx-inline-tabs",
 	"nbsphinx",
-	"sphinx-panels"
+	"pandoc"
 ]
 test = [
 	"pytest",

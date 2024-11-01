@@ -16,26 +16,37 @@ What is the `tddft=yes`?
 Running
 =======
 
-Some Intel MPI/MKL errors occur. What do I do?
+Some Intel MKL errors occur. What do I do?
 ----------------------------------------------
 
   Try:
 
    .. code:: shell
 
-    export LD_PRELOAD=/opt/intel/mkl/lib/intel64/libmkl_rt.so
+    export LD_PRELOAD=/opt/intel/oneapi/mkl/latest/lib/libmkl_rt.so
+
+Some Intel MPI errors occur.
+----------------------------------------------
+
+  Try:
+
+   .. code:: shell
+
+    export LD_PRELOAD=/opt/intel/oneapi/mpi/latest/lib/libmpifort.so
 
 Why can’t I read the wavefunctions? Why does it hang?
 -----------------------------------------------------
 
--  If the wavefunctions were stored by old version QE (<6.4) or `eQE <http://eqe.rutgers.edu>`__, please try reinstall the QEpy with ``oldxml=yes``.
-
 -  There are two different ways to store wavefunctions in QE, which is controls by PW parameter `wf_collect <http://www.quantum-espresso.org/Doc/INPUT_PW.html#idm68>`__.  In doubt, simply use one processor to read.
+
+-  If the wavefunctions were stored by old version QE (<6.4) or `eQE <http://eqe.rutgers.edu>`__, please use the old version of QEpy by:
+
+   .. code:: shell
+
+    python -m pip install qepy==6.5.0
 
 Some f90wrap errors occur. What do I do?
 ----------------------------------------
-
-  + *No module named f90wrap.__main__...*
 
   Please try install the latest `f90wrap <https://github.com/jameskermode/f90wrap>`__ . e.g.
 
@@ -153,6 +164,7 @@ QE
       *ifx* not works for mbd until `#60 <https://github.com/libmbd/libmbd/pull/60>`__. The easiest way to fix is running the following before `make`
 
    .. code:: shell
+
       export LIBMBD_C_API=0
 
 

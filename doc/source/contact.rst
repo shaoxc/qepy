@@ -6,7 +6,7 @@ QEpy Developers
 ================
 
 Feel free to contact the developers:
- - `Xuecheng Shao <https://sites.rutgers.edu/prg/people/xuecheng-shao/>`_
+ - `Xuecheng Shao <https://shaoxc.com>`_
  - `Michele Pavanello <https://sasn.rutgers.edu/about-us/faculty-staff/michele-pavanello>`_
 
 On-line

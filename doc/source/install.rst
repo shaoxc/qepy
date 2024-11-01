@@ -57,21 +57,19 @@ or with all features:
 Example on Ubuntu 22.04
 +++++++++++++++++++++++
 
-.. code:: shell
+   .. code-block:: shell
 
-
-  sudo apt-get update
-  sudo apt-get install --upgrade -y make git python3-dev python3-pip wget
-  sudo apt-get install --upgrade -y gcc gfortran libblas-dev liblapack-dev libopenmpi-dev libfftw3-dev
-  git clone --depth=1 -b qe-7.2 https://gitlab.com/QEF/q-e.git
-  cd q-e
-  ./configure CFLAGS=-fPIC FFLAGS='-fPIC -fallow-argument-mismatch' try_foxflags=-fPIC MPIF90=mpif90 --with-scalapack=no BLAS_LIBS='-lblas' LAPACK_LIBS='-llapack'
-  make all -j 8
-  make all -j 8
-  cd ..
-  git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-  qedir=`pwd`/q-e/ python3 -m pip install -U ./qepy
-
+	  sudo apt-get update
+	  sudo apt-get install --upgrade -y make git python3-dev python3-pip wget
+	  sudo apt-get install --upgrade -y gcc gfortran libblas-dev liblapack-dev libopenmpi-dev libfftw3-dev
+	  git clone --depth=1 -b qe-7.2 https://gitlab.com/QEF/q-e.git
+	  cd q-e
+	  ./configure CFLAGS=-fPIC FFLAGS='-fPIC -fallow-argument-mismatch' MPIF90=mpif90 --with-scalapack=no BLAS_LIBS='-lblas' LAPACK_LIBS='-llapack'
+	  make all -j 8
+	  make all -j 8
+	  cd ..
+	  git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
+	  qedir=`pwd`/q-e/ python3 -m pip install -U ./qepy
 
 
 Tips
@@ -100,7 +98,7 @@ Install the QE
 
    .. code:: shell
 
-      ./configure CFLAGS=-fPIC FFLAGS=-fPIC try_foxflags=-fPIC
+      ./configure CFLAGS=-fPIC FFLAGS=-fPIC
 
    Then,
 
@@ -108,6 +106,23 @@ Install the QE
 
       make all
       export qedir=`pwd`
+
+More examples for QE
+--------------------
+
+   pass
+
+   .. tab:: Unix
+
+      .. code-block:: shell
+
+		 ./configure FFLAGS='-fPIC -fallow-argument-mismatch' CFLAGS=-fPIC
+
+   .. tab:: MacOS
+
+      .. code-block:: shell
+
+         ./configure FFLAGS='-fPIC -fallow-argument-mismatch -ff2c -fno-second-underscore' CFLAGS='-fPIC -arch arm64' CPP='gcc -E' LDFLAGS=-headerpad_max_install_names
 
 
 .. note::
