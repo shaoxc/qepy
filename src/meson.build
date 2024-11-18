@@ -1,6 +1,6 @@
 project('qepy',
   ['c', 'fortran'],
-  version : '7.2.0rc0',
+  version : '7.2.0',
   meson_version: '>= 1.1.0',
   default_options : [
     'warning_level=1',
