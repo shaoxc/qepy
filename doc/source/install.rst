@@ -7,9 +7,9 @@ Installation
 Requirements
 ============
 
--  `Python <https://www.python.org/>`__ (>=3.6)
+-  `Python <https://www.python.org/>`__ (>=3.8)
 -  `NumPy <https://docs.scipy.org/doc/numpy/reference/>`__ (>=1.18.0)
--  `f90wrap <https://github.com/jameskermode/f90wrap>`__ (latest)
+-  `f90wrap <https://github.com/jameskermode/f90wrap>`__ (>=0.2.14)
 -  `Quantum ESPRESSO <https://gitlab.com/QEF/q-e/-/releases/qe-7.2>`__
    (==7.2)
 -  Compiler (`GNU <https://gcc.gnu.org/fortran/>`__\ (Recommended) or
@@ -109,8 +109,6 @@ Install the QE
 
 More examples for QE
 --------------------
-
-   pass
 
    .. tab:: Unix
 
