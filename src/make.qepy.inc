@@ -123,7 +123,7 @@ else
 lib${PNAME}module.c : ${PNAME}
 	@${PYTHON} -m f90wrap --f2py-f90wrap -m lib${PNAME} ${F90WRAP_FILES} --lower
 
-meson.build : lib${PNAME}module.c
+meson.build : lib${PNAME}module.c meson.clean
 	@cp ../meson.build .
 	@cp ../meson_options.txt .
 	meson setup --wipe ${MESONTMP} \
@@ -139,24 +139,27 @@ meson.build : lib${PNAME}module.c
 		-Dsource='${QEPY_FIELS}' \
 		-Dvpath='${QEPYSRC}'
 
-build : meson.build
+lib$(PNAME).so : meson.build
 	meson compile -C ${MESONTMP} --verbose -j 0
 	@mv ${MESONTMP}/lib${PNAME}.*so lib$(PNAME).so
 	@find ${MESONTMP} -name '*.mod' -exec cp {} . \;
 	@if test '${PNAME}' = 'qepy_utilxlib'; then \
 		cp ${MESONTMP}/${CONFIG} . ; fi
+build : lib$(PNAME).so
 endif
 
 ${PNAME} : ${WRAP_FPP_FILES}
-	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(BUILDDIR)/kind_map.json -P 
+	@${PYTHON} -m f90wrap --f90wrap -m ${PNAME} --f90-mod-name lib${PNAME} ${WRAP_FPP_FILES} ${CROSS_FPP_FILES} -k $(BUILDDIR)/kind_map.json -P
 
-clean :
+meson.clean:
+	@-rm -f meson*
+	@-rm -rf ${MESONTMP}
+
+clean : meson.clean
 	@-rm -f ${F90WRAP_FILES} ${WRAP_FPP_FILES}
 	@-rm -f *.o *.mod
-	@-rm -f meson*
 	@-rm -rf src.* .libs .f2py_f2cmap lib${PNAME}*
 	@-rm -rf ${PNAME} ${BUILDDIR}/${PNAME} ${BUILDDIR}/lib${PNAME}.*
-	@-rm -rf ${MESONTMP} 
 
 all : build
 	${PYTHON} ${BUILDDIR}/fix_init_.py $(PNAME)/__init__.py

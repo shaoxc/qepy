@@ -1,3 +1,4 @@
+__version__ = "7.2.0rc3"
 import sys
 from pathlib import Path
 from importlib import import_module
@@ -16,8 +17,6 @@ if 'mkl_' in CONFIG.get('QE', {}).get('link', ''): load_library('mkl_rt')
 path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
 __path__.append(str(path))
-
-__version__ = "7.2.0rc2"
 
 try:
     __version__ = version("qepy")

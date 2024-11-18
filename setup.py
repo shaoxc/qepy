@@ -1,6 +1,5 @@
 import os
 import sys
-import re
 import subprocess
 from pathlib import Path
 import shutil
@@ -99,17 +98,26 @@ class MakeBuild(build_ext):
         #
         shutil.copy2(self.build_path / '__config__.py', self.build_name)
 
+def get_version(release=None):
+    if release is None:
+        with open('pyproject.toml', 'r') as fh:
+            for line in fh:
+                if line.startswith('version'):
+                    release = True
+                    break
+                elif line.startswith('#version'):
+                    release = False
+                    break
+    if release :
+        VERSION = {'version' : None}
+    else :
+        VERSION = {
+                'use_scm_version': {'version_scheme': 'post-release'},
+                'setup_requires': ['setuptools_scm']
+                }
+    return VERSION
+VERSION = get_version()
 
-if os.getenv('RELEASE', 'yes') == 'yes':
-    with open('qepy/__init__.py') as fh :
-        lines = fh.read()
-        __version__ = re.search('__version__ = "(.*)"', lines).group(1)
-    VERSION = {'version' : __version__}
-else :
-    VERSION = {
-            'use_scm_version': {'version_scheme': 'post-release'},
-            'setup_requires': ['setuptools_scm'],
-            }
 
 setup(**VERSION,
       packages=find_packages('./'),
