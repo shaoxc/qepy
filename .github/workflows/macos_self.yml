@@ -20,24 +20,24 @@ jobs:
         python: ["cp38", "cp39"]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10.11'
 
       - name: Build wheels on macos_arm64
-        uses: pypa/cibuildwheel@v2.12.3
+        uses: pypa/cibuildwheel@v2.21.2
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}*
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ENVIRONMENT: FFLAGS='-fPIC -fallow-argument-mismatch' QE_INSTALL_FLAGS='--host=host' NPY_DISTUTILS_APPEND_FLAGS=1 MACOSX_DEPLOYMENT_TARGET=11.0 build_alias=arm-apple-darwin20.0.0 host_alias=x86_64-unknown-linux-gnu CFLAGS='-fPIC -arch arm64' CPP='gcc -E'
           CIBW_ENVIRONMENT_PASS_LINUX: FFLAGS QE_INSTALL_FLAGS NPY_DISTUTILS_APPEND_FLAGS MACOSX_DEPLOYMENT_TARGET build_alias host_alias CFLAGS CPP
           CIBW_ARCHS_MACOS: "arm64"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.python }}-${{ matrix.buildplat[1] }}-${{ matrix.buildplat[2] }}
           path: ./wheelhouse/*.whl
