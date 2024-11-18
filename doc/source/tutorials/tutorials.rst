@@ -4,6 +4,16 @@
 Tutorials
 =========
 
+
+Commands
+========
+
+.. toctree::
+   :maxdepth: 1
+
+   command
+
+
 Jupyter notebooks
 =================
 
