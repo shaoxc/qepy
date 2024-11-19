@@ -8,12 +8,11 @@ Requirements
 ============
 
 -  `Python <https://www.python.org/>`__ (>=3.8)
--  `NumPy <https://docs.scipy.org/doc/numpy/reference/>`__ (>=1.18.0)
--  `f90wrap <https://github.com/jameskermode/f90wrap>`__ (>=0.2.14)
--  `Quantum ESPRESSO <https://gitlab.com/QEF/q-e/-/releases/qe-7.2>`__
-   (==7.2)
+-  `Quantum ESPRESSO <https://gitlab.com/QEF/q-e/-/releases/qe-7.2>`__ (==7.2)
+-  `NumPy <https://numpy.org/doc/stable/reference/>`__ 
+-  `f90wrap <https://github.com/jameskermode/f90wrap>`__ 
 -  Compiler (`GNU <https://gcc.gnu.org/fortran/>`__\ (Recommended) or
-   `Intel <https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html>`__)
+   `Intel <https://www.intel.com/content/www/us/en/developer/tools/oneapi/fortran-compiler.html>`__)
 
 Optional (highly recommended):
 ------------------------------
@@ -45,13 +44,13 @@ You can download the ``QEpy`` source file from `gitlab <https://gitlab.com/shaox
    .. code:: shell
 
       git clone --recurse-submodules https://gitlab.com/shaoxc/qepy.git
-      python -m pip install -U ./qepy
+      python -m pip install ./qepy
    
 or with all features:
 
    .. code:: shell
 
-      oldxml=yes ldau=yes tddft=yes python -m pip install -U ./qepy
+      tddft=yes python -m pip install ./qepy
 
 
 Example on Ubuntu 22.04

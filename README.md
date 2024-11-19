@@ -12,10 +12,10 @@
  - NSF for funding the Quantum-Multiscale collaboration
 
 ## Requirements
- - [Python](https://www.python.org/) (>=3.8)
- - [NumPy](https://docs.scipy.org/doc/numpy/reference/) (>=1.18.0)
- - [f90wrap](https://github.com/jameskermode/f90wrap) (>=0.2.8)
  - [Quantum ESPRESSO ](https://gitlab.com/QEF/q-e/-/releases/qe-7.2) (==7.2)
+ - [Python](https://www.python.org/) (>=3.8)
+ - [NumPy](https://docs.scipy.org/doc/numpy/reference/)
+ - [f90wrap](https://github.com/jameskermode/f90wrap)
  - Compiler ([GNU](https://gcc.gnu.org/fortran/)(Recommended) or [Intel](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html))
 
 ## Installation
