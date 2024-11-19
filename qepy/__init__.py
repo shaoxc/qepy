@@ -4,15 +4,12 @@ from pathlib import Path
 from importlib import import_module
 from importlib.metadata import version # python >= 3.8
 from .__config__ import CONFIG, show as show_config
-from .core import QEpyMods, find_library, load_library
+from .core import QEpyMods, fix_external_lib
 
 __all__ = ["show_config"]
 
-# fix MPI_IN_PLACE
-# mpilib = find_library('mpifort') or find_library('mpi')
-# if mpilib : load_library(mpilib)
-# fix mkl only if mkl library was linked
-if 'mkl_' in CONFIG.get('QE', {}).get('link', ''): load_library('mkl_rt')
+# fix the mkl and mpi in linux
+fix_external_lib()
 
 path = Path(__file__).resolve().parent/'qepylibs'
 sys.path.insert(0, str(path))
