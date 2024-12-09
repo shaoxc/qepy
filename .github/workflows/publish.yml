@@ -54,7 +54,7 @@ jobs:
 
       - name: Download Python wheels
         if: steps.check-tag.outputs.match == 'true'
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v7
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: wheels.yml
