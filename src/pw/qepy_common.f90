@@ -87,10 +87,39 @@ MODULE qepy_common
       GENERIC :: assignment(=) => reset
    end type energies_base
    !
+   type, public :: stress_base
+      real(kind=dp)                   :: sigma(3,3)              ! total   stress
+      real(kind=dp)                   :: sigmakin(3,3)           ! kinetic stress
+      real(kind=dp)                   :: sigmaloc(3,3)           ! local   stress
+      real(kind=dp)                   :: sigmanlc(3,3)           ! nonloc. stress
+      real(kind=dp)                   :: sigmahar(3,3)           ! hartree stress
+      real(kind=dp)                   :: sigmaxc(3,3)            ! exc-cor stress
+      real(kind=dp)                   :: sigmaxcc(3,3)           ! corecor stress
+      real(kind=dp)                   :: sigmaewa(3,3)           ! ewald   stress
+      real(kind=dp)                   :: sigmah(3,3)             ! hubbard stress
+      real(kind=dp)                   :: sigmad23(3,3)           ! DFT-D   stress
+      real(kind=dp)                   :: sigmaxdm(3,3)           ! XDM     stress
+      real(kind=dp)                   :: sigma_nonloc_dft(3,3)   ! dft-nl  stress
+      real(kind=dp)                   :: sigma_ts(3,3)           ! TS-vdW  stress
+      real(kind=dp)                   :: sigma_mbd(3,3)          ! MDB     stress
+      real(kind=dp)                   :: sigmasol(3,3)           ! 3D-RISM stress
+      real(kind=dp)                   :: sigmaexx(3,3)           ! EXX     stress
+      !
+      real(kind=dp)                   :: sigmael(3,3)            ! electronic el field part
+      real(kind=dp)                   :: sigmaion(3,3)           ! sigmaion
+      real(kind=dp)                   :: sigmaext(3,3)           ! external stress
+      ! <--
+   CONTAINS
+      !--------------------------------------------------------------------------------
+      PROCEDURE :: reset => assignment_stress
+      GENERIC :: assignment(=) => reset
+   end type stress_base
+   !
    type, public :: embed_base
       type(input_base)                :: input
       type(tddft_base)                :: tddft
       type(energies_base)             :: energies
+      type(stress_base)               :: stress
       CHARACTER(len=256)              :: task = 'scf'
       real(kind=dp), allocatable      :: extpot(:,:)
       real(kind=dp)                   :: extene = 0.d0
@@ -235,7 +264,7 @@ CONTAINS
       IMPLICIT NONE
       CLASS(energies_base),INTENT(INOUT) :: obj
       REAL(DP),INTENT(IN)                :: value
-       
+
       obj%etot          = value
       obj%ek            = value
       obj%eloc          = value
@@ -263,7 +292,34 @@ CONTAINS
       obj%paw_ehart_ps  = value
       obj%paw_exc_ae    = value
       obj%paw_exc_ps    = value
-      
+
+   END SUBROUTINE
+   !
+   SUBROUTINE assignment_stress(obj, value)
+      !
+      IMPLICIT NONE
+      CLASS(stress_base),INTENT(INOUT)   :: obj
+      REAL(DP),INTENT(IN)                :: value
+
+      obj%sigma            = value
+      obj%sigmakin         = value
+      obj%sigmaloc         = value
+      obj%sigmanlc         = value
+      obj%sigmahar         = value
+      obj%sigmaxc          = value
+      obj%sigmaxcc         = value
+      obj%sigmaewa         = value
+      obj%sigmah           = value
+      obj%sigmad23         = value
+      obj%sigmaxdm         = value
+      obj%sigma_nonloc_dft = value
+      obj%sigma_ts         = value
+      obj%sigma_mbd        = value
+      obj%sigmasol         = value
+      obj%sigmaexx         = value
+      obj%sigmael          = value
+      obj%sigmaion         = value
+
    END SUBROUTINE
    !
    SUBROUTINE arr2pointer_real_1(arr, p, n1)

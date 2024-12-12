@@ -96,6 +96,7 @@ class Driver(metaclass=QEpyLibs):
     """
     POTNAMES = {'external' : 0, 'localpp' : 1, 'hartree' : 2, 'xc' : 4}
     FORCENAMES = {'ewald' : 1, 'localpp' : 2, 'nlcc' : 4}
+    STRESSNAMES = {'ewald' : 1, 'localpp' : 2, 'hartree' : 4, 'xc': 8}
 
     def __init__(self, inputfile = None, comm = None, ldescf = True, iterative = False,
              task = 'scf', embed = None, prefix = None, outdir = None, logfile = None,
@@ -860,11 +861,32 @@ class Driver(metaclass=QEpyLibs):
         forces = self.qepy_pw.force_mod.get_array_force().T
         return forces
 
-    @classmethod
-    def get_stress(cls, **kwargs):
-        """Return the stress (3, 3)."""
+    def get_stress(self, icalc = 0, ignore = (), **kwargs):
+        """Return the total stress. (3, 3)
+
+        Parameters
+        ----------
+        icalc : int
+
+            ===== ============================= ====
+            icalc without                       bin
+            ===== ============================= ====
+              1   no ewald                      0001
+              2   no localpp                    0010
+              4   no hartree                    0100
+              8   no xc                         1000
+            ===== ============================= ====
+        ignore : list
+            ignore some stress, which does same job as `icalc`.
+
+              - ewald (1)
+              - localpp (2)
+              - hartree (4)
+              - xc (8)
+        """
         stress = np.zeros((3, 3), order='F')
-        cls.qepy_pw.stress(stress)
+        if len(ignore) > 0 : icalc = self.stressname2type(ignore)
+        self.qepy_pw.qepy_stress(stress, icalc=icalc)
         return stress
 
     #ASE DFTCalculator
@@ -1162,3 +1184,7 @@ class Driver(metaclass=QEpyLibs):
     @classmethod
     def forcename2type(cls, name = None):
         return cls.name2type(cls.FORCENAMES, name)
+
+    @classmethod
+    def stressname2type(cls, name = None):
+        return cls.name2type(cls.STRESSNAMES, name)
