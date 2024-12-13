@@ -5,7 +5,7 @@ from qepy import qepy_pp
 
 def get_parse(parser = None):
     if parser is None :
-        parser = argparse.ArgumentParser(description='Analysis and convert from pw.x output')
+        parser = argparse.ArgumentParser(description='Analyze and convert from pw.x output')
     parser.add_argument('-i', '--input', dest='input', type=str, action='store',
             default=None, help='The input file of pw.x')
     parser.add_argument('-o', '--output', dest='output', type=str, action='store',

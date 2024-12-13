@@ -13,8 +13,18 @@ What is the `tddft=yes`?
 
   Support real-time TDDFT by using `ce-tddft <https://github.com/dceresoli/ce-tddft>`__. And the real-time TDDFT also support adding/replacing external potential.
 
+Can I use CMake for QE installation?
+------------------------------------
+
+  No. Please use the traditional `configure` way to compile QE.
+
 Running
 =======
+
+*Error in routine allocate_fft* or *Error in routine  fft_type_set*
+-------------------------------------------------------------------
+
+  The qepy has to be imported before the mpi4py package. The simplest approach to fix is add ``import qepy`` as the first line of the script.
 
 Some Intel MKL errors occur. What do I do?
 ----------------------------------------------

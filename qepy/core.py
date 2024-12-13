@@ -6,6 +6,9 @@ import pkgutil
 import operator
 from importlib import import_module
 from ctypes import util, CDLL, RTLD_LOCAL, RTLD_GLOBAL
+import subprocess
+from pathlib import Path
+import platform
 
 def find_library(name):
     if hasattr(util, '_findLib_ld') and hasattr(util, '_get_soname') :
@@ -160,3 +163,48 @@ class QEpyMods:
     @qepymod.setter
     def qepymod(self, value):
         self._qepymod = value
+
+def get_dynamic_libraries(filename):
+    system = platform.system()
+    libraries = []
+    try:
+        if system == "Linux":
+            # Use ldd for Linux
+            result = subprocess.run(["ldd", filename], capture_output=True, text=True, check=True)
+            for line in result.stdout.splitlines():
+                parts = line.split("=>")
+                if len(parts) == 2:
+                    library_path = parts[1].strip().split()[0]
+                    libraries.append(library_path)
+        elif system == "Darwin":
+            # Use otool for macOS
+            result = subprocess.run(["otool", "-L", filename], capture_output=True, text=True, check=True)
+            for line in result.stdout.splitlines()[1:]:  # Skip the first line
+                library_path = line.strip().split()[0]
+                libraries.append(library_path)
+    except:
+        libraries = []
+    return libraries
+
+def import_mkl_lib(libraries):
+    for item in libraries:
+        if 'libmkl_core' in item:
+            mkl_path = item[:item.rfind('/')+1]
+            files = list(Path(mkl_path).glob('libmkl_rt.so*'))
+            if files: load_library(lib=str(files[0]))
+            break
+
+def import_mpi_lib(libraries):
+    for item in libraries:
+        if 'libmpi' in item: load_library(lib=item)
+
+def fix_external_lib():
+    system = platform.system()
+    if system != "Linux": return
+    try:
+        libqepy_pw_file = Path(__file__).resolve().parent/'qepylibs'/'libqepy_pw.so'
+        libraries = get_dynamic_libraries(str(libqepy_pw_file))
+        import_mkl_lib(libraries)
+        import_mpi_lib(libraries)
+    except:
+        pass
