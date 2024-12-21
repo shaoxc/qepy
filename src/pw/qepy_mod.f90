@@ -236,19 +236,23 @@ CONTAINS
 
    SUBROUTINE qepy_set_rho_core(rhoc, gather)
       USE kinds,                ONLY : DP
-      use scf,                  ONLY : rho_core !! the core charge in real space
+      use scf,                  ONLY : rho_core, rhog_core
       USE fft_base,             ONLY : dfftp, dffts
+      USE fft_rho,              ONLY : rho_r2g
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rhoc(:)
       LOGICAL,INTENT(in),OPTIONAL :: gather
       !
       LOGICAL :: gather_
+      COMPLEX(DP)                 :: rhogc(size(rhog_core),1)
       !
       gather_ = .true.
       IF ( present(gather) ) gather_ = gather
       !
       call qepy_get_value(rhoc, rho_core, scatter = gather_)
       !
+      CALL rho_r2g(dfftp, rho_core, rhogc)
+      rhog_core(:) = rhogc(:,1)
    END SUBROUTINE
 
    SUBROUTINE qepy_set_extpot(vin, gather)
